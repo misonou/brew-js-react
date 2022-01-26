@@ -41,11 +41,9 @@ definePrototype(StatefulMixin, Mixin, {
         const self = this;
         const state = self.state;
         return function (current) {
-            if (current !== state.element) {
+            if (current && current !== state.element) {
                 state.element = current;
-                if (current) {
-                    self.initElement(current, state);
-                }
+                self.initElement(current, state);
             }
         };
     },
