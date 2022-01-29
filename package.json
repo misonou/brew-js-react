@@ -1,6 +1,6 @@
 {
   "name": "brew-js-react",
-  "version": "0.1.0-beta",
+  "version": "0.1.0",
   "description": "",
   "type": "module",
   "main": "src/index.js",
@@ -12,7 +12,8 @@
   },
   "author": "misonou",
   "license": "ISC",
-  "repository": "github:misonou/brew-react",
+  "homepage": "https://hackmd.io/@misonou/brew-js-react",
+  "repository": "github:misonou/brew-js-react",
   "dependencies": {
     "brew-js": "^0.2.1",
     "react": "^16.14.0",

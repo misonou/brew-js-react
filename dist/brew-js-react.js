@@ -1,20 +1,28 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("react"), require("react-dom"), require("brew-js"), require("zeta-dom"), require("zeta-dom-react"));
+		module.exports = factory(require("react"), require("react-dom"), require("brew-js"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew-js-react", ["react", "react-dom", "brew-js", "zeta-dom", "zeta-dom-react"], factory);
+		define("brew-js-react", ["react", "react-dom", "brew-js", "zeta-dom", "zeta-dom-react", "waterpipe"], factory);
 	else if(typeof exports === 'object')
-		exports["brew-js-react"] = factory(require("react"), require("react-dom"), require("brew-js"), require("zeta-dom"), require("zeta-dom-react"));
+		exports["brew-js-react"] = factory(require("react"), require("react-dom"), require("brew-js"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
 	else
-		root["brew-js-react"] = factory(root["React"], root["ReactDOM"], root["brew"], root["zeta"], root["zeta-dom-react"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__) {
+		root["brew-js-react"] = factory(root["React"], root["ReactDOM"], root["brew"], root["zeta"], root["zeta-dom-react"], root["waterpipe"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__) {
 return /******/ (() => { // webpackBootstrap
-/******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
+
+/***/ 28:
+/***/ ((module) => {
+
+"use strict";
+module.exports = __WEBPACK_EXTERNAL_MODULE__28__;
+
+/***/ }),
 
 /***/ 103:
 /***/ ((module) => {
 
+"use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__103__;
 
 /***/ }),
@@ -22,6 +30,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__103__;
 /***/ 80:
 /***/ ((module) => {
 
+"use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__80__;
 
 /***/ }),
@@ -29,6 +38,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__80__;
 /***/ 359:
 /***/ ((module) => {
 
+"use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__359__;
 
 /***/ }),
@@ -36,6 +46,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__359__;
 /***/ 318:
 /***/ ((module) => {
 
+"use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__318__;
 
 /***/ }),
@@ -43,7 +54,20 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__318__;
 /***/ 654:
 /***/ ((module) => {
 
+"use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__654__;
+
+/***/ }),
+
+/***/ 43:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+// @ts-nocheck
+
+/** @type {Waterpipe} */
+var waterpipe = window.waterpipe || __webpack_require__(28);
+
+module.exports = waterpipe;
 
 /***/ })
 
@@ -104,8 +128,9 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__654__;
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
+"use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
@@ -129,6 +154,7 @@ __webpack_require__.d(src_namespaceObject, {
   "StatefulMixin": () => (StatefulMixin),
   "createDialog": () => (createDialog),
   "linkTo": () => (linkTo),
+  "makeTranslation": () => (makeTranslation),
   "registerView": () => (registerView),
   "renderView": () => (renderView),
   "useAnimateMixin": () => (useAnimateMixin),
@@ -299,26 +325,14 @@ var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
 
 
 
+/**
+ * @param {Partial<import("./dialog").DialogOptions<any>>} props
+ */
+
 function createDialog(props) {
   var root = document.createElement('div');
   var closing = false;
-  var refresh = noop;
   var promise;
-
-  function Component() {
-    var forceRefresh = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(0)[1];
-
-    refresh = function refresh() {
-      forceRefresh(function (v) {
-        return ++v;
-      });
-    };
-
-    return props.onRender(extend({
-      root: root,
-      closeDialog: closeDialog
-    }, props));
-  }
 
   function closeDialog(value) {
     if (!closing) {
@@ -326,35 +340,38 @@ function createDialog(props) {
       external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.closeFlyout(root, value).then(function () {
         closing = false;
         removeNode(root);
-        external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.unmountComponentAtNode(root);
         (props.onClose || noop)(root);
+
+        if (props.onRender) {
+          external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.unmountComponentAtNode(root);
+        }
       });
     }
   }
 
   return {
     root: root,
-    refresh: refresh,
     close: closeDialog,
     open: function open() {
       if (promise) {
         return promise;
       }
 
-      root.className = props.className;
+      root.className = props.className || '';
+      document.body.appendChild(root);
+      zeta_dom_dom.retainFocus(zeta_dom_dom.activeElement, root);
 
       if (props.modal) {
         root.setAttribute('is-modal', '');
-      }
-
-      document.body.appendChild(root);
-
-      if (props.modal) {
         zeta_dom_dom.setModal(root);
       }
 
-      zeta_dom_dom.retainFocus(zeta_dom_dom.activeElement, root);
-      external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.render(external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(Component), root);
+      if (props.onRender) {
+        external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.render(external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.onRender, extend({
+          closeDialog: closeDialog
+        }, props)), root);
+      }
+
       promise = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.openFlyout(root);
       always(promise, function () {
         promise = null;
@@ -365,43 +382,32 @@ function createDialog(props) {
     }
   };
 }
+/**
+ * @param {import("./dialog").DialogProps} props
+ */
+
 function Dialog(props) {
-  /** @type {import("./dialog").DialogProps & { open: boolean }} */
-  var _props = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)({
-    open: false
-  })[0];
-  extend(_props, props);
-
-  if (props.children) {
-    _props.onRender = function () {
-      return external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, props.children);
-    };
-  }
-
+  var _props = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(props)[0];
   var dialog = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
     return createDialog(_props);
   })[0];
+  extend(_props, props);
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
     var opened = containsOrEquals(zeta_dom_dom.root, dialog.root);
 
-    if (either(opened, _props.open)) {
+    if (either(opened, _props.isOpen)) {
       if (!opened) {
         dialog.open();
       } else {
         dialog.close();
       }
     }
-  }, [_props.open]);
+  }, [_props.isOpen]);
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
     return dialog.close;
   }, [dialog]);
-  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
-    dialog.refresh();
-  });
-  return external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment);
+  return external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, dialog.root);
 }
-// EXTERNAL MODULE: external "zeta-dom-react"
-var external_zeta_dom_react_ = __webpack_require__(103);
 ;// CONCATENATED MODULE: ./src/app.js
 
 /** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
@@ -416,7 +422,6 @@ external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.defaults.reac
 
 
 
-
 function useAppReady() {
   var sReady = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(false);
   var ready = sReady[0],
@@ -427,9 +432,6 @@ function useAppReady() {
     });
   }, []);
   return ready;
-}
-function useLanguage() {
-  return (0,external_zeta_dom_react_.useObservableProperty)(app, 'language');
 }
 function useRouteParam(name, defaultValue) {
   var sValue = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(app.route[name]);
@@ -447,6 +449,69 @@ function useRouteParam(name, defaultValue) {
   }
 
   return value || '';
+}
+// EXTERNAL MODULE: external "zeta-dom-react"
+var external_zeta_dom_react_ = __webpack_require__(103);
+// EXTERNAL MODULE: ./src/include/external/waterpipe.js
+var waterpipe = __webpack_require__(43);
+;// CONCATENATED MODULE: ./src/i18n.js
+
+
+
+
+var empty = Object.create(null);
+function useLanguage() {
+  return (0,external_zeta_dom_react_.useObservableProperty)(app, 'language');
+}
+function makeTranslation(resources, defaultLang) {
+  var re = new RegExp('^(' + Object.keys(resources[defaultLang]).join('|') + ')\\.');
+  var cache = {};
+
+  function getTranslation(prefix, name, data) {
+    var str = ((resources[app.language] || empty)[prefix] || empty)[name] || ((resources[defaultLang] || empty)[prefix] || empty)[name] || '';
+    return str && data !== undefined ? waterpipe(str, data) : str;
+  }
+
+  function createCallback(translate) {
+    return extend(translate, {
+      html: function html(id, data) {
+        return {
+          __html: translate(id, data)
+        };
+      }
+    });
+  }
+
+  function translate(key, data) {
+    var prefix = re.test(key) ? RegExp.$1 : '';
+    var name = prefix ? key.slice(RegExp.lastMatch.length) : key;
+    return getTranslation(prefix, name, data) || key;
+  }
+
+  function useTranslation() {
+    var prefix = makeArray(arguments);
+    var language = useLanguage();
+    var t = translate;
+
+    if (prefix[0]) {
+      var key = prefix.join(' ');
+      t = cache[key] || (cache[key] = createCallback(function (key, data) {
+        return single(prefix, function (v) {
+          return getTranslation(v, key, data);
+        }) || key;
+      }));
+    }
+
+    return {
+      language: language,
+      t: t
+    };
+  }
+
+  return {
+    translate: createCallback(translate),
+    useTranslation: useTranslation
+  };
 }
 ;// CONCATENATED MODULE: ./src/mixins/StaticAttributeMixin.js
 
@@ -567,12 +632,9 @@ definePrototype(StatefulMixin, Mixin, {
     var self = this;
     var state = self.state;
     return function (current) {
-      if (current !== state.element) {
+      if (current && current !== state.element) {
         state.element = current;
-
-        if (current) {
-          self.initElement(current, state);
-        }
+        self.initElement(current, state);
       }
     };
   },
@@ -1013,7 +1075,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
 function registerView(factory, routeParams) {
   var Component = function Component(props) {
     var childProps = exclude(props, ['rootProps', 'onComponentLoaded']);
-    var Component = (0,external_zeta_dom_react_.useAsyncContent)(factory)[0];
+    var Component = (0,external_zeta_dom_react_.useAsync)(factory)[0];
     return external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, props.rootProps, {
       ref: function ref(element) {
         if (element && Component) {
@@ -1043,6 +1105,7 @@ function linkTo(view, params) {
   return app.route.getPath(extend({}, app.route, params, routeMap.get(view)));
 }
 ;// CONCATENATED MODULE: ./src/index.js
+
 
 
 
