@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useObservableProperty } from "zeta-dom-react";
 import { extend, kv } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 
@@ -12,10 +11,6 @@ export function useAppReady() {
         });
     }, []);
     return ready;
-}
-
-export function useLanguage() {
-    return useObservableProperty(app, 'language');
 }
 
 export function useRouteParam(name, defaultValue) {

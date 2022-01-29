@@ -6,12 +6,6 @@
 export function useAppReady(): boolean;
 
 /**
- * Returns the current language, and
- * refresh the component when the language has changed.
- */
-export function useLanguage(): string;
-
-/**
  * Returns the value of specified route parameter, and
  * refresh the component when the route parameter has changed.
  * @param name Name of route parameter.
