@@ -12,7 +12,7 @@
             "src/*": ["./src/*"],
             "zeta-dom/*": ["../zeta-dom/src/*", "node_modules/zeta-dom/*"],
             "zeta-dom-react": ["../zeta-dom-react/src/index", "node_modules/zeta-dom-react/index"],
-            "brew-js": ["../brew-js/src/index", "node_modules/brew-js/index"],
+            "brew-js/*": ["../brew-js/src/*", "node_modules/brew-js/*"],
             "@jest/globals": ["node_modules/@jest/globals/build/index"],
         }
     },

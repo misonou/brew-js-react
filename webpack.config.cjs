@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const glob = require('glob');
 const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 const TerserPlugin = require('terser-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
@@ -17,19 +18,23 @@ function processModule(module, options) {
         const names = [];
         parser.hooks.export.tap('export', (statement) => {
             if (statement.type === 'ExportNamedDeclaration') {
-                names.push(...statement.specifiers.map(v => v.exported.name));
+                if (statement.declaration?.type === 'FunctionDeclaration') {
+                    names.push(statement.declaration.id.name);
+                } else {
+                    names.push(...statement.specifiers.map(v => v.exported.name));
+                }
             }
         });
         parser.parse(fs.readFileSync(filename, 'utf8'));
         return names;
     }
 
-    function getExpressionForSubModule(subMobule) {
-        return options.subMobuleExpressions[subMobule];
+    function getExpressionForSubModule(subModule) {
+        return options.subModuleExpressions[subModule];
     }
 
-    function transformDeconstructName(subMobule, name) {
-        const alias = options.exportNameMappings[`${subMobule}:${name}`];
+    function transformDeconstructName(subModule, name) {
+        const alias = options.exportNameMappings[`${subModule}:${name}`];
         if (alias) {
             return `${alias}: ${name}`
         }
@@ -39,25 +44,26 @@ function processModule(module, options) {
     if (!fs.existsSync(includeUMDDir)) {
         fs.mkdirSync(includeUMDDir, { recursive: true });
     }
-    fs.readdirSync(options.localPath).forEach((filename) => {
-        var output = `import zeta from "${module}";`;
+    glob.sync(options.localPath + '/**/*.js').forEach((p) => {
+        var filename = p.slice(options.localPath.length + 1);
+        var output = `import lib from "${module}";`;
         var parser = new JavascriptParser('module');
         var handler = (statement, source) => {
             if (source.startsWith(module + '/')) {
-                const subMobule = source.split('/')[1];
+                const subModule = source.slice(module.length + 1);
                 switch (statement.type) {
                     case 'ExportAllDeclaration': {
-                        let names = getExportedNames(path.join(zetaDir, `${subMobule}.js`));
-                        output += `const { ${names.map(v => transformDeconstructName(subMobule, v)).join(', ')} } = ${getExpressionForSubModule(subMobule)}; export { ${names.join(', ')} };`;
+                        let names = getExportedNames(path.join(zetaDir, `${subModule}.js`));
+                        output += `const { ${names.map(v => transformDeconstructName(subModule, v)).join(', ')} } = ${getExpressionForSubModule(subModule)}; export { ${names.join(', ')} };`;
                         break;
                     }
                     case 'ExportNamedDeclaration': {
                         let names = statement.specifiers.map(v => v.local.name);
-                        output += `const { ${names.map(v => transformDeconstructName(subMobule, v)).join(', ')} } = ${getExpressionForSubModule(subMobule)}; export { ${names.join(', ')} };`;
+                        output += `const { ${names.map(v => transformDeconstructName(subModule, v)).join(', ')} } = ${getExpressionForSubModule(subModule)}; export { ${names.join(', ')} };`;
                         break;
                     }
                     case 'ImportDeclaration': {
-                        output += `const _defaultExport = ${getExpressionForSubModule(subMobule)}; export default _defaultExport;`;
+                        output += `const _defaultExport = ${getExpressionForSubModule(subModule)}; export default _defaultExport;`;
                         break;
                     }
                 }
@@ -66,7 +72,12 @@ function processModule(module, options) {
         parser.hooks.import.tap('import', handler);
         parser.hooks.exportImport.tap('import', handler);
         parser.parse(fs.readFileSync(path.join(options.localPath, filename), 'utf8'));
-        fs.writeFileSync(path.join(includeUMDDir, filename), output);
+
+        var dstPath = path.join(includeUMDDir, filename);
+        if (!fs.existsSync(path.resolve(dstPath, '..'))) {
+            fs.mkdirSync(path.resolve(dstPath, '..'));
+        }
+        fs.writeFileSync(dstPath, output);
     });
     return includeUMDDir;
 }
@@ -76,17 +87,30 @@ const zetaDOMPath = processModule('zeta-dom', {
     exportNameMappings: {
         'events:ZetaEventContainer': 'EventContainer'
     },
-    subMobuleExpressions: {
-        cssUtil: 'zeta.css',
-        dom: 'zeta.dom',
-        domLock: 'zeta.dom',
-        observe: 'zeta.dom',
-        util: 'zeta.util',
-        domUtil: 'zeta.util',
-        events: 'zeta',
-        tree: 'zeta',
-        env: 'zeta',
-        index: 'zeta'
+    subModuleExpressions: {
+        cssUtil: 'lib.css',
+        dom: 'lib.dom',
+        domLock: 'lib.dom',
+        observe: 'lib.dom',
+        util: 'lib.util',
+        domUtil: 'lib.util',
+        events: 'lib',
+        tree: 'lib',
+        env: 'lib',
+        index: 'lib'
+    }
+});
+const brewJSPath = processModule('brew-js', {
+    localPath: path.join(srcPath, 'include/brew-js'),
+    exportNameMappings: {},
+    subModuleExpressions: {
+        'extension/router': 'lib',
+        anim: 'lib',
+        app: 'lib',
+        core: 'lib',
+        defaults: 'lib.defaults',
+        domAction: 'lib',
+        index: 'lib'
     }
 });
 
@@ -133,7 +157,8 @@ module.exports = {
     },
     resolve: {
         alias: {
-            'zeta-dom': zetaDOMPath
+            'zeta-dom': zetaDOMPath,
+            'brew-js': brewJSPath
         }
     },
     externals: {

@@ -1,7 +1,7 @@
 import React from "react";
-import brew from "brew-js";
 import { useAsync } from "zeta-dom-react";
 import { any, definePrototype, equal, exclude, extend, keys, makeArray, noop, pick, setImmediate } from "./include/zeta-dom/util.js";
+import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 
 const routeMap = new Map();
@@ -32,7 +32,7 @@ definePrototype(ViewContainer, React.Component, {
                 self.prevView = self.currentView;
                 self.prevElement = self.currentElement;
                 self.currentElement = undefined;
-                brew.animateOut(self.prevElement, 'show').then(function () {
+                animateOut(self.prevElement, 'show').then(function () {
                     self.prevElement = undefined;
                     self.prevView = undefined;
                     self.forceUpdate();
@@ -44,7 +44,7 @@ definePrototype(ViewContainer, React.Component, {
                 onComponentLoaded: function (element) {
                     self.currentElement = element;
                     setImmediate(function () {
-                        return brew.animateIn(element, 'show');
+                        return animateIn(element, 'show');
                     });
                 }
             });

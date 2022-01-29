@@ -1,11 +1,12 @@
-import brew from "brew-js";
+import { install } from "./include/brew-js/app.js";
+import defaults from "./include/brew-js/defaults.js";
 
 /** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
 export var app;
 
-brew.install('react', function (app_) {
+install('react', function (app_) {
     // @ts-ignore: type inference issue
     app = app_;
 });
 
-brew.defaults.react = true;
+defaults.react = true;

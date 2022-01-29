@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import brew from "brew-js";
 import { always, either, extend, noop } from "./include/zeta-dom/util.js";
 import { containsOrEquals, removeNode } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
+import { closeFlyout, openFlyout } from "./include/brew-js/domAction.js";
 
 /**
  * @param {Partial<import("./dialog").DialogOptions<any>>} props
@@ -16,7 +16,7 @@ export function createDialog(props) {
     function closeDialog(value) {
         if (!closing) {
             closing = true;
-            brew.closeFlyout(root, value).then(function () {
+            closeFlyout(root, value).then(function () {
                 closing = false;
                 removeNode(root);
                 (props.onClose || noop)(root);
@@ -45,7 +45,7 @@ export function createDialog(props) {
                 ReactDOM.render(React.createElement(props.onRender, extend({ closeDialog }, props)), root);
             }
 
-            promise = brew.openFlyout(root);
+            promise = openFlyout(root);
             always(promise, function () {
                 promise = null;
             });

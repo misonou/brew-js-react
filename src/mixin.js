@@ -41,7 +41,7 @@ export function useFocusStateMixin() {
 }
 
 export function useLoadingStateMixin() {
-    return useState(() => {
+    return useState(function () {
         return new LoadingStateMixin();
     })[0].reset();
 }
