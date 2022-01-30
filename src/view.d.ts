@@ -10,6 +10,13 @@ export type ViewComponent<P> = React.FC<P>;
 export function registerView<P>(factory: () => Promise<{ default: React.ComponentType<P> }>, params: Zeta.Dictionary<string>): ViewComponent<P>;
 
 /**
+ * Determines whether a registered view component matches current route state.
+ * However it does not imply if the view is in fact being rendered.
+ * @param view A view component returned from {@link registerView}.
+ */
+export function isViewMatched(view: ViewComponent<any>): boolean;
+
+/**
  * Renders view by matching current route state against registered route parameters of each supplied views.
  * @param args A list of view components created by {@link registerView}.
  */

@@ -53,13 +53,15 @@ definePrototype(ViewContainer, React.Component, {
     },
     getViewComponent: function () {
         var views = this.props.views;
-        var V = any(views, function (V) {
-            var params = routeMap.get(V);
-            return params && equal(params, pick(app.route, keys(params)));
-        });
+        var V = any(views, isViewMatched);
         return V || void app.navigate(linkTo(views[0]), true);
     }
 });
+
+export function isViewMatched(view) {
+    var params = routeMap.get(view);
+    return !!params && equal(params, pick(app.route, keys(params)));
+}
 
 export function registerView(factory, routeParams) {
     var Component = function (props) {
