@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("react"), require("react-dom"), require("brew-js"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
+		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew-js-react", ["react", "react-dom", "brew-js", "zeta-dom", "zeta-dom-react", "waterpipe"], factory);
+		define("brew-js-react", ["brew-js", "react", "react-dom", "zeta-dom", "zeta-dom-react", "waterpipe"], factory);
 	else if(typeof exports === 'object')
-		exports["brew-js-react"] = factory(require("react"), require("react-dom"), require("brew-js"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
+		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
 	else
-		root["brew-js-react"] = factory(root["React"], root["ReactDOM"], root["brew"], root["zeta"], root["zeta-dom-react"], root["waterpipe"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__) {
+		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["zeta"], root["zeta-dom-react"], root["waterpipe"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__) {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -153,6 +153,7 @@ __webpack_require__.d(src_namespaceObject, {
   "ScrollableMixin": () => (ScrollableMixin),
   "StatefulMixin": () => (StatefulMixin),
   "createDialog": () => (createDialog),
+  "default": () => (src),
   "linkTo": () => (linkTo),
   "makeTranslation": () => (makeTranslation),
   "registerView": () => (registerView),
@@ -169,155 +170,174 @@ __webpack_require__.d(src_namespaceObject, {
   "useScrollableMixin": () => (useScrollableMixin)
 });
 
+// EXTERNAL MODULE: external {"commonjs":"brew-js","commonjs2":"brew-js","amd":"brew-js","root":"brew"}
+var external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_ = __webpack_require__(80);
+;// CONCATENATED MODULE: ./tmp/brew-js/app.js
+
+var _defaultExport = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_;
+/* harmony default export */ const app = (_defaultExport);
+var install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.install,
+    addDetect = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addDetect;
+
+;// CONCATENATED MODULE: ./src/include/brew-js/app.js
+
+
+/* harmony default export */ const brew_js_app = (app);
 // EXTERNAL MODULE: external {"commonjs":"react","commonjs2":"react","amd":"react","root":"React"}
 var external_commonjs_react_commonjs2_react_amd_react_root_React_ = __webpack_require__(359);
 // EXTERNAL MODULE: external {"commonjs":"react-dom","commonjs2":"react-dom","amd":"react-dom","root":"ReactDOM"}
 var external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_ = __webpack_require__(318);
-// EXTERNAL MODULE: external {"commonjs":"brew-js","commonjs2":"brew-js","amd":"brew-js","root":"brew"}
-var external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_ = __webpack_require__(80);
 // EXTERNAL MODULE: external {"commonjs":"zeta-dom","commonjs2":"zeta-dom","amd":"zeta-dom","root":"zeta"}
 var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(654);
 ;// CONCATENATED MODULE: ./tmp/zeta-dom/util.js
 
-var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
-    noop = _zeta$util.noop,
-    either = _zeta$util.either,
-    is = _zeta$util.is,
-    isUndefinedOrNull = _zeta$util.isUndefinedOrNull,
-    isArray = _zeta$util.isArray,
-    isFunction = _zeta$util.isFunction,
-    isThenable = _zeta$util.isThenable,
-    isPlainObject = _zeta$util.isPlainObject,
-    isArrayLike = _zeta$util.isArrayLike,
-    makeArray = _zeta$util.makeArray,
-    extend = _zeta$util.extend,
-    each = _zeta$util.each,
-    map = _zeta$util.map,
-    grep = _zeta$util.grep,
-    splice = _zeta$util.splice,
-    any = _zeta$util.any,
-    single = _zeta$util.single,
-    kv = _zeta$util.kv,
-    pick = _zeta$util.pick,
-    exclude = _zeta$util.exclude,
-    mapGet = _zeta$util.mapGet,
-    mapRemove = _zeta$util.mapRemove,
-    arrRemove = _zeta$util.arrRemove,
-    setAdd = _zeta$util.setAdd,
-    equal = _zeta$util.equal,
-    combineFn = _zeta$util.combineFn,
-    executeOnce = _zeta$util.executeOnce,
-    createPrivateStore = _zeta$util.createPrivateStore,
-    setTimeoutOnce = _zeta$util.setTimeoutOnce,
-    util_setImmediate = _zeta$util.setImmediate,
-    setImmediateOnce = _zeta$util.setImmediateOnce,
-    throwNotFunction = _zeta$util.throwNotFunction,
-    keys = _zeta$util.keys,
-    values = _zeta$util.values,
-    util_hasOwnProperty = _zeta$util.hasOwnProperty,
-    getOwnPropertyDescriptors = _zeta$util.getOwnPropertyDescriptors,
-    util_define = _zeta$util.define,
-    definePrototype = _zeta$util.definePrototype,
-    defineOwnProperty = _zeta$util.defineOwnProperty,
-    defineGetterProperty = _zeta$util.defineGetterProperty,
-    defineHiddenProperty = _zeta$util.defineHiddenProperty,
-    defineAliasProperty = _zeta$util.defineAliasProperty,
-    defineObservableProperty = _zeta$util.defineObservableProperty,
-    watch = _zeta$util.watch,
-    watchOnce = _zeta$util.watchOnce,
-    watchable = _zeta$util.watchable,
-    inherit = _zeta$util.inherit,
-    deepFreeze = _zeta$util.deepFreeze,
-    iequal = _zeta$util.iequal,
-    randomId = _zeta$util.randomId,
-    repeat = _zeta$util.repeat,
-    camel = _zeta$util.camel,
-    hyphenate = _zeta$util.hyphenate,
-    ucfirst = _zeta$util.ucfirst,
-    lcfirst = _zeta$util.lcfirst,
-    trim = _zeta$util.trim,
-    matchWord = _zeta$util.matchWord,
-    htmlDecode = _zeta$util.htmlDecode,
-    resolve = _zeta$util.resolve,
-    reject = _zeta$util.reject,
-    always = _zeta$util.always,
-    resolveAll = _zeta$util.resolveAll,
-    catchAsync = _zeta$util.catchAsync,
-    setPromiseTimeout = _zeta$util.setPromiseTimeout;
+var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
+    noop = _lib$util.noop,
+    either = _lib$util.either,
+    is = _lib$util.is,
+    isUndefinedOrNull = _lib$util.isUndefinedOrNull,
+    isArray = _lib$util.isArray,
+    isFunction = _lib$util.isFunction,
+    isThenable = _lib$util.isThenable,
+    isPlainObject = _lib$util.isPlainObject,
+    isArrayLike = _lib$util.isArrayLike,
+    makeArray = _lib$util.makeArray,
+    extend = _lib$util.extend,
+    each = _lib$util.each,
+    map = _lib$util.map,
+    grep = _lib$util.grep,
+    splice = _lib$util.splice,
+    any = _lib$util.any,
+    single = _lib$util.single,
+    kv = _lib$util.kv,
+    pick = _lib$util.pick,
+    exclude = _lib$util.exclude,
+    mapGet = _lib$util.mapGet,
+    mapRemove = _lib$util.mapRemove,
+    arrRemove = _lib$util.arrRemove,
+    setAdd = _lib$util.setAdd,
+    equal = _lib$util.equal,
+    combineFn = _lib$util.combineFn,
+    executeOnce = _lib$util.executeOnce,
+    createPrivateStore = _lib$util.createPrivateStore,
+    setTimeoutOnce = _lib$util.setTimeoutOnce,
+    util_setImmediate = _lib$util.setImmediate,
+    setImmediateOnce = _lib$util.setImmediateOnce,
+    throwNotFunction = _lib$util.throwNotFunction,
+    keys = _lib$util.keys,
+    values = _lib$util.values,
+    util_hasOwnProperty = _lib$util.hasOwnProperty,
+    getOwnPropertyDescriptors = _lib$util.getOwnPropertyDescriptors,
+    util_define = _lib$util.define,
+    definePrototype = _lib$util.definePrototype,
+    defineOwnProperty = _lib$util.defineOwnProperty,
+    defineGetterProperty = _lib$util.defineGetterProperty,
+    defineHiddenProperty = _lib$util.defineHiddenProperty,
+    defineAliasProperty = _lib$util.defineAliasProperty,
+    defineObservableProperty = _lib$util.defineObservableProperty,
+    watch = _lib$util.watch,
+    watchOnce = _lib$util.watchOnce,
+    watchable = _lib$util.watchable,
+    inherit = _lib$util.inherit,
+    deepFreeze = _lib$util.deepFreeze,
+    iequal = _lib$util.iequal,
+    randomId = _lib$util.randomId,
+    repeat = _lib$util.repeat,
+    camel = _lib$util.camel,
+    hyphenate = _lib$util.hyphenate,
+    ucfirst = _lib$util.ucfirst,
+    lcfirst = _lib$util.lcfirst,
+    trim = _lib$util.trim,
+    matchWord = _lib$util.matchWord,
+    htmlDecode = _lib$util.htmlDecode,
+    resolve = _lib$util.resolve,
+    reject = _lib$util.reject,
+    always = _lib$util.always,
+    resolveAll = _lib$util.resolveAll,
+    catchAsync = _lib$util.catchAsync,
+    setPromiseTimeout = _lib$util.setPromiseTimeout;
 
 ;// CONCATENATED MODULE: ./src/include/zeta-dom/util.js
 
 ;// CONCATENATED MODULE: ./tmp/zeta-dom/domUtil.js
 
-var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
-    domReady = domUtil_zeta$util.domReady,
-    tagName = domUtil_zeta$util.tagName,
-    domUtil_is = domUtil_zeta$util.is,
-    isVisible = domUtil_zeta$util.isVisible,
-    matchSelector = domUtil_zeta$util.matchSelector,
-    comparePosition = domUtil_zeta$util.comparePosition,
-    connected = domUtil_zeta$util.connected,
-    containsOrEquals = domUtil_zeta$util.containsOrEquals,
-    acceptNode = domUtil_zeta$util.acceptNode,
-    combineNodeFilters = domUtil_zeta$util.combineNodeFilters,
-    iterateNode = domUtil_zeta$util.iterateNode,
-    iterateNodeToArray = domUtil_zeta$util.iterateNodeToArray,
-    getCommonAncestor = domUtil_zeta$util.getCommonAncestor,
-    parentsAndSelf = domUtil_zeta$util.parentsAndSelf,
-    selectIncludeSelf = domUtil_zeta$util.selectIncludeSelf,
-    selectClosestRelative = domUtil_zeta$util.selectClosestRelative,
-    createNodeIterator = domUtil_zeta$util.createNodeIterator,
-    createTreeWalker = domUtil_zeta$util.createTreeWalker,
-    bind = domUtil_zeta$util.bind,
-    bindUntil = domUtil_zeta$util.bindUntil,
-    dispatchDOMMouseEvent = domUtil_zeta$util.dispatchDOMMouseEvent,
-    removeNode = domUtil_zeta$util.removeNode,
-    getClass = domUtil_zeta$util.getClass,
-    setClass = domUtil_zeta$util.setClass,
-    getScrollOffset = domUtil_zeta$util.getScrollOffset,
-    getScrollParent = domUtil_zeta$util.getScrollParent,
-    getContentRect = domUtil_zeta$util.getContentRect,
-    scrollBy = domUtil_zeta$util.scrollBy,
-    scrollIntoView = domUtil_zeta$util.scrollIntoView,
-    createRange = domUtil_zeta$util.createRange,
-    rangeIntersects = domUtil_zeta$util.rangeIntersects,
-    rangeEquals = domUtil_zeta$util.rangeEquals,
-    rangeCovers = domUtil_zeta$util.rangeCovers,
-    compareRangePosition = domUtil_zeta$util.compareRangePosition,
-    makeSelection = domUtil_zeta$util.makeSelection,
-    getRect = domUtil_zeta$util.getRect,
-    getRects = domUtil_zeta$util.getRects,
-    toPlainRect = domUtil_zeta$util.toPlainRect,
-    rectEquals = domUtil_zeta$util.rectEquals,
-    rectCovers = domUtil_zeta$util.rectCovers,
-    rectIntersects = domUtil_zeta$util.rectIntersects,
-    pointInRect = domUtil_zeta$util.pointInRect,
-    mergeRect = domUtil_zeta$util.mergeRect,
-    elementFromPoint = domUtil_zeta$util.elementFromPoint;
+var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
+    domReady = domUtil_lib$util.domReady,
+    tagName = domUtil_lib$util.tagName,
+    domUtil_is = domUtil_lib$util.is,
+    isVisible = domUtil_lib$util.isVisible,
+    matchSelector = domUtil_lib$util.matchSelector,
+    comparePosition = domUtil_lib$util.comparePosition,
+    connected = domUtil_lib$util.connected,
+    containsOrEquals = domUtil_lib$util.containsOrEquals,
+    acceptNode = domUtil_lib$util.acceptNode,
+    combineNodeFilters = domUtil_lib$util.combineNodeFilters,
+    iterateNode = domUtil_lib$util.iterateNode,
+    iterateNodeToArray = domUtil_lib$util.iterateNodeToArray,
+    getCommonAncestor = domUtil_lib$util.getCommonAncestor,
+    parentsAndSelf = domUtil_lib$util.parentsAndSelf,
+    selectIncludeSelf = domUtil_lib$util.selectIncludeSelf,
+    selectClosestRelative = domUtil_lib$util.selectClosestRelative,
+    createNodeIterator = domUtil_lib$util.createNodeIterator,
+    createTreeWalker = domUtil_lib$util.createTreeWalker,
+    bind = domUtil_lib$util.bind,
+    bindUntil = domUtil_lib$util.bindUntil,
+    dispatchDOMMouseEvent = domUtil_lib$util.dispatchDOMMouseEvent,
+    removeNode = domUtil_lib$util.removeNode,
+    getClass = domUtil_lib$util.getClass,
+    setClass = domUtil_lib$util.setClass,
+    getScrollOffset = domUtil_lib$util.getScrollOffset,
+    getScrollParent = domUtil_lib$util.getScrollParent,
+    getContentRect = domUtil_lib$util.getContentRect,
+    scrollBy = domUtil_lib$util.scrollBy,
+    scrollIntoView = domUtil_lib$util.scrollIntoView,
+    createRange = domUtil_lib$util.createRange,
+    rangeIntersects = domUtil_lib$util.rangeIntersects,
+    rangeEquals = domUtil_lib$util.rangeEquals,
+    rangeCovers = domUtil_lib$util.rangeCovers,
+    compareRangePosition = domUtil_lib$util.compareRangePosition,
+    makeSelection = domUtil_lib$util.makeSelection,
+    getRect = domUtil_lib$util.getRect,
+    getRects = domUtil_lib$util.getRects,
+    toPlainRect = domUtil_lib$util.toPlainRect,
+    rectEquals = domUtil_lib$util.rectEquals,
+    rectCovers = domUtil_lib$util.rectCovers,
+    rectIntersects = domUtil_lib$util.rectIntersects,
+    pointInRect = domUtil_lib$util.pointInRect,
+    mergeRect = domUtil_lib$util.mergeRect,
+    elementFromPoint = domUtil_lib$util.elementFromPoint;
 
 ;// CONCATENATED MODULE: ./src/include/zeta-dom/domUtil.js
 
 ;// CONCATENATED MODULE: ./tmp/zeta-dom/dom.js
 
-var _defaultExport = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
-/* harmony default export */ const dom = (_defaultExport);
-var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
-    textInputAllowed = _zeta$dom.textInputAllowed,
-    beginDrag = _zeta$dom.beginDrag,
-    beginPinchZoom = _zeta$dom.beginPinchZoom,
-    getShortcut = _zeta$dom.getShortcut,
-    setShortcut = _zeta$dom.setShortcut,
-    focusable = _zeta$dom.focusable,
-    focused = _zeta$dom.focused,
-    setModal = _zeta$dom.setModal,
-    retainFocus = _zeta$dom.retainFocus,
-    releaseFocus = _zeta$dom.releaseFocus,
-    dom_focus = _zeta$dom.focus;
+var dom_defaultExport = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
+/* harmony default export */ const dom = (dom_defaultExport);
+var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    textInputAllowed = _lib$dom.textInputAllowed,
+    beginDrag = _lib$dom.beginDrag,
+    beginPinchZoom = _lib$dom.beginPinchZoom,
+    getShortcut = _lib$dom.getShortcut,
+    setShortcut = _lib$dom.setShortcut,
+    focusable = _lib$dom.focusable,
+    focused = _lib$dom.focused,
+    setModal = _lib$dom.setModal,
+    retainFocus = _lib$dom.retainFocus,
+    releaseFocus = _lib$dom.releaseFocus,
+    dom_focus = _lib$dom.focus;
 
 ;// CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
 
 
 /* harmony default export */ const zeta_dom_dom = (dom);
+;// CONCATENATED MODULE: ./tmp/brew-js/domAction.js
+
+var addAsyncAction = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAsyncAction,
+    closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.closeFlyout,
+    openFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.openFlyout;
+
+;// CONCATENATED MODULE: ./src/include/brew-js/domAction.js
+
 ;// CONCATENATED MODULE: ./src/dialog.js
 
 
@@ -337,7 +357,7 @@ function createDialog(props) {
   function closeDialog(value) {
     if (!closing) {
       closing = true;
-      external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.closeFlyout(root, value).then(function () {
+      closeFlyout(root, value).then(function () {
         closing = false;
         removeNode(root);
         (props.onClose || noop)(root);
@@ -372,7 +392,7 @@ function createDialog(props) {
         }, props)), root);
       }
 
-      promise = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.openFlyout(root);
+      promise = openFlyout(root);
       always(promise, function () {
         promise = null;
       });
@@ -408,16 +428,24 @@ function Dialog(props) {
   }, [dialog]);
   return external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, dialog.root);
 }
+;// CONCATENATED MODULE: ./tmp/brew-js/defaults.js
+
+var defaults_defaultExport = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.defaults;
+/* harmony default export */ const defaults = (defaults_defaultExport);
+;// CONCATENATED MODULE: ./src/include/brew-js/defaults.js
+
+/* harmony default export */ const brew_js_defaults = (defaults);
 ;// CONCATENATED MODULE: ./src/app.js
+
 
 /** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
 
-var app;
-external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.install('react', function (app_) {
+var app_app;
+install('react', function (app_) {
   // @ts-ignore: type inference issue
-  app = app_;
+  app_app = app_;
 });
-external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.defaults.react = true;
+brew_js_defaults.react = true;
 ;// CONCATENATED MODULE: ./src/hooks.js
 
 
@@ -427,25 +455,25 @@ function useAppReady() {
   var ready = sReady[0],
       setReady = sReady[1];
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
-    app.ready.then(function () {
+    app_app.ready.then(function () {
       setReady(true);
     });
   }, []);
   return ready;
 }
 function useRouteParam(name, defaultValue) {
-  var sValue = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(app.route[name]);
+  var sValue = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(app_app.route[name]);
   var value = sValue[0],
       setValue = sValue[1];
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
-    var current = app.route[name]; // route parameter might be changed after state initialization and before useEffect hook is called
+    var current = app_app.route[name]; // route parameter might be changed after state initialization and before useEffect hook is called
 
     setValue(current);
-    return app.route.watch(name, setValue);
+    return app_app.route.watch(name, setValue);
   }, [name, defaultValue]);
 
   if (!value && defaultValue !== undefined) {
-    app.navigate(app.route.getPath(extend({}, app.route, kv(name, defaultValue))), true);
+    app_app.navigate(app_app.route.getPath(extend({}, app_app.route, kv(name, defaultValue))), true);
   }
 
   return value || '';
@@ -461,14 +489,14 @@ var waterpipe = __webpack_require__(43);
 
 var empty = Object.create(null);
 function useLanguage() {
-  return (0,external_zeta_dom_react_.useObservableProperty)(app, 'language');
+  return (0,external_zeta_dom_react_.useObservableProperty)(app_app, 'language');
 }
 function makeTranslation(resources, defaultLang) {
   var re = new RegExp('^(' + Object.keys(resources[defaultLang]).join('|') + ')\\.');
   var cache = {};
 
   function getTranslation(prefix, name, data) {
-    var str = ((resources[app.language] || empty)[prefix] || empty)[name] || ((resources[defaultLang] || empty)[prefix] || empty)[name] || '';
+    var str = ((resources[app_app.language] || empty)[prefix] || empty)[name] || ((resources[defaultLang] || empty)[prefix] || empty)[name] || '';
     return str && data !== undefined ? waterpipe(str, data) : str;
   }
 
@@ -825,7 +853,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
       element.id = 'flyout-' + ++flyoutMixinCounter;
     }
 
-    app.on(element, {
+    app_app.on(element, {
       animationstart: function animationstart() {
         self.animating = true;
       },
@@ -946,7 +974,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
   },
   initElement: function initElement(element, state) {
     var self = this;
-    app.on(element, 'statechange', function (e) {
+    app_app.on(element, 'statechange', function (e) {
       if ('pageIndex' in e.newValues) {
         extend(self, {
           pageIndex: e.newValues.pageIndex
@@ -1006,6 +1034,15 @@ function useMixinRef(mixin) {
   return mixin.getMixin().reset();
 }
 
+;// CONCATENATED MODULE: ./tmp/brew-js/anim.js
+
+var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateIn,
+    animateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateOut,
+    addAnimateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAnimateIn,
+    addAnimateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAnimateOut;
+
+;// CONCATENATED MODULE: ./src/include/brew-js/anim.js
+
 ;// CONCATENATED MODULE: ./src/view.js
 
 
@@ -1019,7 +1056,7 @@ function ViewContainer() {
   var self = this;
   external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(self, arguments);
   self.mounted = false;
-  self.componentWillUnmount = app.on('navigate', function () {
+  self.componentWillUnmount = app_app.on('navigate', function () {
     if (self.mounted && self.getViewComponent()) {
       self.forceUpdate();
     }
@@ -1042,7 +1079,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         self.prevView = self.currentView;
         self.prevElement = self.currentElement;
         self.currentElement = undefined;
-        external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateOut(self.prevElement, 'show').then(function () {
+        animateOut(self.prevElement, 'show').then(function () {
           self.prevElement = undefined;
           self.prevView = undefined;
           self.forceUpdate();
@@ -1050,12 +1087,12 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       }
 
       self.currentView = external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
-        key: app.route.view,
+        key: app_app.route.view,
         rootProps: exclude(self.props, ['views']),
         onComponentLoaded: function onComponentLoaded(element) {
           self.currentElement = element;
           util_setImmediate(function () {
-            return external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateIn(element, 'show');
+            return animateIn(element, 'show');
           });
         }
       });
@@ -1067,9 +1104,9 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
     var views = this.props.views;
     var V = any(views, function (V) {
       var params = routeMap.get(V);
-      return params && equal(params, pick(app.route, keys(params)));
+      return params && equal(params, pick(app_app.route, keys(params)));
     });
-    return V || void app.navigate(linkTo(views[0]), true);
+    return V || void app_app.navigate(linkTo(views[0]), true);
   }
 });
 function registerView(factory, routeParams) {
@@ -1102,9 +1139,11 @@ function renderView() {
   }));
 }
 function linkTo(view, params) {
-  return app.route.getPath(extend({}, app.route, params, routeMap.get(view)));
+  return app_app.route.getPath(extend({}, app_app.route, params, routeMap.get(view)));
 }
 ;// CONCATENATED MODULE: ./src/index.js
+
+/* harmony default export */ const src = (brew_js_app);
 
 
 
