@@ -3,6 +3,7 @@ import AnimateMixin from "./mixins/AnimateMixin";
 import AnimateSequenceItemMixin from "./mixins/AnimateSequenceItemMixin";
 import AnimateSequenceMixin from "./mixins/AnimateSequenceMixin";
 import ClassNameMixin from "./mixins/ClassNameMixin";
+import ErrorHandlerMixin from "./mixins/ErrorHandlerMixin";
 import FlyoutMixin from "./mixins/FlyoutMixin";
 import FocusStateMixin from "./mixins/FocusStateMixin";
 import LoadingStateMixin from "./mixins/LoadingStateMixin";
@@ -14,6 +15,7 @@ export * from "./mixins/AnimateMixin";
 export * from "./mixins/AnimateSequenceItemMixin";
 export * from "./mixins/AnimateSequenceMixin";
 export * from "./mixins/ClassNameMixin";
+export * from "./mixins/ErrorHandlerMixin";
 export * from "./mixins/FlyoutMixin";
 export * from "./mixins/FocusStateMixin";
 export * from "./mixins/LoadingStateMixin";
@@ -26,6 +28,7 @@ export {
     AnimateSequenceItemMixin,
     AnimateSequenceItemMixin,
     ClassNameMixin,
+    ErrorHandlerMixin,
     FlyoutMixin,
     FocusStateMixin,
     LoadingStateMixin,
@@ -44,5 +47,7 @@ export function useAnimateSequenceMixin(): AnimateSequenceMixin;
 export function useFocusStateMixin(): FocusStateMixin;
 
 export function useLoadingStateMixin(): LoadingStateMixin;
+
+export function useErrorHandlerMixin(): ErrorHandlerMixin;
 
 export function useMixinRef<T extends StatefulMixin>(mixin: MixinRef<T>): T;

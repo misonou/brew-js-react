@@ -4,6 +4,7 @@ import AnimateMixin from "./mixins/AnimateMixin.js";
 import AnimateSequenceItemMixin from "./mixins/AnimateSequenceItemMixin.js";
 import AnimateSequenceMixin from "./mixins/AnimateSequenceMixin.js";
 import ClassNameMixin from "./mixins/ClassNameMixin.js";
+import ErrorHandlerMixin from "./mixins/ErrorHandlerMixin.js";
 import FlyoutMixin from "./mixins/FlyoutMixin.js";
 import FocusStateMixin from "./mixins/FocusStateMixin.js";
 import LoadingStateMixin from "./mixins/LoadingStateMixin.js";
@@ -46,6 +47,12 @@ export function useLoadingStateMixin() {
     })[0].reset();
 }
 
+export function useErrorHandlerMixin() {
+    return useState(function () {
+        return new ErrorHandlerMixin();
+    })[0].reset();
+}
+
 export function useMixinRef(mixin) {
     return mixin.getMixin().reset();
 }
@@ -56,6 +63,7 @@ export {
     AnimateSequenceItemMixin,
     AnimateSequenceMixin,
     ClassNameMixin,
+    ErrorHandlerMixin,
     FlyoutMixin,
     FocusStateMixin,
     LoadingStateMixin,
