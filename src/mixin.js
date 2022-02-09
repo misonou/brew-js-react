@@ -11,46 +11,23 @@ import LoadingStateMixin from "./mixins/LoadingStateMixin.js";
 import StatefulMixin from "./mixins/StatefulMixin.js";
 import ScrollableMixin from "./mixins/ScrollableMixin.js";
 
+function createUseFunction(ctor) {
+    return function () {
+        return useState(function () {
+            return new ctor();
+        })[0].reset();
+    };
+}
+
+export const useAnimateMixin = createUseFunction(AnimateMixin);
+export const useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
+export const useErrorHandlerMixin = createUseFunction(ErrorHandlerMixin);
+export const useFlyoutMixin = createUseFunction(FlyoutMixin);
+export const useFocusStateMixin = createUseFunction(FocusStateMixin);
+export const useLoadingStateMixin = createUseFunction(LoadingStateMixin);
+
 export function useScrollableMixin(options) {
-    return useState(function () {
-        return new ScrollableMixin();
-    })[0].reset().withOptions(options);
-}
-
-export function useFlyoutMixin() {
-    return useState(function () {
-        return new FlyoutMixin();
-    })[0].reset();
-}
-
-export function useAnimateMixin() {
-    return useState(function () {
-        return new AnimateMixin();
-    })[0].reset();
-}
-
-export function useAnimateSequenceMixin() {
-    return useState(function () {
-        return new AnimateSequenceMixin();
-    })[0].reset();
-}
-
-export function useFocusStateMixin() {
-    return useState(function () {
-        return new FocusStateMixin();
-    })[0].reset();
-}
-
-export function useLoadingStateMixin() {
-    return useState(function () {
-        return new LoadingStateMixin();
-    })[0].reset();
-}
-
-export function useErrorHandlerMixin() {
-    return useState(function () {
-        return new ErrorHandlerMixin();
-    })[0].reset();
+    return createUseFunction(ScrollableMixin)().withOptions(options);
 }
 
 export function useMixinRef(mixin) {
