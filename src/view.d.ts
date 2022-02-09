@@ -38,3 +38,19 @@ export function renderView(props: ViewComponentRootProps, ...args: ViewComponent
  * @param params Extra route parameters that supplements or overrides current route parameters.
  */
 export function linkTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): string;
+
+/**
+ * Navigates to path that will render the specified view.
+ * @param view A view component created by {@link registerView}.
+ * @param params Extra route parameters that supplements or overrides current route parameters.
+ * @see {@link linkTo}.
+ */
+export function navigateTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): Promise<Brew.NavigateResult>;
+
+/**
+ * Navigates to path that will render the specified view, replacing current state in browser history.
+ * @param view A view component created by {@link registerView}.
+ * @param params Extra route parameters that supplements or overrides current route parameters.
+ * @see {@link linkTo}.
+ */
+export function redirectTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): Promise<Brew.NavigateResult>;

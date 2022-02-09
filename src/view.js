@@ -53,8 +53,7 @@ definePrototype(ViewContainer, React.Component, {
     },
     getViewComponent: function () {
         var views = this.props.views;
-        var V = any(views, isViewMatched);
-        return V || void app.navigate(linkTo(views[0]), true);
+        return any(views, isViewMatched) || void redirectTo(views[0]);
     }
 });
 
@@ -91,4 +90,12 @@ export function renderView() {
 
 export function linkTo(view, params) {
     return app.route.getPath(extend({}, app.route, params, routeMap.get(view)));
+}
+
+export function navigateTo(view, params) {
+    return app.navigate(linkTo(view, params));
+}
+
+export function redirectTo(view, params) {
+    return app.navigate(linkTo(view, params), true);
 }
