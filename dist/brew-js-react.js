@@ -146,6 +146,7 @@ __webpack_require__.d(src_namespaceObject, {
   "AnimateSequenceMixin": () => (AnimateSequenceMixin),
   "ClassNameMixin": () => (ClassNameMixin),
   "Dialog": () => (Dialog),
+  "ErrorHandlerMixin": () => (ErrorHandlerMixin),
   "FlyoutMixin": () => (FlyoutMixin),
   "FocusStateMixin": () => (FocusStateMixin),
   "LoadingStateMixin": () => (LoadingStateMixin),
@@ -154,13 +155,17 @@ __webpack_require__.d(src_namespaceObject, {
   "StatefulMixin": () => (StatefulMixin),
   "createDialog": () => (createDialog),
   "default": () => (src),
+  "isViewMatched": () => (isViewMatched),
   "linkTo": () => (linkTo),
   "makeTranslation": () => (makeTranslation),
+  "navigateTo": () => (navigateTo),
+  "redirectTo": () => (redirectTo),
   "registerView": () => (registerView),
   "renderView": () => (renderView),
   "useAnimateMixin": () => (useAnimateMixin),
   "useAnimateSequenceMixin": () => (useAnimateSequenceMixin),
   "useAppReady": () => (useAppReady),
+  "useErrorHandlerMixin": () => (useErrorHandlerMixin),
   "useFlyoutMixin": () => (useFlyoutMixin),
   "useFocusStateMixin": () => (useFocusStateMixin),
   "useLanguage": () => (useLanguage),
@@ -797,6 +802,55 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
     });
   }
 });
+;// CONCATENATED MODULE: ./tmp/zeta-dom/events.js
+
+var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/events.js
+
+;// CONCATENATED MODULE: ./src/mixins/ErrorHandlerMixin.js
+
+
+
+
+var ErrorHandlerMixinSuper = StatefulMixin.prototype;
+var emitter = new ZetaEventContainer();
+
+function isErrorMatched(filter, error) {
+  if (isFunction(filter)) {
+    return is(error, filter);
+  }
+
+  return error && error.code === filter;
+}
+
+function ErrorHandlerMixin() {
+  StatefulMixin.call(this);
+}
+definePrototype(ErrorHandlerMixin, StatefulMixin, {
+  "catch": function _catch(filter, callback) {
+    if (!callback) {
+      callback = filter;
+      filter = null;
+    }
+
+    return emitter.add(this, filter ? 'error' : 'default', function (e) {
+      if (!filter || isErrorMatched(filter, e.error)) {
+        return callback(e.error);
+      }
+    });
+  },
+  initElement: function initElement(element, state) {
+    var self = this;
+    ErrorHandlerMixinSuper.initElement.call(self, element, state);
+    zeta_dom_dom.on(element, 'error', function (e) {
+      var data = {
+        error: e.error
+      };
+      return emitter.emit('error', self, data) || emitter.emit('default', self, data);
+    });
+  }
+});
 ;// CONCATENATED MODULE: ./src/mixins/FlyoutMixin.js
 
 
@@ -900,21 +954,28 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
 
 
 
-var FocusStateMixinSuper = ClassNameMixin.prototype;
+var FocusStateMixinSuper = StatefulMixin.prototype;
 function FocusStateMixin() {
-  ClassNameMixin.call(this, ['focused']);
+  StatefulMixin.call(this);
 }
-definePrototype(FocusStateMixin, ClassNameMixin, {
+definePrototype(FocusStateMixin, StatefulMixin, {
   initElement: function initElement(element, state) {
     FocusStateMixinSuper.initElement.call(this, element, state);
     zeta_dom_dom.on(element, {
       focusin: function focusin() {
+        state.focused = true;
         setClass(element, 'focused', true);
       },
       focusout: function focusout() {
+        state.focused = false;
         setClass(element, 'focused', false);
       }
     });
+  },
+  getClassNames: function getClassNames() {
+    return [{
+      focused: !!this.state.focused
+    }];
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/LoadingStateMixin.js
@@ -922,24 +983,32 @@ definePrototype(FocusStateMixin, ClassNameMixin, {
 
 
 
-var LoadingStateMixinSuper = ClassNameMixin.prototype;
+var LoadingStateMixinSuper = StatefulMixin.prototype;
 function LoadingStateMixin() {
-  ClassNameMixin.call(this, ['loading']);
+  StatefulMixin.call(this);
 }
-definePrototype(LoadingStateMixin, ClassNameMixin, {
+definePrototype(LoadingStateMixin, StatefulMixin, {
   initElement: function initElement(element, state) {
     LoadingStateMixinSuper.initElement.call(this, element, state);
     zeta_dom_dom.on(element, {
       asyncStart: function asyncStart() {
+        state.loading = true;
         setClass(element, 'loading', true);
       },
       asyncEnd: function asyncEnd() {
+        state.loading = false;
         setClass(element, 'loading', false);
       },
       cancelled: function cancelled() {
+        state.loading = false;
         setClass(element, 'loading', false);
       }
     });
+  },
+  getClassNames: function getClassNames() {
+    return [{
+      loading: !!this.state.loading
+    }];
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/ScrollableMixin.js
@@ -1000,35 +1069,24 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
 
 
 
+
+
+function createUseFunction(ctor) {
+  return function () {
+    return (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
+      return new ctor();
+    })[0].reset();
+  };
+}
+
+var useAnimateMixin = createUseFunction(AnimateMixin);
+var useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
+var useErrorHandlerMixin = createUseFunction(ErrorHandlerMixin);
+var useFlyoutMixin = createUseFunction(FlyoutMixin);
+var useFocusStateMixin = createUseFunction(FocusStateMixin);
+var useLoadingStateMixin = createUseFunction(LoadingStateMixin);
 function useScrollableMixin(options) {
-  return (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
-    return new ScrollableMixin();
-  })[0].reset().withOptions(options);
-}
-function useFlyoutMixin() {
-  return (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
-    return new FlyoutMixin();
-  })[0].reset();
-}
-function useAnimateMixin() {
-  return (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
-    return new AnimateMixin();
-  })[0].reset();
-}
-function useAnimateSequenceMixin() {
-  return (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
-    return new AnimateSequenceMixin();
-  })[0].reset();
-}
-function useFocusStateMixin() {
-  return (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
-    return new FocusStateMixin();
-  })[0].reset();
-}
-function useLoadingStateMixin() {
-  return (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
-    return new LoadingStateMixin();
-  })[0].reset();
+  return createUseFunction(ScrollableMixin)().withOptions(options);
 }
 function useMixinRef(mixin) {
   return mixin.getMixin().reset();
@@ -1102,13 +1160,13 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
   },
   getViewComponent: function getViewComponent() {
     var views = this.props.views;
-    var V = any(views, function (V) {
-      var params = routeMap.get(V);
-      return params && equal(params, pick(app_app.route, keys(params)));
-    });
-    return V || void app_app.navigate(linkTo(views[0]), true);
+    return any(views, isViewMatched) || void redirectTo(views[0]);
   }
 });
+function isViewMatched(view) {
+  var params = routeMap.get(view);
+  return !!params && equal(params, pick(app_app.route, keys(params)));
+}
 function registerView(factory, routeParams) {
   var Component = function Component(props) {
     var childProps = exclude(props, ['rootProps', 'onComponentLoaded']);
@@ -1140,6 +1198,12 @@ function renderView() {
 }
 function linkTo(view, params) {
   return app_app.route.getPath(extend({}, app_app.route, params, routeMap.get(view)));
+}
+function navigateTo(view, params) {
+  return app_app.navigate(linkTo(view, params));
+}
+function redirectTo(view, params) {
+  return app_app.navigate(linkTo(view, params), true);
 }
 ;// CONCATENATED MODULE: ./src/index.js
 
