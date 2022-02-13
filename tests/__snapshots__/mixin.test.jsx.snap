@@ -1,0 +1,103 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StatefulMixin#state should return the same state in canonical order 1`] = `
+<DocumentFragment>
+  <div
+    class=""
+    data-custom="1"
+  >
+    foo
+  </div>
+  <div
+    class=""
+    data-custom="2"
+  >
+    foo
+  </div>
+</DocumentFragment>
+`;
+
+exports[`StatefulMixin#state should return the same state in canonical order 2`] = `
+<DocumentFragment>
+  <div
+    class=""
+    data-custom="1"
+  >
+    bar
+  </div>
+  <div
+    class=""
+    data-custom="2"
+  >
+    bar
+  </div>
+</DocumentFragment>
+`;
+
+exports[`StaticAttributeMixin should add custom attributes to element 1`] = `
+<DocumentFragment>
+  <div
+    class=""
+    data-custom="foo"
+  />
+</DocumentFragment>
+`;
+
+exports[`StaticAttributeMixin should add custom attributes to element 2`] = `
+<DocumentFragment>
+  <div
+    class=""
+    data-custom="foo"
+  />
+</DocumentFragment>
+`;
+
+exports[`use should accept class name string as second or next argument 1`] = `
+<DocumentFragment>
+  <div
+    class="foo"
+  >
+    foo
+  </div>
+</DocumentFragment>
+`;
+
+exports[`use should accept mutable ref object as first argument 1`] = `
+<DocumentFragment>
+  <div
+    class=""
+    scrollable-target=""
+  >
+    foo
+  </div>
+</DocumentFragment>
+`;
+
+exports[`use should accept ref callback as first argument 1`] = `
+<DocumentFragment>
+  <div
+    class=""
+    scrollable-target=""
+  >
+    foo
+  </div>
+</DocumentFragment>
+`;
+
+exports[`use should apply all class names from mixins 1`] = `
+<DocumentFragment>
+  <div
+    class="foo bar"
+  />
+</DocumentFragment>
+`;
+
+exports[`use should apply all custom attributes from mixins 1`] = `
+<DocumentFragment>
+  <div
+    class=""
+    data-custom-1="foo"
+    data-custom-2="bar"
+  />
+</DocumentFragment>
+`;
