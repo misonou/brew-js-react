@@ -16,6 +16,20 @@ if (toPrimitive) {
     };
 }
 
+function createCallback(translate) {
+    var callback = function (key, data) {
+        return translate(key, data, true);
+    };
+    return extend(callback, {
+        html: function (id, data) {
+            return { __html: translate(id, data) };
+        },
+        lazy: function (id, data) {
+            return new TString(translate.bind(0, id, data, true));
+        }
+    });
+}
+
 export function useLanguage() {
     return useObservableProperty(app, 'language');
 }
@@ -24,26 +38,18 @@ export function makeTranslation(resources, defaultLang) {
     const re = new RegExp('^(' + Object.keys(resources[defaultLang]).join('|') + ')\\.');
     const cache = {};
 
-    function getTranslation(prefix, name, data) {
+    function getTranslation(prefix, name, data, noEncode) {
         var str = ((resources[app.language] || empty)[prefix] || empty)[name] || ((resources[defaultLang] || empty)[prefix] || empty)[name] || '';
-        return str && data !== undefined ? waterpipe(str, data) : str;
+        if (str && (!noEncode || data !== undefined)) {
+            return waterpipe(str, data, { noEncode });
+        }
+        return str;
     }
 
-    function createCallback(translate) {
-        return extend(translate, {
-            html: function (id, data) {
-                return { __html: translate(id, data) };
-            },
-            lazy: function (id, data) {
-                return new TString(this.bind(0, id, data));
-            }
-        });
-    }
-
-    function translate(key, data) {
+    function translate(key, data, noEncode) {
         var prefix = re.test(key) ? RegExp.$1 : '';
         var name = prefix ? key.slice(RegExp.lastMatch.length) : key;
-        return getTranslation(prefix, name, data) || key;
+        return getTranslation(prefix, name, data, noEncode) || key;
     }
 
     function useTranslation() {
@@ -52,9 +58,9 @@ export function makeTranslation(resources, defaultLang) {
         var t = translate;
         if (prefix[0]) {
             var key = prefix.join(' ');
-            t = cache[key] || (cache[key] = createCallback(function (key, data) {
+            t = cache[key] || (cache[key] = createCallback(function (key, data, noEncode) {
                 return single(prefix, function (v) {
-                    return getTranslation(v, key, data);
+                    return getTranslation(v, key, data, noEncode);
                 }) || key;
             }));
         }

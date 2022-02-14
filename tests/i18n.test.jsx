@@ -72,6 +72,30 @@ describe('translate', () => {
         }, 'en');
         expect(translate('prefix.key1')).toBe('prefix.key1');
     });
+
+    it('should not encode reserved characters in normal variant', () => {
+        const { translate } = makeTranslation({
+            en: { prefix: { key: '<>&"\'' } }
+        }, 'en');
+        expect(translate('prefix.key')).toBe('<>&"\'');
+        expect(translate('prefix.key', {})).toBe('<>&"\'');
+    });
+
+    it('should not encode reserved characters in lazy variant', () => {
+        const { translate } = makeTranslation({
+            en: { prefix: { key: '<>&"\'' } }
+        }, 'en');
+        expect(translate.lazy('prefix.key').toString()).toBe('<>&"\'');
+        expect(translate.lazy('prefix.key', {}).toString()).toBe('<>&"\'');
+    });
+
+    it('should encode reserved characters in html variant', () => {
+        const { translate } = makeTranslation({
+            en: { prefix: { key: '<>&"\'' } }
+        }, 'en');
+        expect(translate.html('prefix.key')).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
+        expect(translate.html('prefix.key', {})).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
+    });
 });
 
 describe('useTranslation', () => {
@@ -117,5 +141,32 @@ describe('useTranslation', () => {
         }, 'en');
         const { result } = renderHook(() => useTranslation('prefix2', 'prefix1'));
         expect(result.current.t('key')).toBe('prefix2_value');
+    });
+
+    it('should not encode reserved characters in normal variant', () => {
+        const { useTranslation } = makeTranslation({
+            en: { prefix: { key: '<>&"\'' } }
+        }, 'en');
+        const { result } = renderHook(() => useTranslation('prefix'));
+        expect(result.current.t('key')).toBe('<>&"\'');
+        expect(result.current.t('key', {})).toBe('<>&"\'');
+    });
+
+    it('should not encode reserved characters in lazy variant', () => {
+        const { useTranslation } = makeTranslation({
+            en: { prefix: { key: '<>&"\'' } }
+        }, 'en');
+        const { result } = renderHook(() => useTranslation('prefix'));
+        expect(result.current.t.lazy('key').toString()).toBe('<>&"\'');
+        expect(result.current.t.lazy('key', {}).toString()).toBe('<>&"\'');
+    });
+
+    it('should encode reserved characters in html variant', () => {
+        const { useTranslation } = makeTranslation({
+            en: { prefix: { key: '<>&"\'' } }
+        }, 'en');
+        const { result } = renderHook(() => useTranslation('prefix'));
+        expect(result.current.t.html('key')).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
+        expect(result.current.t.html('key', {})).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
     });
 });
