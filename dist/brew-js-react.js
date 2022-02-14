@@ -392,7 +392,7 @@ function createDialog(props) {
       }
 
       if (props.onRender) {
-        external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.render(external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.onRender, extend({
+        external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.render( /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.onRender, extend({
           closeDialog: closeDialog
         }, props)), root);
       }
@@ -431,7 +431,7 @@ function Dialog(props) {
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
     return dialog.close;
   }, [dialog]);
-  return external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, dialog.root);
+  return /*#__PURE__*/external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, dialog.root);
 }
 ;// CONCATENATED MODULE: ./tmp/brew-js/defaults.js
 
@@ -493,6 +493,18 @@ var waterpipe = __webpack_require__(43);
 
 
 var empty = Object.create(null);
+var toPrimitive = typeof Symbol === 'function' && Symbol.toPrimitive;
+
+function TString(toString) {
+  this.toString = toString;
+}
+
+if (toPrimitive) {
+  TString.prototype[toPrimitive] = function () {
+    return this.toString();
+  };
+}
+
 function useLanguage() {
   return (0,external_zeta_dom_react_.useObservableProperty)(app_app, 'language');
 }
@@ -511,6 +523,9 @@ function makeTranslation(resources, defaultLang) {
         return {
           __html: translate(id, data)
         };
+      },
+      lazy: function lazy(id, data) {
+        return new TString(this.bind(0, id, data));
       }
     });
   }
@@ -1144,7 +1159,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         });
       }
 
-      self.currentView = external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
+      self.currentView = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
         key: app_app.route.view,
         rootProps: exclude(self.props, ['views']),
         onComponentLoaded: function onComponentLoaded(element) {
@@ -1156,7 +1171,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       });
     }
 
-    return external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
+    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
   },
   getViewComponent: function getViewComponent() {
     var views = this.props.views;
@@ -1171,13 +1186,13 @@ function registerView(factory, routeParams) {
   var Component = function Component(props) {
     var childProps = exclude(props, ['rootProps', 'onComponentLoaded']);
     var Component = (0,external_zeta_dom_react_.useAsync)(factory)[0];
-    return external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, props.rootProps, {
+    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, props.rootProps, {
       ref: function ref(element) {
         if (element && Component) {
           (props.onComponentLoaded || noop)(element);
         }
       },
-      children: Component && external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(Component["default"], childProps)
+      children: Component && /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(Component["default"], childProps)
     }));
   };
 
@@ -1192,7 +1207,7 @@ function renderView() {
     props = views.shift();
   }
 
-  return external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewContainer, extend({}, props, {
+  return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewContainer, extend({}, props, {
     views: views
   }));
 }
