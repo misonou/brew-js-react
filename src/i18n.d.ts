@@ -14,6 +14,12 @@ export interface Translate<T> {
      * @param data Data object to be passed to template engine.
      */
     html(key: T, data?: any): { __html: string };
+    /**
+     * Returns a string-coercible object that will convert to translation string when coerced.
+     * @param key Tranlsation key.
+     * @param data Data object to be passed to template engine.
+     */
+    lazy(key: T, data?: any): { [Symbol.toPrimitive](): string; toString(): string };
 }
 
 export interface Translation<T> {

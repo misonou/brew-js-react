@@ -4,6 +4,17 @@ import { extend, makeArray, single } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 
 const empty = Object.create(null);
+const toPrimitive = typeof Symbol === 'function' && Symbol.toPrimitive;
+
+function TString(toString) {
+    this.toString = toString;
+}
+
+if (toPrimitive) {
+    TString.prototype[toPrimitive] = function () {
+        return this.toString();
+    };
+}
 
 export function useLanguage() {
     return useObservableProperty(app, 'language');
@@ -22,6 +33,9 @@ export function makeTranslation(resources, defaultLang) {
         return extend(translate, {
             html: function (id, data) {
                 return { __html: translate(id, data) };
+            },
+            lazy: function (id, data) {
+                return new TString(this.bind(0, id, data));
             }
         });
     }
