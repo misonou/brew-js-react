@@ -60,7 +60,7 @@ export function useLanguage(): string;
 export function makeTranslation<T extends Zeta.Dictionary<object>, K extends keyof T>(resources: T, defaultLang: K) {
     type ResourceObject = typeof resources[K];
     type ResourcePrefix = StringKeysOf<ResourceObject>;
-    type ResourceKey<T extends ResourcePrefix> = StringKeysOf<ResourceObject[T]>;
+    type ResourceKey<T> = { [P in ResourcePrefix]: StringKeysOf<ResourceObject[P]> }[T];
     type ResourceGlobalKey = { [P in ResourcePrefix]: `${P}.${StringKeysOf<ResourceObject[P]>}` }[ResourcePrefix];
 
     interface UseTranslationHook {
