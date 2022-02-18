@@ -1,5 +1,7 @@
-import { definePrototype, inherit, randomId, values } from "../include/zeta-dom/util.js";
+import { createPrivateStore, definePrototype, inherit, randomId, values } from "../include/zeta-dom/util.js";
 import Mixin from "./Mixin.js";
+
+const _ = createPrivateStore();
 
 function MixinRefImpl(mixin) {
     this.mixin = mixin;
@@ -13,9 +15,11 @@ definePrototype(MixinRefImpl, {
 
 export default function StatefulMixin() {
     Mixin.call(this);
-    this.states = {};
-    this.prefix = '';
-    this.counter = 0;
+    _(this, {
+        states: {},
+        prefix: '',
+        counter: 0
+    });
 }
 
 definePrototype(StatefulMixin, Mixin, {
@@ -25,16 +29,16 @@ definePrototype(StatefulMixin, Mixin, {
         return state.ref || (state.ref = new MixinRefImpl(this.clone()));
     },
     get state() {
-        const self = this;
-        const key = self.prefix + self.counter;
-        return self.states[key] || (self.states[key] = self.initState());
+        const obj = _(this);
+        const key = obj.prefix + obj.counter;
+        return obj.states[key] || (obj.states[key] = this.initState());
     },
     reset: function () {
-        this.counter = 0;
+        _(this).counter = 0;
         return this;
     },
     next: function () {
-        this.counter++;
+        _(this).counter++;
         return this;
     },
     getRef: function () {
@@ -48,7 +52,7 @@ definePrototype(StatefulMixin, Mixin, {
         };
     },
     elements: function () {
-        return values(this.states).map(function (v) {
+        return values(_(this).states).map(function (v) {
             return v.element;
         }).filter(function (v) {
             return v;
@@ -60,10 +64,12 @@ definePrototype(StatefulMixin, Mixin, {
     initElement: function (element, state) {
     },
     clone: function () {
-        return inherit(Object.getPrototypeOf(this), {
-            states: this.states,
+        const clone = inherit(Object.getPrototypeOf(this));
+        _(clone, {
+            states: _(this).states,
             prefix: randomId() + '.',
             counter: 0
         });
+        return clone;
     }
 });
