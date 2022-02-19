@@ -505,6 +505,23 @@ if (toPrimitive) {
   };
 }
 
+function createCallback(translate) {
+  var callback = function callback(key, data) {
+    return translate(key, data, true);
+  };
+
+  return extend(callback, {
+    html: function html(id, data) {
+      return {
+        __html: translate(id, data)
+      };
+    },
+    lazy: function lazy(id, data) {
+      return new TString(translate.bind(0, id, data, true));
+    }
+  });
+}
+
 function useLanguage() {
   return (0,external_zeta_dom_react_.useObservableProperty)(app_app, 'language');
 }
@@ -512,28 +529,22 @@ function makeTranslation(resources, defaultLang) {
   var re = new RegExp('^(' + Object.keys(resources[defaultLang]).join('|') + ')\\.');
   var cache = {};
 
-  function getTranslation(prefix, name, data) {
+  function getTranslation(prefix, name, data, noEncode) {
     var str = ((resources[app_app.language] || empty)[prefix] || empty)[name] || ((resources[defaultLang] || empty)[prefix] || empty)[name] || '';
-    return str && data !== undefined ? waterpipe(str, data) : str;
+
+    if (str && (!noEncode || data !== undefined)) {
+      return waterpipe(str, data, {
+        noEncode: noEncode
+      });
+    }
+
+    return str;
   }
 
-  function createCallback(translate) {
-    return extend(translate, {
-      html: function html(id, data) {
-        return {
-          __html: translate(id, data)
-        };
-      },
-      lazy: function lazy(id, data) {
-        return new TString(this.bind(0, id, data));
-      }
-    });
-  }
-
-  function translate(key, data) {
+  function translate(key, data, noEncode) {
     var prefix = re.test(key) ? RegExp.$1 : '';
     var name = prefix ? key.slice(RegExp.lastMatch.length) : key;
-    return getTranslation(prefix, name, data) || key;
+    return getTranslation(prefix, name, data, noEncode) || key;
   }
 
   function useTranslation() {
@@ -543,9 +554,9 @@ function makeTranslation(resources, defaultLang) {
 
     if (prefix[0]) {
       var key = prefix.join(' ');
-      t = cache[key] || (cache[key] = createCallback(function (key, data) {
+      t = cache[key] || (cache[key] = createCallback(function (key, data, noEncode) {
         return single(prefix, function (v) {
-          return getTranslation(v, key, data);
+          return getTranslation(v, key, data, noEncode);
         }) || key;
       }));
     }
@@ -640,6 +651,8 @@ util_define(Mixin, {
 
 
 
+var _ = createPrivateStore();
+
 function MixinRefImpl(mixin) {
   this.mixin = mixin;
 }
@@ -651,9 +664,12 @@ definePrototype(MixinRefImpl, {
 });
 function StatefulMixin() {
   Mixin.call(this);
-  this.states = {};
-  this.prefix = '';
-  this.counter = 0;
+
+  _(this, {
+    states: {},
+    prefix: '',
+    counter: 0
+  });
 }
 definePrototype(StatefulMixin, Mixin, {
   get ref() {
@@ -663,17 +679,18 @@ definePrototype(StatefulMixin, Mixin, {
   },
 
   get state() {
-    var self = this;
-    var key = self.prefix + self.counter;
-    return self.states[key] || (self.states[key] = self.initState());
+    var obj = _(this);
+
+    var key = obj.prefix + obj.counter;
+    return obj.states[key] || (obj.states[key] = this.initState());
   },
 
   reset: function reset() {
-    this.counter = 0;
+    _(this).counter = 0;
     return this;
   },
   next: function next() {
-    this.counter++;
+    _(this).counter++;
     return this;
   },
   getRef: function getRef() {
@@ -687,7 +704,7 @@ definePrototype(StatefulMixin, Mixin, {
     };
   },
   elements: function elements() {
-    return values(this.states).map(function (v) {
+    return values(_(this).states).map(function (v) {
       return v.element;
     }).filter(function (v) {
       return v;
@@ -700,11 +717,15 @@ definePrototype(StatefulMixin, Mixin, {
   },
   initElement: function initElement(element, state) {},
   clone: function clone() {
-    return inherit(Object.getPrototypeOf(this), {
-      states: this.states,
+    var clone = inherit(Object.getPrototypeOf(this));
+
+    _(clone, {
+      states: _(this).states,
       prefix: randomId() + '.',
       counter: 0
     });
+
+    return clone;
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/ClassNameMixin.js
