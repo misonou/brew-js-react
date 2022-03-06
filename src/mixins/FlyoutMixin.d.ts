@@ -1,11 +1,16 @@
 import ClassNameMixin from "./ClassNameMixin";
 import { AnimationEffect } from "./AnimateMixin";
 
+export interface FlyoutMixinOptions {
+    modal?: boolean;
+}
+
 export default class FlyoutMixin extends ClassNameMixin {
     readonly isFlyoutOpened: boolean;
     readonly animating: boolean;
     readonly visible: boolean;
     readonly toggle: ClassNameMixin;
+    modal: boolean;
 
     withEffects(...effects: AnimationEffect[]): this;
     onOpen(callback: () => void): Zeta.UnregisterCallback;

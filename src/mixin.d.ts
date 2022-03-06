@@ -4,7 +4,7 @@ import AnimateSequenceItemMixin from "./mixins/AnimateSequenceItemMixin";
 import AnimateSequenceMixin from "./mixins/AnimateSequenceMixin";
 import ClassNameMixin from "./mixins/ClassNameMixin";
 import ErrorHandlerMixin from "./mixins/ErrorHandlerMixin";
-import FlyoutMixin from "./mixins/FlyoutMixin";
+import FlyoutMixin, { FlyoutMixinOptions } from "./mixins/FlyoutMixin";
 import FocusStateMixin from "./mixins/FocusStateMixin";
 import LoadingStateMixin from "./mixins/LoadingStateMixin";
 import StatefulMixin, { MixinRef } from "./mixins/StatefulMixin";
@@ -38,7 +38,7 @@ export {
 
 export function useScrollableMixin(options?: ScrollableMixinOptions): ScrollableMixin;
 
-export function useFlyoutMixin(): FlyoutMixin;
+export function useFlyoutMixin(options?: FlyoutMixinOptions): FlyoutMixin;
 
 export function useAnimateMixin(): AnimateMixin;
 

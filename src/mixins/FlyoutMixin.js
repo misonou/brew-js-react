@@ -7,6 +7,7 @@ var flyoutMixinCounter = 0;
 
 export default function FlyoutMixin() {
     ClassNameMixin.call(this, ['open', 'closing', 'tweening-in', 'tweening-out']);
+    this.modal = false;
     this.isFlyoutOpened = false;
     this.animating = false;
     this.visible = false;
@@ -29,6 +30,8 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     getCustomAttributes: function () {
         return extend({}, FlyoutMixinSuper.getCustomAttributes.call(this), {
             'is-flyout': ''
+        }, this.modal && {
+            'is-modal': ''
         }, this.effects && {
             'animate-on': 'open',
             'animate-in': this.effects.join(' '),
@@ -73,6 +76,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
             toggle: this.toggle.ref.getMixin()
         });
         defineAliasProperty(mixin, 'isFlyoutOpened', this);
+        defineAliasProperty(mixin, 'modal', this);
         return mixin;
     },
     onClassNameUpdated: function (element, prevState, state) {
