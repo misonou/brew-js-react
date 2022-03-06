@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { extend } from "./include/zeta-dom/util.js";
 import Mixin from "./mixins/Mixin.js";
 import AnimateMixin from "./mixins/AnimateMixin.js";
 import AnimateSequenceItemMixin from "./mixins/AnimateSequenceItemMixin.js";
@@ -11,11 +12,15 @@ import LoadingStateMixin from "./mixins/LoadingStateMixin.js";
 import StatefulMixin from "./mixins/StatefulMixin.js";
 import ScrollableMixin from "./mixins/ScrollableMixin.js";
 
+function extendSelf(options) {
+    extend(this, options);
+}
+
 function createUseFunction(ctor) {
     return function () {
-        return useState(function () {
-            return new ctor();
-        })[0].reset();
+        var mixin = useMixin(ctor);
+        (mixin.withOptions || extendSelf).apply(mixin, arguments);
+        return mixin;
     };
 }
 
@@ -25,9 +30,12 @@ export const useErrorHandlerMixin = createUseFunction(ErrorHandlerMixin);
 export const useFlyoutMixin = createUseFunction(FlyoutMixin);
 export const useFocusStateMixin = createUseFunction(FocusStateMixin);
 export const useLoadingStateMixin = createUseFunction(LoadingStateMixin);
+export const useScrollableMixin = createUseFunction(ScrollableMixin);
 
-export function useScrollableMixin(options) {
-    return createUseFunction(ScrollableMixin)().withOptions(options);
+export function useMixin(ctor) {
+    return useState(function () {
+        return new ctor();
+    })[0].reset();
 }
 
 export function useMixinRef(mixin) {

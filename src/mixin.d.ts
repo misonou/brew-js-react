@@ -50,4 +50,6 @@ export function useLoadingStateMixin(): LoadingStateMixin;
 
 export function useErrorHandlerMixin(): ErrorHandlerMixin;
 
+export function useMixin<T extends typeof Mixin>(mixin: T): InstanceType<T>;
+
 export function useMixinRef<T extends StatefulMixin>(mixin: MixinRef<T>): T;
