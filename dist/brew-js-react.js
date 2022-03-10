@@ -170,6 +170,7 @@ __webpack_require__.d(src_namespaceObject, {
   "useFocusStateMixin": () => (useFocusStateMixin),
   "useLanguage": () => (useLanguage),
   "useLoadingStateMixin": () => (useLoadingStateMixin),
+  "useMixin": () => (useMixin),
   "useMixinRef": () => (useMixinRef),
   "useRouteParam": () => (useRouteParam),
   "useScrollableMixin": () => (useScrollableMixin)
@@ -182,6 +183,7 @@ var external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_ = __webpa
 var _defaultExport = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_;
 /* harmony default export */ const app = (_defaultExport);
 var install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.install,
+    addExtension = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addExtension,
     addDetect = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addDetect;
 
 ;// CONCATENATED MODULE: ./src/include/brew-js/app.js
@@ -327,6 +329,7 @@ var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
     focusable = _lib$dom.focusable,
     focused = _lib$dom.focused,
     setModal = _lib$dom.setModal,
+    releaseModal = _lib$dom.releaseModal,
     retainFocus = _lib$dom.retainFocus,
     releaseFocus = _lib$dom.releaseFocus,
     dom_focus = _lib$dom.focus;
@@ -895,6 +898,7 @@ var FlyoutMixinSuper = ClassNameMixin.prototype;
 var flyoutMixinCounter = 0;
 function FlyoutMixin() {
   ClassNameMixin.call(this, ['open', 'closing', 'tweening-in', 'tweening-out']);
+  this.modal = false;
   this.isFlyoutOpened = false;
   this.animating = false;
   this.visible = false;
@@ -916,6 +920,8 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
   getCustomAttributes: function getCustomAttributes() {
     return extend({}, FlyoutMixinSuper.getCustomAttributes.call(this), {
       'is-flyout': ''
+    }, this.modal && {
+      'is-modal': ''
     }, this.effects && {
       'animate-on': 'open',
       'animate-in': this.effects.join(' '),
@@ -962,6 +968,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
       toggle: this.toggle.ref.getMixin()
     });
     defineAliasProperty(mixin, 'isFlyoutOpened', this);
+    defineAliasProperty(mixin, 'modal', this);
     return mixin;
   },
   onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {
@@ -1107,11 +1114,16 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
 
 
 
+
+function extendSelf(options) {
+  extend(this, options);
+}
+
 function createUseFunction(ctor) {
   return function () {
-    return (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
-      return new ctor();
-    })[0].reset();
+    var mixin = useMixin(ctor);
+    (mixin.withOptions || extendSelf).apply(mixin, arguments);
+    return mixin;
   };
 }
 
@@ -1121,8 +1133,11 @@ var useErrorHandlerMixin = createUseFunction(ErrorHandlerMixin);
 var useFlyoutMixin = createUseFunction(FlyoutMixin);
 var useFocusStateMixin = createUseFunction(FocusStateMixin);
 var useLoadingStateMixin = createUseFunction(LoadingStateMixin);
-function useScrollableMixin(options) {
-  return createUseFunction(ScrollableMixin)().withOptions(options);
+var useScrollableMixin = createUseFunction(ScrollableMixin);
+function useMixin(ctor) {
+  return (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
+    return new ctor();
+  })[0].reset();
 }
 function useMixinRef(mixin) {
   return mixin.getMixin().reset();
