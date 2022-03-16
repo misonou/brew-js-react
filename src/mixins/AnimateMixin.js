@@ -9,23 +9,26 @@ export default function AnimateMixin() {
 
 definePrototype(AnimateMixin, ClassNameMixin, {
     next: function () {
-        this.effects = undefined;
-        this.trigger = undefined;
-        return AnimateMixinSuper.next.call(this);
+        var self = this;
+        self.effects = undefined;
+        self.trigger = undefined;
+        return AnimateMixinSuper.next.call(self);
     },
     with: function (props) {
-        this.effects = props.effects;
-        this.trigger = props.trigger;
-        return this;
+        var self = this;
+        self.effects = props.effects;
+        self.trigger = props.trigger;
+        return self;
     },
     withEffects: function () {
         this.effects = makeArray(arguments);
         return this;
     },
     getCustomAttributes: function () {
-        return extend({}, AnimateMixinSuper.getCustomAttributes.call(this), {
-            'animate-in': (this.effects || []).join(' '),
-            'animate-on': this.trigger || 'show'
+        var self = this;
+        return extend({}, AnimateMixinSuper.getCustomAttributes.call(self), {
+            'animate-in': (self.effects || []).join(' '),
+            'animate-on': self.trigger || 'show'
         });
     }
 });

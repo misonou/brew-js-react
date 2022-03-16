@@ -6,9 +6,10 @@ import ClassNameMixin from "./ClassNameMixin.js";
 const ScrollableMixinSuper = ClassNameMixin.prototype;
 
 export default function ScrollableMixin() {
-    ClassNameMixin.call(this, ['scrollable-x', 'scrollable-x-l', 'scrollable-x-r', 'scrollable-y', 'scrollable-y-d', 'scrollable-y-u']);
-    this.target = Mixin.scrollableTarget;
-    this.pageIndex = 0;
+    var self = this;
+    ClassNameMixin.call(self, ['scrollable-x', 'scrollable-x-l', 'scrollable-x-r', 'scrollable-y', 'scrollable-y-d', 'scrollable-y-u']);
+    self.target = Mixin.scrollableTarget;
+    self.pageIndex = 0;
 }
 
 definePrototype(ScrollableMixin, ClassNameMixin, {

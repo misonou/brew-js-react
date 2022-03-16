@@ -24,9 +24,10 @@ export default function StatefulMixin() {
 
 definePrototype(StatefulMixin, Mixin, {
     get ref() {
-        const state = this.state;
-        this.next();
-        return state.ref || (state.ref = new MixinRefImpl(this.clone()));
+        const self = this;
+        const state = self.state;
+        self.next();
+        return state.ref || (state.ref = new MixinRefImpl(self.clone()));
     },
     get state() {
         const obj = _(this);

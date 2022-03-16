@@ -6,9 +6,10 @@ const AnimateSequenceMixinSuper = AnimateMixin.prototype;
 var animateSequenceMixinCounter = 0;
 
 export default function AnimateSequenceMixin() {
-    AnimateMixin.call(this);
-    this.className = 'brew-anim-' + (++animateSequenceMixinCounter);
-    this.item = new AnimateSequenceItemMixin(this.className);
+    var self = this;
+    AnimateMixin.call(self);
+    self.className = 'brew-anim-' + (++animateSequenceMixinCounter);
+    self.item = new AnimateSequenceItemMixin(self.className);
 }
 
 definePrototype(AnimateSequenceMixin, AnimateMixin, {

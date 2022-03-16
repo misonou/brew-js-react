@@ -23,12 +23,13 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
 });
 
 export default function FlyoutMixin() {
-    ClassNameMixin.call(this, ['open', 'closing', 'tweening-in', 'tweening-out']);
-    this.modal = false;
-    this.isFlyoutOpened = false;
-    this.animating = false;
-    this.visible = false;
-    this.toggle = new FlyoutToggleMixin(this);
+    var self = this;
+    ClassNameMixin.call(self, ['open', 'closing', 'tweening-in', 'tweening-out']);
+    self.modal = false;
+    self.isFlyoutOpened = false;
+    self.animating = false;
+    self.visible = false;
+    self.toggle = new FlyoutToggleMixin(self);
 }
 
 definePrototype(FlyoutMixin, ClassNameMixin, {
@@ -45,13 +46,14 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         return this;
     },
     getCustomAttributes: function () {
-        return extend({}, FlyoutMixinSuper.getCustomAttributes.call(this), {
+        var self = this;
+        return extend({}, FlyoutMixinSuper.getCustomAttributes.call(self), {
             'is-flyout': ''
-        }, this.modal && {
+        }, self.modal && {
             'is-modal': ''
-        }, this.effects && {
+        }, self.effects && {
             'animate-on': 'open',
-            'animate-in': this.effects.join(' '),
+            'animate-in': self.effects.join(' '),
             'animate-out': ''
         });
     },
@@ -89,11 +91,12 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         });
     },
     clone: function () {
-        var mixin = extend(FlyoutMixinSuper.clone.call(this), {
-            toggle: this.toggle.ref.getMixin()
+        var self = this;
+        var mixin = extend(FlyoutMixinSuper.clone.call(self), {
+            toggle: self.toggle.ref.getMixin()
         });
-        defineAliasProperty(mixin, 'isFlyoutOpened', this);
-        defineAliasProperty(mixin, 'modal', this);
+        defineAliasProperty(mixin, 'isFlyoutOpened', self);
+        defineAliasProperty(mixin, 'modal', self);
         return mixin;
     },
     onClassNameUpdated: function (element, prevState, state) {
