@@ -101,19 +101,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     },
     onClassNameUpdated: function (element, prevState, state) {
         var self = this;
-        var isAdded = function (v) {
-            return prevState[v] !== state[v] && state[v];
-        };
-        var isRemoved = function (v) {
-            return prevState[v] !== state[v] && !state[v];
-        };
-        if (isAdded('open')) {
-            self.isFlyoutOpened = true;
-            self.visible = true;
-        } else if (isAdded('closing') || isAdded('tweening-out')) {
-            self.isFlyoutOpened = false;
-        } else if (isRemoved('open')) {
-            self.visible = false;
-        }
+        self.visible = state.open;
+        self.isFlyoutOpened = state.open && !state.closing && !state['tweening-out'];
     }
 });
