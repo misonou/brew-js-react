@@ -1,8 +1,25 @@
 import { definePrototype, each, equal, extend } from "../include/zeta-dom/util.js";
+import { containsOrEquals } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
 import StatefulMixin from "./StatefulMixin.js";
 
 const ClassNameMixinSuper = StatefulMixin.prototype;
+
+function checkState(self, element, state, isAsync) {
+    var classNames = state.classNames;
+    var prev = extend({}, classNames);
+    each(self.classNames, function (i, v) {
+        classNames[v] = element.classList.contains(v);
+    });
+    if (!equal(prev, classNames)) {
+        var cb = self.onClassNameUpdated.bind(self, element, prev, extend({}, classNames));
+        if (isAsync) {
+            setImmediate(cb);
+        } else {
+            cb();
+        }
+    }
+}
 
 export default function ClassNameMixin(classNames) {
     StatefulMixin.call(this);
@@ -12,6 +29,14 @@ export default function ClassNameMixin(classNames) {
 definePrototype(ClassNameMixin, StatefulMixin, {
     getClassNames: function () {
         return [this.state.classNames];
+    },
+    getRef: function () {
+        var self = this;
+        var element = self.state.element;
+        if (element && containsOrEquals(root, element)) {
+            checkState(self, element, self.state, true);
+        }
+        return ClassNameMixinSuper.getRef.call(this);
     },
     initState: function () {
         return {
@@ -23,13 +48,7 @@ definePrototype(ClassNameMixin, StatefulMixin, {
         var self = this;
         dom.watchAttributes(element, ['class'], function (nodes) {
             if (nodes.includes(element)) {
-                const prev = extend({}, state.classNames);
-                each(self.classNames, function (i, v) {
-                    state.classNames[v] = element.classList.contains(v);
-                });
-                if (!equal(prev, state.classNames)) {
-                    self.onClassNameUpdated(element, prev, state.classNames);
-                }
+                checkState(self, element, state);
             }
         });
     },
