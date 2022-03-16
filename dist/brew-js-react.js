@@ -676,9 +676,10 @@ function StatefulMixin() {
 }
 definePrototype(StatefulMixin, Mixin, {
   get ref() {
-    var state = this.state;
-    this.next();
-    return state.ref || (state.ref = new MixinRefImpl(this.clone()));
+    var self = this;
+    var state = self.state;
+    self.next();
+    return state.ref || (state.ref = new MixinRefImpl(self.clone()));
   },
 
   get state() {
@@ -781,23 +782,26 @@ function AnimateMixin() {
 }
 definePrototype(AnimateMixin, ClassNameMixin, {
   next: function next() {
-    this.effects = undefined;
-    this.trigger = undefined;
-    return AnimateMixinSuper.next.call(this);
+    var self = this;
+    self.effects = undefined;
+    self.trigger = undefined;
+    return AnimateMixinSuper.next.call(self);
   },
   "with": function _with(props) {
-    this.effects = props.effects;
-    this.trigger = props.trigger;
-    return this;
+    var self = this;
+    self.effects = props.effects;
+    self.trigger = props.trigger;
+    return self;
   },
   withEffects: function withEffects() {
     this.effects = makeArray(arguments);
     return this;
   },
   getCustomAttributes: function getCustomAttributes() {
-    return extend({}, AnimateMixinSuper.getCustomAttributes.call(this), {
-      'animate-in': (this.effects || []).join(' '),
-      'animate-on': this.trigger || 'show'
+    var self = this;
+    return extend({}, AnimateMixinSuper.getCustomAttributes.call(self), {
+      'animate-in': (self.effects || []).join(' '),
+      'animate-on': self.trigger || 'show'
     });
   }
 });
@@ -821,9 +825,10 @@ definePrototype(AnimateSequenceItemMixin, ClassNameMixin, {
 var AnimateSequenceMixinSuper = AnimateMixin.prototype;
 var animateSequenceMixinCounter = 0;
 function AnimateSequenceMixin() {
-  AnimateMixin.call(this);
-  this.className = 'brew-anim-' + ++animateSequenceMixinCounter;
-  this.item = new AnimateSequenceItemMixin(this.className);
+  var self = this;
+  AnimateMixin.call(self);
+  self.className = 'brew-anim-' + ++animateSequenceMixinCounter;
+  self.item = new AnimateSequenceItemMixin(self.className);
 }
 definePrototype(AnimateSequenceMixin, AnimateMixin, {
   reset: function reset() {
@@ -896,13 +901,33 @@ definePrototype(ErrorHandlerMixin, StatefulMixin, {
 
 var FlyoutMixinSuper = ClassNameMixin.prototype;
 var flyoutMixinCounter = 0;
+
+function FlyoutToggleMixin(mixin) {
+  ClassNameMixin.call(this, ['target-opened']);
+  this.flyoutMixin = mixin;
+}
+
+definePrototype(FlyoutToggleMixin, ClassNameMixin, {
+  getCustomAttributes: function getCustomAttributes() {
+    var element = this.flyoutMixin.elements()[0];
+    return extend({}, FlyoutMixinSuper.getCustomAttributes.call(this), {
+      'toggle': element && '#' + element.id
+    });
+  },
+  clone: function clone() {
+    return extend(FlyoutMixinSuper.clone.call(this), {
+      flyoutMixin: this.flyoutMixin
+    });
+  }
+});
 function FlyoutMixin() {
-  ClassNameMixin.call(this, ['open', 'closing', 'tweening-in', 'tweening-out']);
-  this.modal = false;
-  this.isFlyoutOpened = false;
-  this.animating = false;
-  this.visible = false;
-  this.toggle = new ClassNameMixin(['target-opened']);
+  var self = this;
+  ClassNameMixin.call(self, ['open', 'closing', 'tweening-in', 'tweening-out']);
+  self.modal = false;
+  self.isFlyoutOpened = false;
+  self.animating = false;
+  self.visible = false;
+  self.toggle = new FlyoutToggleMixin(self);
 }
 definePrototype(FlyoutMixin, ClassNameMixin, {
   reset: function reset() {
@@ -918,13 +943,14 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     return this;
   },
   getCustomAttributes: function getCustomAttributes() {
-    return extend({}, FlyoutMixinSuper.getCustomAttributes.call(this), {
+    var self = this;
+    return extend({}, FlyoutMixinSuper.getCustomAttributes.call(self), {
       'is-flyout': ''
-    }, this.modal && {
+    }, self.modal && {
       'is-modal': ''
-    }, this.effects && {
+    }, self.effects && {
       'animate-on': 'open',
-      'animate-in': this.effects.join(' '),
+      'animate-in': self.effects.join(' '),
       'animate-out': ''
     });
   },
@@ -964,11 +990,12 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     });
   },
   clone: function clone() {
-    var mixin = extend(FlyoutMixinSuper.clone.call(this), {
-      toggle: this.toggle.ref.getMixin()
+    var self = this;
+    var mixin = extend(FlyoutMixinSuper.clone.call(self), {
+      toggle: self.toggle.ref.getMixin()
     });
-    defineAliasProperty(mixin, 'isFlyoutOpened', this);
-    defineAliasProperty(mixin, 'modal', this);
+    defineAliasProperty(mixin, 'isFlyoutOpened', self);
+    defineAliasProperty(mixin, 'modal', self);
     return mixin;
   },
   onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {
@@ -1061,9 +1088,10 @@ definePrototype(LoadingStateMixin, StatefulMixin, {
 
 var ScrollableMixinSuper = ClassNameMixin.prototype;
 function ScrollableMixin() {
-  ClassNameMixin.call(this, ['scrollable-x', 'scrollable-x-l', 'scrollable-x-r', 'scrollable-y', 'scrollable-y-d', 'scrollable-y-u']);
-  this.target = Mixin.scrollableTarget;
-  this.pageIndex = 0;
+  var self = this;
+  ClassNameMixin.call(self, ['scrollable-x', 'scrollable-x-l', 'scrollable-x-r', 'scrollable-y', 'scrollable-y-d', 'scrollable-y-u']);
+  self.target = Mixin.scrollableTarget;
+  self.pageIndex = 0;
 }
 definePrototype(ScrollableMixin, ClassNameMixin, {
   withOptions: function withOptions(options) {
@@ -1140,7 +1168,7 @@ function useMixin(ctor) {
   })[0].reset();
 }
 function useMixinRef(mixin) {
-  return mixin.getMixin().reset();
+  return mixin && mixin.getMixin().reset();
 }
 
 ;// CONCATENATED MODULE: ./tmp/brew-js/anim.js
