@@ -39,7 +39,7 @@ export function useMixin(ctor) {
 }
 
 export function useMixinRef(mixin) {
-    return mixin.getMixin().reset();
+    return mixin && mixin.getMixin().reset();
 }
 
 export {

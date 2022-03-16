@@ -10,9 +10,9 @@ interface MixinProps {
 export default abstract class Mixin implements ClassNameProvider {
     static readonly scrollableTarget: StaticAttributeMixin;
 
-    static readonly use(ref: React.ForwardedRef<any>, ...args: (Mixin | string)[]): MixinProps;
-    static readonly use(ref: Mixin, ...args: (Mixin | string)[]): MixinProps;
-    static readonly use(...args: Mixin[]): MixinProps;
+    static readonly use(ref: React.ForwardedRef<any>, ...args: (Mixin | string | undefined)[]): MixinProps;
+    static readonly use(ref: Mixin, ...args: (Mixin | string | undefined)[]): MixinProps;
+    static readonly use(...args: (Mixin | undefined)[]): MixinProps;
 
     /**
      * @private Internal use.
