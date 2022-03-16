@@ -5,13 +5,30 @@ import ClassNameMixin from "./ClassNameMixin.js";
 const FlyoutMixinSuper = ClassNameMixin.prototype;
 var flyoutMixinCounter = 0;
 
+function FlyoutToggleMixin(mixin) {
+    ClassNameMixin.call(this, ['target-opened']);
+    this.flyoutMixin = mixin;
+}
+
+definePrototype(FlyoutToggleMixin, ClassNameMixin, {
+    getCustomAttributes: function () {
+        var element = this.flyoutMixin.elements()[0];
+        return extend({}, FlyoutMixinSuper.getCustomAttributes.call(this), {
+            'toggle': element && ('#' + element.id)
+        });
+    },
+    clone: function () {
+        return extend(FlyoutMixinSuper.clone.call(this), { flyoutMixin: this.flyoutMixin });
+    }
+});
+
 export default function FlyoutMixin() {
     ClassNameMixin.call(this, ['open', 'closing', 'tweening-in', 'tweening-out']);
     this.modal = false;
     this.isFlyoutOpened = false;
     this.animating = false;
     this.visible = false;
-    this.toggle = new ClassNameMixin(['target-opened']);
+    this.toggle = new FlyoutToggleMixin(this);
 }
 
 definePrototype(FlyoutMixin, ClassNameMixin, {
