@@ -3,6 +3,7 @@ import { AnimationEffect } from "./AnimateMixin";
 
 export interface FlyoutMixinOptions {
     modal?: boolean;
+    swipeToDismiss?: Zeta.Direction;
 }
 
 export default class FlyoutMixin extends ClassNameMixin {

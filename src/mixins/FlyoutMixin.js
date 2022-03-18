@@ -48,7 +48,8 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     getCustomAttributes: function () {
         var self = this;
         return extend({}, FlyoutMixinSuper.getCustomAttributes.call(self), {
-            'is-flyout': ''
+            'is-flyout': '',
+            'swipe-dismiss': self.swipeToDismiss
         }, self.modal && {
             'is-modal': ''
         }, self.effects && {
