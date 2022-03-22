@@ -736,7 +736,27 @@ definePrototype(StatefulMixin, Mixin, {
 
 
 
+
 var ClassNameMixinSuper = StatefulMixin.prototype;
+
+function checkState(self, element, state, isAsync) {
+  var classNames = state.classNames;
+  var prev = extend({}, classNames);
+  each(self.classNames, function (i, v) {
+    classNames[v] = element.classList.contains(v);
+  });
+
+  if (!equal(prev, classNames)) {
+    var cb = self.onClassNameUpdated.bind(self, element, prev, extend({}, classNames));
+
+    if (isAsync) {
+      setImmediate(cb);
+    } else {
+      cb();
+    }
+  }
+}
+
 function ClassNameMixin(classNames) {
   StatefulMixin.call(this);
   this.classNames = classNames || [];
@@ -744,6 +764,16 @@ function ClassNameMixin(classNames) {
 definePrototype(ClassNameMixin, StatefulMixin, {
   getClassNames: function getClassNames() {
     return [this.state.classNames];
+  },
+  getRef: function getRef() {
+    var self = this;
+    var element = self.state.element;
+
+    if (element && containsOrEquals(root, element)) {
+      checkState(self, element, self.state, true);
+    }
+
+    return ClassNameMixinSuper.getRef.call(this);
   },
   initState: function initState() {
     return {
@@ -755,14 +785,7 @@ definePrototype(ClassNameMixin, StatefulMixin, {
     var self = this;
     zeta_dom_dom.watchAttributes(element, ['class'], function (nodes) {
       if (nodes.includes(element)) {
-        var prev = extend({}, state.classNames);
-        each(self.classNames, function (i, v) {
-          state.classNames[v] = element.classList.contains(v);
-        });
-
-        if (!equal(prev, state.classNames)) {
-          self.onClassNameUpdated(element, prev, state.classNames);
-        }
+        checkState(self, element, state);
       }
     });
   },
@@ -945,7 +968,8 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
   getCustomAttributes: function getCustomAttributes() {
     var self = this;
     return extend({}, FlyoutMixinSuper.getCustomAttributes.call(self), {
-      'is-flyout': ''
+      'is-flyout': '',
+      'swipe-dismiss': self.swipeToDismiss
     }, self.modal && {
       'is-modal': ''
     }, self.effects && {
@@ -1000,23 +1024,8 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
   },
   onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {
     var self = this;
-
-    var isAdded = function isAdded(v) {
-      return prevState[v] !== state[v] && state[v];
-    };
-
-    var isRemoved = function isRemoved(v) {
-      return prevState[v] !== state[v] && !state[v];
-    };
-
-    if (isAdded('open')) {
-      self.isFlyoutOpened = true;
-      self.visible = true;
-    } else if (isAdded('closing') || isAdded('tweening-out')) {
-      self.isFlyoutOpened = false;
-    } else if (isRemoved('open')) {
-      self.visible = false;
-    }
+    self.visible = state.open;
+    self.isFlyoutOpened = state.open && !state.closing && !state['tweening-out'];
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/FocusStateMixin.js
