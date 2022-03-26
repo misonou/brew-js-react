@@ -1,26 +1,10 @@
 import { defineAliasProperty, definePrototype, each, extend, makeArray } from "../include/zeta-dom/util.js";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
+import FlyoutToggleMixin from "./FlyoutToggleMixin.js";
 
 const FlyoutMixinSuper = ClassNameMixin.prototype;
 var flyoutMixinCounter = 0;
-
-function FlyoutToggleMixin(mixin) {
-    ClassNameMixin.call(this, ['target-opened']);
-    this.flyoutMixin = mixin;
-}
-
-definePrototype(FlyoutToggleMixin, ClassNameMixin, {
-    getCustomAttributes: function () {
-        var element = this.flyoutMixin.elements()[0];
-        return extend({}, FlyoutMixinSuper.getCustomAttributes.call(this), {
-            'toggle': element && ('#' + element.id)
-        });
-    },
-    clone: function () {
-        return extend(FlyoutMixinSuper.clone.call(this), { flyoutMixin: this.flyoutMixin });
-    }
-});
 
 export default function FlyoutMixin() {
     var self = this;

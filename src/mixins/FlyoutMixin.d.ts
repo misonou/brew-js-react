@@ -1,4 +1,5 @@
 import ClassNameMixin from "./ClassNameMixin";
+import FlyoutToggleMixin from "./FlyoutToggleMixin";
 import { AnimationEffect } from "./AnimateMixin";
 
 export interface FlyoutMixinOptions {

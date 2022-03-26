@@ -5,6 +5,7 @@ import AnimateSequenceMixin from "./mixins/AnimateSequenceMixin";
 import ClassNameMixin from "./mixins/ClassNameMixin";
 import ErrorHandlerMixin from "./mixins/ErrorHandlerMixin";
 import FlyoutMixin, { FlyoutMixinOptions } from "./mixins/FlyoutMixin";
+import FlyoutToggleMixin from "./mixins/FlyoutToggleMixin";
 import FocusStateMixin from "./mixins/FocusStateMixin";
 import LoadingStateMixin from "./mixins/LoadingStateMixin";
 import StatefulMixin, { MixinRef } from "./mixins/StatefulMixin";
@@ -30,6 +31,7 @@ export {
     ClassNameMixin,
     ErrorHandlerMixin,
     FlyoutMixin,
+    FlyoutToggleMixin,
     FocusStateMixin,
     LoadingStateMixin,
     StatefulMixin,
