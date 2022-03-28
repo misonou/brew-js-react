@@ -1,15 +1,23 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
+		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew-js-react", ["brew-js", "react", "react-dom", "zeta-dom", "zeta-dom-react", "waterpipe"], factory);
+		define("brew-js-react", ["brew-js", "react", "react-dom", "zeta-dom", "zeta-dom-react", "waterpipe", "jQuery"], factory);
 	else if(typeof exports === 'object')
-		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
+		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
 	else
-		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["zeta"], root["zeta-dom-react"], root["waterpipe"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__) {
+		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["zeta"], root["zeta-dom-react"], root["waterpipe"], root["jQuery"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__, __WEBPACK_EXTERNAL_MODULE__145__) {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
+
+/***/ 145:
+/***/ ((module) => {
+
+"use strict";
+module.exports = __WEBPACK_EXTERNAL_MODULE__145__;
+
+/***/ }),
 
 /***/ 28:
 /***/ ((module) => {
@@ -56,6 +64,19 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__318__;
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__654__;
+
+/***/ }),
+
+/***/ 346:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/// <reference types="jq-scrollable" />
+// @ts-nocheck
+
+/** @type {JQueryStatic} */
+var jQuery = window.jQuery || __webpack_require__(145);
+
+module.exports = jQuery;
 
 /***/ }),
 
@@ -148,6 +169,7 @@ __webpack_require__.d(src_namespaceObject, {
   "Dialog": () => (Dialog),
   "ErrorHandlerMixin": () => (ErrorHandlerMixin),
   "FlyoutMixin": () => (FlyoutMixin),
+  "FlyoutToggleMixin": () => (FlyoutToggleMixin),
   "FocusStateMixin": () => (FocusStateMixin),
   "LoadingStateMixin": () => (LoadingStateMixin),
   "Mixin": () => (Mixin),
@@ -918,31 +940,34 @@ definePrototype(ErrorHandlerMixin, StatefulMixin, {
     });
   }
 });
+;// CONCATENATED MODULE: ./src/mixins/FlyoutToggleMixin.js
+
+
+var FlyoutToggleMixinSuper = ClassNameMixin.prototype;
+function FlyoutToggleMixin(mixin) {
+  ClassNameMixin.call(this, ['target-opened']);
+  this.flyoutMixin = mixin;
+}
+definePrototype(FlyoutToggleMixin, ClassNameMixin, {
+  getCustomAttributes: function getCustomAttributes() {
+    var element = this.flyoutMixin.elements()[0];
+    return extend({}, FlyoutToggleMixinSuper.getCustomAttributes.call(this), {
+      'toggle': element && '#' + element.id
+    });
+  },
+  clone: function clone() {
+    return extend(FlyoutToggleMixinSuper.clone.call(this), {
+      flyoutMixin: this.flyoutMixin
+    });
+  }
+});
 ;// CONCATENATED MODULE: ./src/mixins/FlyoutMixin.js
+
 
 
 
 var FlyoutMixinSuper = ClassNameMixin.prototype;
 var flyoutMixinCounter = 0;
-
-function FlyoutToggleMixin(mixin) {
-  ClassNameMixin.call(this, ['target-opened']);
-  this.flyoutMixin = mixin;
-}
-
-definePrototype(FlyoutToggleMixin, ClassNameMixin, {
-  getCustomAttributes: function getCustomAttributes() {
-    var element = this.flyoutMixin.elements()[0];
-    return extend({}, FlyoutMixinSuper.getCustomAttributes.call(this), {
-      'toggle': element && '#' + element.id
-    });
-  },
-  clone: function clone() {
-    return extend(FlyoutMixinSuper.clone.call(this), {
-      flyoutMixin: this.flyoutMixin
-    });
-  }
-});
 function FlyoutMixin() {
   var self = this;
   ClassNameMixin.call(self, ['open', 'closing', 'tweening-in', 'tweening-out']);
@@ -1090,7 +1115,10 @@ definePrototype(LoadingStateMixin, StatefulMixin, {
     }];
   }
 });
+// EXTERNAL MODULE: ./src/include/external/jquery.js
+var jquery = __webpack_require__(346);
 ;// CONCATENATED MODULE: ./src/mixins/ScrollableMixin.js
+
 
 
 
@@ -1101,6 +1129,7 @@ function ScrollableMixin() {
   ClassNameMixin.call(self, ['scrollable-x', 'scrollable-x-l', 'scrollable-x-r', 'scrollable-y', 'scrollable-y-d', 'scrollable-y-u']);
   self.target = Mixin.scrollableTarget;
   self.pageIndex = 0;
+  self.scrolling = false;
 }
 definePrototype(ScrollableMixin, ClassNameMixin, {
   withOptions: function withOptions(options) {
@@ -1123,11 +1152,19 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
   },
   initElement: function initElement(element, state) {
     var self = this;
-    app_app.on(element, 'statechange', function (e) {
-      if ('pageIndex' in e.newValues) {
-        extend(self, {
-          pageIndex: e.newValues.pageIndex
-        });
+    app_app.on(element, {
+      statechange: function statechange(e) {
+        if ('pageIndex' in e.newValues) {
+          extend(self, {
+            pageIndex: e.newValues.pageIndex
+          });
+        }
+      },
+      scrollStart: function scrollStart() {
+        self.scrolling = true;
+      },
+      scrollStop: function scrollStop() {
+        self.scrolling = false;
       }
     }, true);
   },
@@ -1137,7 +1174,14 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
     return mixin;
   }
 });
+each('destroy enable disable setOptions refresh scrollPadding stop scrollLeft scrollTop scrollBy scrollTo scrollByPage scrollToPage scrollToElement', function (i, v) {
+  defineHiddenProperty(ScrollableMixin.prototype, v, function () {
+    var obj = jquery(this.elements());
+    return obj.scrollable.apply(obj, [v].concat(makeArray(arguments)));
+  });
+});
 ;// CONCATENATED MODULE: ./src/mixin.js
+
 
 
 
