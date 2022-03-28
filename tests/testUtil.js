@@ -1,7 +1,8 @@
 import { jest } from "@jest/globals";
-import brew, { app } from "brew-js/app";
-import { } from "brew-js/extension/router";
-import { } from "brew-js/extension/i18n";
+import brew from "brew-js/core";
+import { app } from "brew-js/app";
+import router from "brew-js/extension/router";
+import i18n from "brew-js/extension/i18n";
 import { } from 'regenerator-runtime/runtime';
 import { noop } from "zeta-dom/util";
 
@@ -24,7 +25,7 @@ export function delay(milliseconds) {
 }
 
 export function initApp(callback) {
-    brew(callback || noop);
+    brew.with(router, i18n)(callback || noop);
     return app.ready;
 }
 
