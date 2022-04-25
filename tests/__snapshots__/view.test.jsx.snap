@@ -12,6 +12,18 @@ exports[`renderView should cause redirection to the first match view if none was
 </DocumentFragment>
 `;
 
+exports[`renderView should match views with more params first 1`] = `
+<DocumentFragment>
+  <div>
+    <div>
+      <div>
+        baz
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`renderView should pass props to view container 1`] = `
 <DocumentFragment>
   <div>

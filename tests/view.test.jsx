@@ -139,7 +139,7 @@ describe('renderView', () => {
     });
 
     it('should cause redirection to the first match view if none was matched', async () => {
-        const { asFragment } = render(<div>{renderView(Foo, Bar)}</div>)
+        const { asFragment } = render(<div>{renderView(Foo, Bar, Baz)}</div>)
         await screen.findByText('foo');
         expect(asFragment()).toMatchSnapshot();
         expect(app.path).toBe('/foo');
@@ -149,6 +149,14 @@ describe('renderView', () => {
         const { asFragment } = render(<div>{renderView({ className: 'foo' }, Foo)}</div>)
         await screen.findByText('foo');
         expect(asFragment()).toMatchSnapshot();
+    });
+
+    it('should match views with more params first', async () => {
+        await app.navigate('/foo/baz');
+        const { asFragment } = render(<div>{renderView(Foo, Bar, Baz)}</div>)
+        await screen.findByText('baz');
+        expect(asFragment()).toMatchSnapshot();
+        expect(app.path).toBe('/foo/baz');
     });
 });
 

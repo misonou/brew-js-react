@@ -1,6 +1,6 @@
 import React from "react";
 import { useAsync } from "zeta-dom-react";
-import { any, definePrototype, each, exclude, extend, isFunction, makeArray, noop, pick, setImmediate } from "./include/zeta-dom/util.js";
+import { any, definePrototype, each, exclude, extend, isFunction, keys, makeArray, noop, pick, setImmediate } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 
@@ -52,8 +52,8 @@ definePrototype(ViewContainer, React.Component, {
         return React.createElement(React.Fragment, null, self.prevView, self.currentView);
     },
     getViewComponent: function () {
-        var views = this.props.views;
-        return any(views, isViewMatched) || void redirectTo(views[0]);
+        var props = this.props;
+        return any(props.views, isViewMatched) || void redirectTo(props.defaultView);
     }
 });
 
@@ -84,6 +84,7 @@ export function registerView(factory, routeParams) {
         }
     });
     routeMap.set(Component, {
+        matchCount: keys(routeParams).length,
         matchers: routeParams,
         params: pick(routeParams, function (v) {
             return typeof v === 'string';
@@ -95,7 +96,11 @@ export function registerView(factory, routeParams) {
 export function renderView() {
     var views = makeArray(arguments);
     var rootProps = isFunction(views[0]) ? {} : views.shift();
-    return React.createElement(ViewContainer, { rootProps, views });
+    var defaultView = views[0];
+    views.sort(function (a, b) {
+        return (routeMap.get(b) || {}).matchCount - (routeMap.get(a) || {}).matchCount;
+    });
+    return React.createElement(ViewContainer, { rootProps, views, defaultView });
 }
 
 export function linkTo(view, params) {
