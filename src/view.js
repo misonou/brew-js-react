@@ -1,6 +1,6 @@
 import React from "react";
 import { useAsync } from "zeta-dom-react";
-import { any, definePrototype, equal, exclude, extend, keys, makeArray, noop, pick, setImmediate } from "./include/zeta-dom/util.js";
+import { any, definePrototype, equal, exclude, extend, isFunction, keys, makeArray, noop, pick, setImmediate } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 
@@ -40,7 +40,7 @@ definePrototype(ViewContainer, React.Component, {
             }
             self.currentView = React.createElement(V, {
                 key: app.route.view,
-                rootProps: exclude(self.props, ['views']),
+                rootProps: self.props.rootProps,
                 onComponentLoaded: function (element) {
                     self.currentElement = element;
                     setImmediate(function () {
@@ -64,7 +64,6 @@ export function isViewMatched(view) {
 
 export function registerView(factory, routeParams) {
     var Component = function (props) {
-        var childProps = exclude(props, ['rootProps', 'onComponentLoaded']);
         var Component = useAsync(factory)[0];
         return React.createElement('div', extend({}, props.rootProps, {
             ref: function (element) {
@@ -72,7 +71,7 @@ export function registerView(factory, routeParams) {
                     (props.onComponentLoaded || noop)(element);
                 }
             },
-            children: Component && React.createElement(Component.default, childProps)
+            children: Component && React.createElement(Component.default)
         }));
     };
     routeMap.set(Component, routeParams);
@@ -81,11 +80,8 @@ export function registerView(factory, routeParams) {
 
 export function renderView() {
     var views = makeArray(arguments);
-    var props;
-    if (views[0] && typeof views[0] !== 'function') {
-        props = views.shift();
-    }
-    return React.createElement(ViewContainer, extend({}, props, { views }));
+    var rootProps = isFunction(views[0]) ? {} : views.shift();
+    return React.createElement(ViewContainer, { rootProps, views });
 }
 
 export function linkTo(view, params) {
