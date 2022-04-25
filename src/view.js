@@ -1,6 +1,6 @@
 import React from "react";
 import { useAsync } from "zeta-dom-react";
-import { any, definePrototype, each, exclude, extend, isFunction, keys, makeArray, noop, pick, setImmediate } from "./include/zeta-dom/util.js";
+import { any, definePrototype, each, exclude, extend, isFunction, keys, makeArray, noop, pick, randomId, setImmediate } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 
@@ -47,7 +47,7 @@ definePrototype(ViewContainer, React.Component, {
                 });
             }
             self.currentView = React.createElement(V, {
-                key: app.route.view,
+                key: routeMap.get(V).id,
                 rootProps: self.props.rootProps,
                 onComponentLoaded: function (element) {
                     self.currentElement = element;
@@ -92,6 +92,7 @@ export function registerView(factory, routeParams) {
         }
     });
     routeMap.set(Component, {
+        id: randomId(),
         matchCount: keys(routeParams).length,
         matchers: routeParams,
         params: pick(routeParams, function (v) {
