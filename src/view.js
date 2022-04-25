@@ -6,11 +6,19 @@ import { app } from "./app.js";
 
 const routeMap = new Map();
 
+let stateId;
+
 function ViewContainer() {
     /** @type {any} */
     var self = this;
     React.Component.apply(self, arguments);
     self.mounted = false;
+    if (!stateId) {
+        stateId = history.state;
+        app.on('navigate', function () {
+            stateId = history.state;
+        });
+    }
     self.componentWillUnmount = app.on('navigate', function () {
         if (self.mounted && self.getViewComponent()) {
             self.forceUpdate();
@@ -53,7 +61,7 @@ definePrototype(ViewContainer, React.Component, {
     },
     getViewComponent: function () {
         var props = this.props;
-        return any(props.views, isViewMatched) || void redirectTo(props.defaultView);
+        return any(props.views, isViewMatched) || (history.state === stateId && void redirectTo(props.defaultView));
     }
 });
 

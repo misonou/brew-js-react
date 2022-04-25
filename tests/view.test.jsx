@@ -158,6 +158,18 @@ describe('renderView', () => {
         expect(asFragment()).toMatchSnapshot();
         expect(app.path).toBe('/foo/baz');
     });
+
+    it('should not trigger redirection when app is about to navigate', async () => {
+        const Component = function ({ view }) {
+            return renderView(view);
+        };
+        const promise = app.navigate('/bar');
+        const { rerender } = render(<Component view={Foo} />);
+        rerender(<Component view={Bar} />);
+
+        await expect(promise).resolves.toBeTruthy();
+        expect(app.path).toBe('/bar');
+    });
 });
 
 describe('linkTo', () => {
