@@ -1,6 +1,6 @@
 import React from "react";
 import { useAsync } from "zeta-dom-react";
-import { any, definePrototype, equal, exclude, extend, isFunction, keys, makeArray, noop, pick, setImmediate } from "./include/zeta-dom/util.js";
+import { any, definePrototype, each, exclude, extend, isFunction, makeArray, noop, pick, setImmediate } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 
@@ -59,7 +59,10 @@ definePrototype(ViewContainer, React.Component, {
 
 export function isViewMatched(view) {
     var params = routeMap.get(view);
-    return !!params && equal(params, pick(app.route, keys(params)));
+    return !!params && !any(params.matchers, function (v, i) {
+        var value = app.route[i] || '';
+        return isFunction(v) ? !v(value) : (v || '') !== value;
+    });
 }
 
 export function registerView(factory, routeParams) {
@@ -74,7 +77,18 @@ export function registerView(factory, routeParams) {
             children: Component && React.createElement(Component.default)
         }));
     };
-    routeMap.set(Component, routeParams);
+    routeParams = extend({}, routeParams);
+    each(routeParams, function (i, v) {
+        if (v instanceof RegExp) {
+            routeParams[i] = v.test.bind(v);
+        }
+    });
+    routeMap.set(Component, {
+        matchers: routeParams,
+        params: pick(routeParams, function (v) {
+            return typeof v === 'string';
+        })
+    });
     return Component;
 }
 
@@ -85,7 +99,7 @@ export function renderView() {
 }
 
 export function linkTo(view, params) {
-    return app.route.getPath(extend({}, app.route, params, routeMap.get(view)));
+    return app.route.getPath(extend({}, app.route, params, (routeMap.get(view) || {}).params));
 }
 
 export function navigateTo(view, params) {

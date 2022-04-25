@@ -1,7 +1,8 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { linkTo, registerView, renderView } from "src/view";
-import { initApp } from "./testUtil";
+import { isViewMatched, linkTo, registerView, renderView } from "src/view";
+import { initApp, mockFn, verifyCalls } from "./testUtil";
+import { async } from "regenerator-runtime";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
 let app;
@@ -9,6 +10,10 @@ let app;
 let Foo;
 /** @type {import("src/view").ViewComponent<{}>} */
 let Bar;
+/** @type {import("src/view").ViewComponent<{}>} */
+let Baz;
+
+let bazCallback = mockFn(v => v === 'baz');
 
 beforeAll(async () => {
     app = await initApp(app => {
@@ -37,10 +42,92 @@ beforeAll(async () => {
             }
         }
     }, { view: 'bar' })
+
+    Baz = registerView(async () => {
+        return {
+            default: () => {
+                return (<div>baz</div>)
+            }
+        }
+    }, { view: 'foo', baz: /./ })
 });
 
 beforeEach(async () => {
     await app.navigate(app.initialPath);
+});
+
+describe('isViewMatched', () => {
+    it('should match route params with regex', async () => {
+        const BazRegex = registerView(async () => {
+            return {
+                default: () => {
+                    return (<div>baz_regex</div>)
+                }
+            }
+        }, { view: 'foo', baz: /^\d+$/ });
+
+        await app.navigate('/foo/baz');
+        expect(isViewMatched(Baz)).toBe(true);
+        expect(isViewMatched(BazRegex)).toBe(false);
+    });
+
+    it('should match route params with callback', async () => {
+        const BazCb = registerView(async () => {
+            return {
+                default: () => {
+                    return (<div>baz_cb</div>)
+                }
+            }
+        }, { view: 'foo', baz: bazCallback });
+
+        await app.navigate('/foo/baz');
+        expect(isViewMatched(BazCb)).toBe(true);
+        verifyCalls(bazCallback, [['baz']]);
+        bazCallback.mockClear();
+
+        await app.navigate('/foo/baz2');
+        expect(isViewMatched(BazCb)).toBe(false);
+        verifyCalls(bazCallback, [['baz2']]);
+    });
+
+    it('should match null', async () => {
+        const FooBazNull = registerView(async () => {
+            return {
+                default: () => {
+                    return (<div>foo_baz_empty</div>)
+                }
+            }
+        }, { view: 'foo', baz: null });
+
+        await app.navigate('/foo');
+        expect(isViewMatched(FooBazNull)).toBe(true);
+    });
+
+    it('should match null with empty string', async () => {
+        const FooBazEmpty = registerView(async () => {
+            return {
+                default: () => {
+                    return (<div>foo_baz_empty</div>)
+                }
+            }
+        }, { view: 'foo', baz: '' });
+
+        await app.navigate('/foo');
+        expect(isViewMatched(FooBazEmpty)).toBe(true);
+    });
+
+    it('should match null with empty regex', async () => {
+        const FooBazEmptyRegex = registerView(async () => {
+            return {
+                default: () => {
+                    return (<div>foo_baz_empty_regex</div>)
+                }
+            }
+        }, { view: 'foo', baz: /^$/ });
+
+        await app.navigate('/foo');
+        expect(isViewMatched(FooBazEmptyRegex)).toBe(true);
+    });
 });
 
 describe('renderView', () => {

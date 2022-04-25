@@ -7,7 +7,7 @@ export type ViewComponent<P> = React.FC<P>;
  * @param factory A callback that returns a promise resolving a React component, typically using async `import`.
  * @param params A dictionary containing route parameters.
  */
-export function registerView<P>(factory: () => Promise<{ default: React.ComponentType<P> }>, params: Zeta.Dictionary<string>): ViewComponent<P>;
+export function registerView<P>(factory: () => Promise<{ default: React.ComponentType<P> }>, params: Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>): ViewComponent<P>;
 
 /**
  * Determines whether a registered view component matches current route state.
