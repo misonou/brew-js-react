@@ -249,10 +249,14 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     combineFn = _lib$util.combineFn,
     executeOnce = _lib$util.executeOnce,
     createPrivateStore = _lib$util.createPrivateStore,
+    util_setTimeout = _lib$util.setTimeout,
     setTimeoutOnce = _lib$util.setTimeoutOnce,
+    util_setInterval = _lib$util.setInterval,
+    setIntervalSafe = _lib$util.setIntervalSafe,
     util_setImmediate = _lib$util.setImmediate,
     setImmediateOnce = _lib$util.setImmediateOnce,
     throwNotFunction = _lib$util.throwNotFunction,
+    errorWithCode = _lib$util.errorWithCode,
     keys = _lib$util.keys,
     values = _lib$util.values,
     util_hasOwnProperty = _lib$util.hasOwnProperty,
@@ -293,7 +297,6 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
 var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
     domReady = domUtil_lib$util.domReady,
     tagName = domUtil_lib$util.tagName,
-    domUtil_is = domUtil_lib$util.is,
     isVisible = domUtil_lib$util.isVisible,
     matchSelector = domUtil_lib$util.matchSelector,
     comparePosition = domUtil_lib$util.comparePosition,
@@ -320,11 +323,6 @@ var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
     getContentRect = domUtil_lib$util.getContentRect,
     scrollBy = domUtil_lib$util.scrollBy,
     scrollIntoView = domUtil_lib$util.scrollIntoView,
-    createRange = domUtil_lib$util.createRange,
-    rangeIntersects = domUtil_lib$util.rangeIntersects,
-    rangeEquals = domUtil_lib$util.rangeEquals,
-    rangeCovers = domUtil_lib$util.rangeCovers,
-    compareRangePosition = domUtil_lib$util.compareRangePosition,
     makeSelection = domUtil_lib$util.makeSelection,
     getRect = domUtil_lib$util.getRect,
     getRects = domUtil_lib$util.getRects,
@@ -354,6 +352,7 @@ var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
     releaseModal = _lib$dom.releaseModal,
     retainFocus = _lib$dom.retainFocus,
     releaseFocus = _lib$dom.releaseFocus,
+    iterateFocusPath = _lib$dom.iterateFocusPath,
     dom_focus = _lib$dom.focus;
 
 ;// CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
@@ -1240,12 +1239,21 @@ var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_bre
 
 
 var routeMap = new Map();
+var stateId;
 
 function ViewContainer() {
   /** @type {any} */
   var self = this;
   external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(self, arguments);
   self.mounted = false;
+
+  if (!stateId) {
+    stateId = history.state;
+    app_app.on('navigate', function () {
+      stateId = history.state;
+    });
+  }
+
   self.componentWillUnmount = app_app.on('navigate', function () {
     if (self.mounted && self.getViewComponent()) {
       self.forceUpdate();
@@ -1277,8 +1285,8 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       }
 
       self.currentView = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
-        key: app_app.route.view,
-        rootProps: exclude(self.props, ['views']),
+        key: routeMap.get(V).id,
+        rootProps: self.props.rootProps,
         onComponentLoaded: function onComponentLoaded(element) {
           self.currentElement = element;
           util_setImmediate(function () {
@@ -1291,17 +1299,19 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
     return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
   },
   getViewComponent: function getViewComponent() {
-    var views = this.props.views;
-    return any(views, isViewMatched) || void redirectTo(views[0]);
+    var props = this.props;
+    return any(props.views, isViewMatched) || history.state === stateId && void redirectTo(props.defaultView);
   }
 });
 function isViewMatched(view) {
   var params = routeMap.get(view);
-  return !!params && equal(params, pick(app_app.route, keys(params)));
+  return !!params && !any(params.matchers, function (v, i) {
+    var value = app_app.route[i] || '';
+    return isFunction(v) ? !v(value) : (v || '') !== value;
+  });
 }
 function registerView(factory, routeParams) {
   var Component = function Component(props) {
-    var childProps = exclude(props, ['rootProps', 'onComponentLoaded']);
     var Component = (0,external_zeta_dom_react_.useAsync)(factory)[0];
     return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, props.rootProps, {
       ref: function ref(element) {
@@ -1309,27 +1319,41 @@ function registerView(factory, routeParams) {
           (props.onComponentLoaded || noop)(element);
         }
       },
-      children: Component && /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(Component["default"], childProps)
+      children: Component && /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(Component["default"])
     }));
   };
 
-  routeMap.set(Component, routeParams);
+  routeParams = extend({}, routeParams);
+  each(routeParams, function (i, v) {
+    if (v instanceof RegExp) {
+      routeParams[i] = v.test.bind(v);
+    }
+  });
+  routeMap.set(Component, {
+    id: randomId(),
+    matchCount: keys(routeParams).length,
+    matchers: routeParams,
+    params: pick(routeParams, function (v) {
+      return typeof v === 'string';
+    })
+  });
   return Component;
 }
 function renderView() {
   var views = makeArray(arguments);
-  var props;
-
-  if (views[0] && typeof views[0] !== 'function') {
-    props = views.shift();
-  }
-
-  return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewContainer, extend({}, props, {
-    views: views
-  }));
+  var rootProps = isFunction(views[0]) ? {} : views.shift();
+  var defaultView = views[0];
+  views.sort(function (a, b) {
+    return (routeMap.get(b) || {}).matchCount - (routeMap.get(a) || {}).matchCount;
+  });
+  return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewContainer, {
+    rootProps: rootProps,
+    views: views,
+    defaultView: defaultView
+  });
 }
 function linkTo(view, params) {
-  return app_app.route.getPath(extend({}, app_app.route, params, routeMap.get(view)));
+  return app_app.route.getPath(extend({}, app_app.route, params, (routeMap.get(view) || {}).params));
 }
 function navigateTo(view, params) {
   return app_app.navigate(linkTo(view, params));
