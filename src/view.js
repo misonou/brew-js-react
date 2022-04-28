@@ -67,7 +67,7 @@ definePrototype(ViewContainer, React.Component, {
 
 export function isViewMatched(view) {
     var params = routeMap.get(view);
-    return !!params && !any(params.matchers, function (v, i) {
+    return !!params && false === any(params.matchers, function (v, i) {
         var value = app.route[i] || '';
         return isFunction(v) ? !v(value) : (v || '') !== value;
     });

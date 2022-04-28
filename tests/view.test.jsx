@@ -128,6 +128,32 @@ describe('isViewMatched', () => {
         await app.navigate('/foo');
         expect(isViewMatched(FooBazEmptyRegex)).toBe(true);
     });
+
+    it('should not match non-null value with null', async () => {
+        const FooBazNull = registerView(async () => {
+            return {
+                default: () => {
+                    return (<div>foo_baz_empty</div>)
+                }
+            }
+        }, { view: 'foo', baz: null });
+
+        await app.navigate('/foo/baz');
+        expect(isViewMatched(FooBazNull)).toBe(false);
+    });
+
+    it('should not match non-null value with empty string', async () => {
+        const FooBazEmpty = registerView(async () => {
+            return {
+                default: () => {
+                    return (<div>foo_baz_empty</div>)
+                }
+            }
+        }, { view: 'foo', baz: '' });
+
+        await app.navigate('/foo/baz');
+        expect(isViewMatched(FooBazEmpty)).toBe(false);
+    });
 });
 
 describe('renderView', () => {
