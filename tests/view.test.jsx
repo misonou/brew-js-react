@@ -20,8 +20,9 @@ beforeAll(async () => {
         app.useRouter({
             baseUrl: '/',
             routes: [
-                '/{view:foo}/{baz?}',
-                '/{view}/*',
+                '/{dummy}/{view:foo}/{baz?}',
+                '/{dummy}/{view}/*',
+                '/{dummy}',
                 '/*'
             ]
         });
@@ -53,7 +54,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-    await app.navigate(app.initialPath);
+    await app.navigate('/dummy');
 });
 
 describe('isViewMatched', () => {
@@ -66,7 +67,7 @@ describe('isViewMatched', () => {
             }
         }, { view: 'foo', baz: /^\d+$/ });
 
-        await app.navigate('/foo/baz');
+        await app.navigate('/dummy/foo/baz');
         expect(isViewMatched(Baz)).toBe(true);
         expect(isViewMatched(BazRegex)).toBe(false);
     });
@@ -80,12 +81,12 @@ describe('isViewMatched', () => {
             }
         }, { view: 'foo', baz: bazCallback });
 
-        await app.navigate('/foo/baz');
+        await app.navigate('/dummy/foo/baz');
         expect(isViewMatched(BazCb)).toBe(true);
         verifyCalls(bazCallback, [['baz']]);
         bazCallback.mockClear();
 
-        await app.navigate('/foo/baz2');
+        await app.navigate('/dummy/foo/baz2');
         expect(isViewMatched(BazCb)).toBe(false);
         verifyCalls(bazCallback, [['baz2']]);
     });
@@ -99,7 +100,7 @@ describe('isViewMatched', () => {
             }
         }, { view: 'foo', baz: null });
 
-        await app.navigate('/foo');
+        await app.navigate('/dummy/foo');
         expect(isViewMatched(FooBazNull)).toBe(true);
     });
 
@@ -112,7 +113,7 @@ describe('isViewMatched', () => {
             }
         }, { view: 'foo', baz: '' });
 
-        await app.navigate('/foo');
+        await app.navigate('/dummy/foo');
         expect(isViewMatched(FooBazEmpty)).toBe(true);
     });
 
@@ -125,7 +126,7 @@ describe('isViewMatched', () => {
             }
         }, { view: 'foo', baz: /^$/ });
 
-        await app.navigate('/foo');
+        await app.navigate('/dummy/foo');
         expect(isViewMatched(FooBazEmptyRegex)).toBe(true);
     });
 
@@ -138,7 +139,7 @@ describe('isViewMatched', () => {
             }
         }, { view: 'foo', baz: null });
 
-        await app.navigate('/foo/baz');
+        await app.navigate('/dummy/foo/baz');
         expect(isViewMatched(FooBazNull)).toBe(false);
     });
 
@@ -151,14 +152,14 @@ describe('isViewMatched', () => {
             }
         }, { view: 'foo', baz: '' });
 
-        await app.navigate('/foo/baz');
+        await app.navigate('/dummy/foo/baz');
         expect(isViewMatched(FooBazEmpty)).toBe(false);
     });
 });
 
 describe('renderView', () => {
     it('should render matched view', async () => {
-        await app.navigate('/bar');
+        await app.navigate('/dummy/bar');
         const { asFragment } = render(<div>{renderView(Foo, Bar)}</div>)
         await screen.findByText('bar');
         expect(asFragment()).toMatchSnapshot();
@@ -168,7 +169,7 @@ describe('renderView', () => {
         const { asFragment } = render(<div>{renderView(Foo, Bar, Baz)}</div>)
         await screen.findByText('foo');
         expect(asFragment()).toMatchSnapshot();
-        expect(app.path).toBe('/foo');
+        expect(app.path).toBe('/dummy/foo');
     });
 
     it('should pass props to view container', async () => {
@@ -178,28 +179,33 @@ describe('renderView', () => {
     });
 
     it('should match views with more params first', async () => {
-        await app.navigate('/foo/baz');
+        await app.navigate('/dummy/foo/baz');
         const { asFragment } = render(<div>{renderView(Foo, Bar, Baz)}</div>)
         await screen.findByText('baz');
         expect(asFragment()).toMatchSnapshot();
-        expect(app.path).toBe('/foo/baz');
+        expect(app.path).toBe('/dummy/foo/baz');
     });
 
     it('should not trigger redirection when app is about to navigate', async () => {
         const Component = function ({ view }) {
             return renderView(view);
         };
-        const promise = app.navigate('/bar');
+        const promise = app.navigate('/dummy/bar');
         const { rerender } = render(<Component view={Foo} />);
         rerender(<Component view={Bar} />);
 
         await expect(promise).resolves.toBeTruthy();
-        expect(app.path).toBe('/bar');
+        expect(app.path).toBe('/dummy/bar');
     });
 });
 
 describe('linkTo', () => {
     it('should return path that will render specified view with params', () => {
-        expect(linkTo(Foo, { baz: 'baz' })).toBe('/foo/baz');
+        expect(linkTo(Foo, { baz: 'baz' })).toBe('/dummy/foo/baz');
+    });
+
+    it('should return minimum path matching the specified view', async () => {
+        await app.navigate('/dummy/foo/baz');
+        expect(linkTo(Foo)).toBe('/dummy/foo');
     });
 });

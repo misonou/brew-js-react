@@ -5,6 +5,7 @@ import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 
 const routeMap = new Map();
+const usedParams = {};
 
 let stateId;
 
@@ -87,6 +88,7 @@ export function registerView(factory, routeParams) {
     };
     routeParams = extend({}, routeParams);
     each(routeParams, function (i, v) {
+        usedParams[i] = true;
         if (v instanceof RegExp) {
             routeParams[i] = v.test.bind(v);
         }
@@ -113,7 +115,18 @@ export function renderView() {
 }
 
 export function linkTo(view, params) {
-    return app.route.getPath(extend({}, app.route, params, (routeMap.get(view) || {}).params));
+    var viewParams = (routeMap.get(view) || {}).params;
+    var newParams = {};
+    for (var i in app.route) {
+        if (viewParams && i in viewParams) {
+            newParams[i] = viewParams[i];
+        } else if (params && i in params) {
+            newParams[i] = params[i];
+        } else if (!usedParams[i]) {
+            newParams[i] = app.route[i];
+        }
+    }
+    return app.route.getPath(newParams);
 }
 
 export function navigateTo(view, params) {
