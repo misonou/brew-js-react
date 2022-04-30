@@ -1239,6 +1239,7 @@ var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_bre
 
 
 var routeMap = new Map();
+var usedParams = {};
 var stateId;
 
 function ViewContainer() {
@@ -1305,7 +1306,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
 });
 function isViewMatched(view) {
   var params = routeMap.get(view);
-  return !!params && !any(params.matchers, function (v, i) {
+  return !!params && false === any(params.matchers, function (v, i) {
     var value = app_app.route[i] || '';
     return isFunction(v) ? !v(value) : (v || '') !== value;
   });
@@ -1325,6 +1326,8 @@ function registerView(factory, routeParams) {
 
   routeParams = extend({}, routeParams);
   each(routeParams, function (i, v) {
+    usedParams[i] = true;
+
     if (v instanceof RegExp) {
       routeParams[i] = v.test.bind(v);
     }
@@ -1353,7 +1356,20 @@ function renderView() {
   });
 }
 function linkTo(view, params) {
-  return app_app.route.getPath(extend({}, app_app.route, params, (routeMap.get(view) || {}).params));
+  var viewParams = (routeMap.get(view) || {}).params;
+  var newParams = {};
+
+  for (var i in app_app.route) {
+    if (viewParams && i in viewParams) {
+      newParams[i] = viewParams[i];
+    } else if (params && i in params) {
+      newParams[i] = params[i];
+    } else if (!usedParams[i]) {
+      newParams[i] = app_app.route[i];
+    }
+  }
+
+  return app_app.route.getPath(newParams);
 }
 function navigateTo(view, params) {
   return app_app.navigate(linkTo(view, params));
