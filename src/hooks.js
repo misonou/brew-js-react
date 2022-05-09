@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { extend, kv } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 
+const states = {};
+
 export function useAppReady() {
     const sReady = useState(false);
     const ready = sReady[0], setReady = sReady[1];
@@ -26,4 +28,11 @@ export function useRouteParam(name, defaultValue) {
         app.navigate(app.route.getPath(extend({}, app.route, kv(name, defaultValue))), true);
     }
     return value || '';
+}
+
+export function useRouteState(key, defaultValue) {
+    const cur = states[history.state] || (states[history.state] = {});
+    const state = useState(key in cur ? cur[key] : defaultValue);
+    cur[key] = state[0];
+    return state;
 }

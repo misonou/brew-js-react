@@ -12,3 +12,15 @@ export function useAppReady(): boolean;
  * @param defaultValue When given, an empty value in current route state will cause a redirection which set the route parameter to such value.
  */
 export function useRouteParam(name: string, defaultValue?: string): string;
+
+/**
+ * Returns a stateful value, and a function to update it.
+ * Same as {@link React.useState}, but the state is persisted in route history.
+ */
+export function useRouteState<T>(key: string | symbol, defaultValue: T): [T, React.Dispatch<React.SetStateAction<T>>];
+
+/**
+ * Returns a stateful value, and a function to update it.
+ * Same as {@link React.useState}, but the state is persisted in route history.
+ */
+export function useRouteState<T = undefined>(key: string | symbol): [T | undefined, React.Dispatch<React.SetStateAction<T | undefined>>];
