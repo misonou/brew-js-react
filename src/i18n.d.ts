@@ -63,6 +63,19 @@ export function makeTranslation<T extends Zeta.Dictionary<object>, K extends key
     type ResourceKey<T> = { [P in ResourcePrefix]: StringKeysOf<ResourceObject[P]> }[T];
     type ResourceGlobalKey = { [P in ResourcePrefix]: `${P}.${StringKeysOf<ResourceObject[P]>}` }[ResourcePrefix];
 
+    interface GetTranslation {
+        /**
+         * Create translation callback which only looks up all prefixes.
+         * Translation key must include prefix.
+         */
+        (): Translate<ResourceGlobalKey>;
+        /**
+         * Create translation callback which only looks up the given prefixes.
+         * Translation string will be looked up in prefixes of the specified order.
+         */
+        <T extends readonly ResourcePrefix[]>(...args: T): Translate<ResourceKey<ArrayMember<T>>>;
+    }
+
     interface UseTranslationHook {
         /**
          * Create translation callback which only looks up all prefixes.
@@ -77,6 +90,7 @@ export function makeTranslation<T extends Zeta.Dictionary<object>, K extends key
     }
 
     declare const translate: Translate<ResourceGlobalKey>;
+    declare const getTranslation: GetTranslation;
     declare const useTranslation: UseTranslationHook;
-    return { translate, useTranslation };
+    return { translate, getTranslation, useTranslation };
 }

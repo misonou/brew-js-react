@@ -52,9 +52,8 @@ export function makeTranslation(resources, defaultLang) {
         return getTranslation(prefix, name, data, noEncode) || key;
     }
 
-    function useTranslation() {
+    function getTranslationCallback() {
         var prefix = makeArray(arguments);
-        var language = useLanguage();
         var t = translate;
         if (prefix[0]) {
             var key = prefix.join(' ');
@@ -64,11 +63,18 @@ export function makeTranslation(resources, defaultLang) {
                 }) || key;
             }));
         }
+        return t;
+    }
+
+    function useTranslation() {
+        var language = useLanguage();
+        var t = getTranslationCallback.apply(0, arguments);
         return { language, t };
     }
 
     return {
         translate: createCallback(translate),
+        getTranslation: getTranslationCallback,
         useTranslation
     };
 }

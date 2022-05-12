@@ -98,6 +98,61 @@ describe('translate', () => {
     });
 });
 
+describe('getTranslation', () => {
+    it('should return translated string in current language', () => {
+        const { getTranslation } = makeTranslation({
+            en: { prefix: { key: 'en_string' } },
+            de: { prefix: { key: 'de_string' } },
+        }, 'de');
+        expect(getTranslation('prefix')('key')).toBe('en_string');
+    });
+
+    it('should return translated string in default language if key does not exist', () => {
+        const { getTranslation } = makeTranslation({
+            de: { prefix: { key: 'de_string' } }
+        }, 'de');
+        expect(getTranslation('prefix')('key')).toBe('de_string');
+    });
+
+    it('should interpolate translation string', () => {
+        const { getTranslation } = makeTranslation({
+            en: { prefix: { key: '{{value}}' } }
+        }, 'en');
+        expect(getTranslation('prefix')('key', { value: 1 })).toBe('1');
+    });
+
+    it('should return key if key does not exist in default language', () => {
+        const { getTranslation } = makeTranslation({
+            en: { prefix: { key: '{{value}}' } }
+        }, 'en');
+        expect(getTranslation('prefix')('key1')).toBe('key1');
+    });
+
+    it('should not encode reserved characters in normal variant', () => {
+        const { getTranslation } = makeTranslation({
+            en: { prefix: { key: '<>&"\'' } }
+        }, 'en');
+        expect(getTranslation('prefix')('key')).toBe('<>&"\'');
+        expect(getTranslation('prefix')('key', {})).toBe('<>&"\'');
+    });
+
+    it('should not encode reserved characters in lazy variant', () => {
+        const { getTranslation } = makeTranslation({
+            en: { prefix: { key: '<>&"\'' } }
+        }, 'en');
+        expect(getTranslation('prefix').lazy('key').toString()).toBe('<>&"\'');
+        expect(getTranslation('prefix').lazy('key', {}).toString()).toBe('<>&"\'');
+    });
+
+    it('should encode reserved characters in html variant', () => {
+        const { getTranslation } = makeTranslation({
+            en: { prefix: { key: '<>&"\'' } }
+        }, 'en');
+        expect(getTranslation('prefix').html('key')).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
+        expect(getTranslation('prefix').html('key', {})).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
+    });
+});
+
 describe('useTranslation', () => {
     it('should return translated string in current language', () => {
         const { useTranslation } = makeTranslation({
