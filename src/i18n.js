@@ -54,16 +54,12 @@ export function makeTranslation(resources, defaultLang) {
 
     function getTranslationCallback() {
         var prefix = makeArray(arguments);
-        var t = translate;
-        if (prefix[0]) {
-            var key = prefix.join(' ');
-            t = cache[key] || (cache[key] = createCallback(function (key, data, noEncode) {
-                return single(prefix, function (v) {
-                    return getTranslation(v, key, data, noEncode);
-                }) || key;
-            }));
-        }
-        return t;
+        var key = prefix.join(' ');
+        return cache[key] || (cache[key] = createCallback(function (key, data, noEncode) {
+            return single(prefix, function (v) {
+                return getTranslation(v, key, data, noEncode);
+            }) || key;
+        }));
     }
 
     function useTranslation() {
@@ -72,8 +68,9 @@ export function makeTranslation(resources, defaultLang) {
         return { language, t };
     }
 
+    cache[''] = createCallback(translate);
     return {
-        translate: createCallback(translate),
+        translate: cache[''],
         getTranslation: getTranslationCallback,
         useTranslation
     };

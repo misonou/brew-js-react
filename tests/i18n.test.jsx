@@ -224,4 +224,15 @@ describe('useTranslation', () => {
         expect(result.current.t.html('key')).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
         expect(result.current.t.html('key', {})).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
     });
+
+    it('should work without any prefixes', () => {
+        const { useTranslation } = makeTranslation({
+            en: { prefix: { key: 'en_string' } },
+            de: { prefix: { key: 'de_string' } },
+        }, 'de');
+        const { result } = renderHook(() => useTranslation());
+        expect(result.current.t('prefix.key')).toBe('en_string');
+        expect(typeof result.current.t.lazy).toBe('function');
+        expect(typeof result.current.t.html).toBe('function');
+    });
 });
