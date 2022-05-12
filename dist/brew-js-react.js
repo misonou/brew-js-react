@@ -195,6 +195,7 @@ __webpack_require__.d(src_namespaceObject, {
   "useMixin": () => (useMixin),
   "useMixinRef": () => (useMixinRef),
   "useRouteParam": () => (useRouteParam),
+  "useRouteState": () => (useRouteState),
   "useScrollableMixin": () => (useScrollableMixin)
 });
 
@@ -479,6 +480,7 @@ brew_js_defaults.react = true;
 
 
 
+var states = {};
 function useAppReady() {
   var sReady = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(false);
   var ready = sReady[0],
@@ -491,21 +493,33 @@ function useAppReady() {
   return ready;
 }
 function useRouteParam(name, defaultValue) {
-  var sValue = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(app_app.route[name]);
+  var route = app_app.route;
+  var sValue = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(route[name]);
   var value = sValue[0],
       setValue = sValue[1];
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
-    var current = app_app.route[name]; // route parameter might be changed after state initialization and before useEffect hook is called
+    var current = route[name]; // route parameter might be changed after state initialization and before useEffect hook is called
 
     setValue(current);
-    return app_app.route.watch(name, setValue);
+
+    if (name in route) {
+      return route.watch(name, setValue);
+    }
+
+    console.error('Route parameter ' + name + ' does not exist');
   }, [name, defaultValue]);
 
   if (!value && defaultValue !== undefined) {
-    app_app.navigate(app_app.route.getPath(extend({}, app_app.route, kv(name, defaultValue))), true);
+    app_app.navigate(route.getPath(extend({}, route, kv(name, defaultValue))), true);
   }
 
   return value || '';
+}
+function useRouteState(key, defaultValue) {
+  var cur = states[history.state] || (states[history.state] = {});
+  var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(key in cur ? cur[key] : defaultValue);
+  cur[key] = state[0];
+  return state;
 }
 // EXTERNAL MODULE: external "zeta-dom-react"
 var external_zeta_dom_react_ = __webpack_require__(103);
@@ -571,28 +585,29 @@ function makeTranslation(resources, defaultLang) {
     return getTranslation(prefix, name, data, noEncode) || key;
   }
 
-  function useTranslation() {
+  function getTranslationCallback() {
     var prefix = makeArray(arguments);
+    var key = prefix.join(' ');
+    return cache[key] || (cache[key] = createCallback(function (key, data, noEncode) {
+      return single(prefix, function (v) {
+        return getTranslation(v, key, data, noEncode);
+      }) || key;
+    }));
+  }
+
+  function useTranslation() {
     var language = useLanguage();
-    var t = translate;
-
-    if (prefix[0]) {
-      var key = prefix.join(' ');
-      t = cache[key] || (cache[key] = createCallback(function (key, data, noEncode) {
-        return single(prefix, function (v) {
-          return getTranslation(v, key, data, noEncode);
-        }) || key;
-      }));
-    }
-
+    var t = getTranslationCallback.apply(0, arguments);
     return {
       language: language,
       t: t
     };
   }
 
+  cache[''] = createCallback(translate);
   return {
-    translate: createCallback(translate),
+    translate: cache[''],
+    getTranslation: getTranslationCallback,
     useTranslation: useTranslation
   };
 }
