@@ -1,5 +1,6 @@
 import React from "react";
 import { useAsync } from "zeta-dom-react";
+import dom from "./include/zeta-dom/dom.js";
 import { any, definePrototype, each, exclude, extend, isFunction, keys, makeArray, noop, pick, randomId, setImmediate } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
@@ -31,6 +32,9 @@ definePrototype(ViewContainer, React.Component, {
     componentDidMount: function () {
         this.mounted = true;
     },
+    componentDidCatch: function (error) {
+        dom.emit('error', this.parentElement || dom.root, { error }, true);
+    },
     render: function () {
         /** @type {any} */
         var self = this;
@@ -52,6 +56,7 @@ definePrototype(ViewContainer, React.Component, {
                 rootProps: self.props.rootProps,
                 onComponentLoaded: function (element) {
                     self.currentElement = element;
+                    self.parentElement = element.parentElement;
                     setImmediate(function () {
                         return animateIn(element, 'show');
                     });
