@@ -1,12 +1,13 @@
 import React from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
-import { any, definePrototype, each, exclude, extend, isFunction, keys, makeArray, noop, pick, randomId, setImmediate } from "./include/zeta-dom/util.js";
+import { any, defineGetterProperty, definePrototype, each, extend, isFunction, keys, makeArray, noop, pick, randomId, setImmediate } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 
 const routeMap = new Map();
 const usedParams = {};
+const StateContext = React.createContext(Object.freeze({ active: true }));
 
 let stateId;
 
@@ -51,17 +52,25 @@ definePrototype(ViewContainer, React.Component, {
                     self.forceUpdate();
                 });
             }
-            self.currentView = React.createElement(V, {
+            var providerProps = {
                 key: routeMap.get(V).id,
-                rootProps: self.props.rootProps,
-                onComponentLoaded: function (element) {
-                    self.currentElement = element;
-                    self.parentElement = element.parentElement;
-                    setImmediate(function () {
-                        return animateIn(element, 'show');
-                    });
-                }
+                value: {}
+            };
+            var view = React.createElement(StateContext.Provider, providerProps,
+                React.createElement(V, {
+                    rootProps: self.props.rootProps,
+                    onComponentLoaded: function (element) {
+                        self.currentElement = element;
+                        self.parentElement = element.parentElement;
+                        setImmediate(function () {
+                            return animateIn(element, 'show');
+                        });
+                    }
+                }));
+            defineGetterProperty(providerProps.value, 'active', function () {
+                return self.currentView === view;
             });
+            self.currentView = view;
         }
         return React.createElement(React.Fragment, null, self.prevView, self.currentView);
     },
@@ -70,6 +79,10 @@ definePrototype(ViewContainer, React.Component, {
         return any(props.views, isViewMatched) || (history.state === stateId && void redirectTo(props.defaultView));
     }
 });
+
+export function useViewContainerState() {
+    return React.useContext(StateContext);
+}
 
 export function isViewMatched(view) {
     var params = routeMap.get(view);

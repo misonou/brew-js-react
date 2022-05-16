@@ -1,6 +1,12 @@
 export type ViewComponentRootProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 export type ViewComponent<P> = React.FC<P>;
 
+export interface ViewContainerState {
+    readonly active: boolean;
+}
+
+export function useViewContainerState(): ViewContainerState;
+
 /**
  * Registers view component with specific route paramters.
  * Route parameters will be matched against current route state by {@link renderView}.
