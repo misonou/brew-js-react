@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { extend, kv } from "./include/zeta-dom/util.js";
+import { extend, kv, setImmediate } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
+import { useViewContainerState } from "./view.js";
 
 const states = {};
 
@@ -16,6 +17,7 @@ export function useAppReady() {
 }
 
 export function useRouteParam(name, defaultValue) {
+    const container = useViewContainerState();
     const route = app.route;
     const sValue = useState(route[name]);
     const value = sValue[0], setValue = sValue[1];
@@ -24,7 +26,13 @@ export function useRouteParam(name, defaultValue) {
         // route parameter might be changed after state initialization and before useEffect hook is called
         setValue(current);
         if (name in route) {
-            return route.watch(name, setValue);
+            return route.watch(name, function (value) {
+                setImmediate(function () {
+                    if (container.active) {
+                        setValue(value);
+                    }
+                });
+            });
         }
         console.error('Route parameter ' + name + ' does not exist');
     }, [name, defaultValue]);

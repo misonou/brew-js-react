@@ -1,7 +1,9 @@
 import React from "react";
+import { render, screen } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react-hooks";
 import { useRouteParam, useRouteState } from "src/hooks";
-import { initApp } from "./testUtil";
+import { registerView, renderView } from "src/view";
+import { defunctAfterTest, initApp, mockFn } from "./testUtil";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
 let app;
@@ -30,6 +32,48 @@ describe('useRouteParam', () => {
         await act(async () => void await app.watchOnce('path'));
         expect(result.current).toBe('foo');
         expect(app.path).toBe('/foo');
+    });
+
+    it('should cause component to re-render after navigate event', async () => {
+        const { result, waitForNextUpdate } = renderHook(() => useRouteParam('view'));
+        const cb = mockFn();
+        defunctAfterTest(app.on('navigate', cb));
+
+        app.route.view = 'foo';
+        expect(result.all.length).toBe(1);
+
+        await waitForNextUpdate();
+        expect(cb).toBeCalledTimes(1);
+    });
+
+    it('should not cause component to re-render when the parent view is going to unmount', async () => {
+        const cb = mockFn();
+        const Foo = registerView(async () => {
+            return {
+                default: () => {
+                    cb();
+                    useRouteParam('view');
+                    return (<div>foo</div>);
+                }
+            }
+        }, { view: 'foo' });
+        const Bar = registerView(async () => {
+            return {
+                default: () => {
+                    useRouteParam('view');
+                    return (<div>bar</div>);
+                }
+            }
+        }, { view: 'bar' });
+
+        const { unmount } = render(<div>{renderView(Foo, Bar)}</div>)
+        await app.navigate('/foo');
+        await screen.findByText('foo');
+        expect(cb).toBeCalledTimes(1);
+
+        await app.navigate('/bar');
+        expect(cb).toBeCalledTimes(1);
+        unmount();
     });
 });
 
