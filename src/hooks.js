@@ -5,6 +5,10 @@ import { useViewContainerState } from "./view.js";
 
 const states = {};
 
+function getCurrentStates() {
+    return states[history.state] || (states[history.state] = {});
+}
+
 export function useAppReady() {
     const sReady = useState(false);
     const ready = sReady[0], setReady = sReady[1];
@@ -43,8 +47,11 @@ export function useRouteParam(name, defaultValue) {
 }
 
 export function useRouteState(key, defaultValue) {
-    const cur = states[history.state] || (states[history.state] = {});
+    const container = useViewContainerState();
+    const cur = getCurrentStates();
     const state = useState(key in cur ? cur[key] : defaultValue);
-    cur[key] = state[0];
+    if (container.active) {
+        cur[key] = state[0];
+    }
     return state;
 }

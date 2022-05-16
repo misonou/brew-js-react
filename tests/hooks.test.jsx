@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react-hooks";
 import { useRouteParam, useRouteState } from "src/hooks";
 import { registerView, renderView } from "src/view";
-import { defunctAfterTest, initApp, mockFn } from "./testUtil";
+import { defunctAfterTest, initApp, mockFn, verifyCalls } from "./testUtil";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
 let app;
@@ -101,5 +101,59 @@ describe('useRouteState', () => {
         await app.back();
         const { result: result2 } = renderHook(() => useRouteState(sym, 'foo'));
         expect(result2.current[0]).toEqual('bar');
+    });
+
+    it('should not persist values when component is about to unmount', async () => {
+        const cb = mockFn();
+        const Foo = registerView(async () => {
+            return {
+                default: () => {
+                    const [value, setValue] = useRouteState('value', 'foo');
+                    useRouteParam('view');
+                    React.useEffect(() => setValue('foo1'), []);
+                    React.useEffect(() => () => cb('foo unmount', history.state), []);
+                    cb(value, history.state);
+                    return (<div>{value}</div>);
+                }
+            }
+        }, { view: 'foo' });
+        const Bar = registerView(async () => {
+            return {
+                default: () => {
+                    const [value, setValue] = useRouteState('value', 'bar');
+                    useRouteParam('view');
+                    React.useEffect(() => setValue('bar1'), []);
+                    React.useEffect(() => () => cb('bar unmount', history.state), []);
+                    cb(value, history.state);
+                    return (<div>{value}</div>);
+                }
+            }
+        }, { view: 'bar' });
+
+        const { unmount } = render(<div>{renderView(Foo, Bar)}</div>)
+        const { id: stateId1 } = await app.navigate('/foo');
+        await screen.findByText('foo1');
+        expect(cb.mock.calls).toEqual([
+            ['foo', stateId1],
+            ['foo1', stateId1]
+        ]);
+
+        cb.mockClear();
+        const { id: stateId2 } = await app.navigate('/bar');
+        await screen.findByText('bar1');
+        expect(cb.mock.calls).toEqual([
+            ['foo unmount', stateId2],
+            ['bar', stateId2],
+            ['bar1', stateId2]
+        ]);
+
+        cb.mockClear();
+        await app.back();
+        await screen.findByText('foo1');
+        expect(cb.mock.calls).toEqual([
+            ['bar unmount', stateId1],
+            ['foo1', stateId1]
+        ]);
+        unmount();
     });
 });
