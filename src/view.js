@@ -4,6 +4,7 @@ import dom from "./include/zeta-dom/dom.js";
 import { any, defineGetterProperty, definePrototype, each, extend, isFunction, keys, makeArray, noop, pick, randomId, setImmediate } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
+import { ViewStateContainer } from "./hooks.js";
 
 const routeMap = new Map();
 const usedParams = {};
@@ -57,16 +58,17 @@ definePrototype(ViewContainer, React.Component, {
                 value: {}
             };
             var view = React.createElement(StateContext.Provider, providerProps,
-                React.createElement(V, {
-                    rootProps: self.props.rootProps,
-                    onComponentLoaded: function (element) {
-                        self.currentElement = element;
-                        self.parentElement = element.parentElement;
-                        setImmediate(function () {
-                            return animateIn(element, 'show');
-                        });
-                    }
-                }));
+                React.createElement(ViewStateContainer, null,
+                    React.createElement(V, {
+                        rootProps: self.props.rootProps,
+                        onComponentLoaded: function (element) {
+                            self.currentElement = element;
+                            self.parentElement = element.parentElement;
+                            setImmediate(function () {
+                                return animateIn(element, 'show');
+                            });
+                        }
+                    })));
             defineGetterProperty(providerProps.value, 'active', function () {
                 return self.currentView === view;
             });

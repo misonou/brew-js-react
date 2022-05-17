@@ -1,3 +1,5 @@
+export const ViewStateContainer: React.FC;
+
 /**
  * Returns if the app has completed initialization, and
  * refresh the component when the app has changed its ready state.

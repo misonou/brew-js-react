@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { createElement, useEffect, useState } from "react";
+import { ViewStateProvider } from "zeta-dom-react";
 import { extend, kv, setImmediate } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { useViewContainerState } from "./view.js";
@@ -54,4 +55,30 @@ export function useRouteState(key, defaultValue) {
         cur[key] = state[0];
     }
     return state;
+}
+
+export function ViewStateContainer(props) {
+    const container = useViewContainerState();
+    const provider = useState(function () {
+        const cache = {};
+        return {
+            getState: function (uniqueId, key) {
+                var cur = getCurrentStates();
+                var state = cache[uniqueId] || (cache[uniqueId] = {
+                    value: cur[key] && cur[key].value,
+                    get: function () {
+                        return state.value;
+                    },
+                    set: function (value) {
+                        state.value = value;
+                    }
+                });
+                if (container.active) {
+                    cur[key] = state;
+                }
+                return state;
+            }
+        };
+    })[0];
+    return createElement(ViewStateProvider, { value: provider }, props.children);
 }
