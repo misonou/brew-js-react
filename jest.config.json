@@ -5,8 +5,11 @@
     ],
     "moduleNameMapper": {
         "^src/(.*)$": "<rootDir>/src/$1",
+        "^react$": "<rootDir>/node_modules/react",
+        "^react-(.*)$": "<rootDir>/node_modules/react-$1",
         "^brew-js/(.*)$": "<rootDir>/../brew-js/src/$1",
         "^zeta-dom/(.*)$": "<rootDir>/../zeta-dom/src/$1",
+        "^zeta-dom-react$": "<rootDir>/../zeta-dom-react/src/index",
         "^zeta-dom-react/(.*)$": "<rootDir>/../zeta-dom-react/src/$1"
     },
     "extensionsToTreatAsEsm": [".jsx"],
