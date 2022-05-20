@@ -175,6 +175,7 @@ __webpack_require__.d(src_namespaceObject, {
   "Mixin": () => (Mixin),
   "ScrollableMixin": () => (ScrollableMixin),
   "StatefulMixin": () => (StatefulMixin),
+  "ViewStateContainer": () => (ViewStateContainer),
   "createDialog": () => (createDialog),
   "default": () => (src),
   "isViewMatched": () => (isViewMatched),
@@ -196,7 +197,8 @@ __webpack_require__.d(src_namespaceObject, {
   "useMixinRef": () => (useMixinRef),
   "useRouteParam": () => (useRouteParam),
   "useRouteState": () => (useRouteState),
-  "useScrollableMixin": () => (useScrollableMixin)
+  "useScrollableMixin": () => (useScrollableMixin),
+  "useViewContainerState": () => (useViewContainerState)
 });
 
 // EXTERNAL MODULE: external {"commonjs":"brew-js","commonjs2":"brew-js","amd":"brew-js","root":"brew"}
@@ -458,6 +460,8 @@ function Dialog(props) {
   }, [dialog]);
   return /*#__PURE__*/external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, dialog.root);
 }
+// EXTERNAL MODULE: external "zeta-dom-react"
+var external_zeta_dom_react_ = __webpack_require__(103);
 ;// CONCATENATED MODULE: ./tmp/brew-js/defaults.js
 
 var defaults_defaultExport = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.defaults;
@@ -476,11 +480,193 @@ install('react', function (app_) {
   app_app = app_;
 });
 brew_js_defaults.react = true;
+;// CONCATENATED MODULE: ./tmp/brew-js/anim.js
+
+var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateIn,
+    animateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateOut,
+    addAnimateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAnimateIn,
+    addAnimateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAnimateOut;
+
+;// CONCATENATED MODULE: ./src/include/brew-js/anim.js
+
+;// CONCATENATED MODULE: ./src/view.js
+
+
+
+
+
+
+
+var routeMap = new Map();
+var usedParams = {};
+var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext(Object.freeze({
+  active: true
+}));
+var stateId;
+
+function ViewContainer() {
+  /** @type {any} */
+  var self = this;
+  external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(self, arguments);
+  self.mounted = false;
+
+  if (!stateId) {
+    stateId = history.state;
+    app_app.on('navigate', function () {
+      stateId = history.state;
+    });
+  }
+
+  self.componentWillUnmount = app_app.on('navigate', function () {
+    if (self.mounted && self.getViewComponent()) {
+      self.forceUpdate();
+    }
+  });
+}
+
+definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react_root_React_.Component, {
+  componentDidMount: function componentDidMount() {
+    this.mounted = true;
+  },
+  componentDidCatch: function componentDidCatch(error) {
+    zeta_dom_dom.emit('error', this.parentElement || zeta_dom_dom.root, {
+      error: error
+    }, true);
+  },
+  render: function render() {
+    /** @type {any} */
+    var self = this;
+    var V = self.getViewComponent();
+
+    if (V && V !== self.currentViewComponent) {
+      self.currentViewComponent = V;
+
+      if (self.currentView && self.currentElement) {
+        self.prevView = self.currentView;
+        self.prevElement = self.currentElement;
+        self.currentElement = undefined;
+        animateOut(self.prevElement, 'show').then(function () {
+          self.prevElement = undefined;
+          self.prevView = undefined;
+          self.forceUpdate();
+        });
+      }
+
+      var providerProps = {
+        key: routeMap.get(V).id,
+        value: {}
+      };
+      var view = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(StateContext.Provider, providerProps, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewStateContainer, null, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
+        rootProps: self.props.rootProps,
+        onComponentLoaded: function onComponentLoaded(element) {
+          self.currentElement = element;
+          self.parentElement = element.parentElement;
+          util_setImmediate(function () {
+            return animateIn(element, 'show');
+          });
+        }
+      })));
+      defineGetterProperty(providerProps.value, 'active', function () {
+        return self.currentView === view;
+      });
+      self.currentView = view;
+    }
+
+    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
+  },
+  getViewComponent: function getViewComponent() {
+    var props = this.props;
+    return any(props.views, isViewMatched) || history.state === stateId && void redirectTo(props.defaultView);
+  }
+});
+function useViewContainerState() {
+  return external_commonjs_react_commonjs2_react_amd_react_root_React_.useContext(StateContext);
+}
+function isViewMatched(view) {
+  var params = routeMap.get(view);
+  return !!params && false === any(params.matchers, function (v, i) {
+    var value = app_app.route[i] || '';
+    return isFunction(v) ? !v(value) : (v || '') !== value;
+  });
+}
+function registerView(factory, routeParams) {
+  var Component = function Component(props) {
+    var Component = (0,external_zeta_dom_react_.useAsync)(factory)[0];
+    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, props.rootProps, {
+      ref: function ref(element) {
+        if (element && Component) {
+          (props.onComponentLoaded || noop)(element);
+        }
+      },
+      children: Component && /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(Component["default"])
+    }));
+  };
+
+  routeParams = extend({}, routeParams);
+  each(routeParams, function (i, v) {
+    usedParams[i] = true;
+
+    if (v instanceof RegExp) {
+      routeParams[i] = v.test.bind(v);
+    }
+  });
+  routeMap.set(Component, {
+    id: randomId(),
+    matchCount: keys(routeParams).length,
+    matchers: routeParams,
+    params: pick(routeParams, function (v) {
+      return typeof v === 'string';
+    })
+  });
+  return Component;
+}
+function renderView() {
+  var views = makeArray(arguments);
+  var rootProps = isFunction(views[0]) ? {} : views.shift();
+  var defaultView = views[0];
+  views.sort(function (a, b) {
+    return (routeMap.get(b) || {}).matchCount - (routeMap.get(a) || {}).matchCount;
+  });
+  return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewContainer, {
+    rootProps: rootProps,
+    views: views,
+    defaultView: defaultView
+  });
+}
+function linkTo(view, params) {
+  var viewParams = (routeMap.get(view) || {}).params;
+  var newParams = {};
+
+  for (var i in app_app.route) {
+    if (viewParams && i in viewParams) {
+      newParams[i] = viewParams[i];
+    } else if (params && i in params) {
+      newParams[i] = params[i];
+    } else if (!usedParams[i]) {
+      newParams[i] = app_app.route[i];
+    }
+  }
+
+  return app_app.route.getPath(newParams);
+}
+function navigateTo(view, params) {
+  return app_app.navigate(linkTo(view, params));
+}
+function redirectTo(view, params) {
+  return app_app.navigate(linkTo(view, params), true);
+}
 ;// CONCATENATED MODULE: ./src/hooks.js
 
 
 
+
+
 var states = {};
+
+function getCurrentStates() {
+  return states[history.state] || (states[history.state] = {});
+}
+
 function useAppReady() {
   var sReady = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(false);
   var ready = sReady[0],
@@ -493,6 +679,7 @@ function useAppReady() {
   return ready;
 }
 function useRouteParam(name, defaultValue) {
+  var container = useViewContainerState();
   var route = app_app.route;
   var sValue = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(route[name]);
   var value = sValue[0],
@@ -503,7 +690,13 @@ function useRouteParam(name, defaultValue) {
     setValue(current);
 
     if (name in route) {
-      return route.watch(name, setValue);
+      return route.watch(name, function (value) {
+        util_setImmediate(function () {
+          if (container.active) {
+            setValue(value);
+          }
+        });
+      });
     }
 
     console.error('Route parameter ' + name + ' does not exist');
@@ -516,13 +709,45 @@ function useRouteParam(name, defaultValue) {
   return value || '';
 }
 function useRouteState(key, defaultValue) {
-  var cur = states[history.state] || (states[history.state] = {});
+  var container = useViewContainerState();
+  var cur = getCurrentStates();
   var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(key in cur ? cur[key] : defaultValue);
-  cur[key] = state[0];
+
+  if (container.active) {
+    cur[key] = state[0];
+  }
+
   return state;
 }
-// EXTERNAL MODULE: external "zeta-dom-react"
-var external_zeta_dom_react_ = __webpack_require__(103);
+function ViewStateContainer(props) {
+  var container = useViewContainerState();
+  var provider = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
+    var cache = {};
+    return {
+      getState: function getState(uniqueId, key) {
+        var cur = getCurrentStates();
+        var state = cache[uniqueId] || (cache[uniqueId] = {
+          value: cur[key] && cur[key].value,
+          get: function get() {
+            return state.value;
+          },
+          set: function set(value) {
+            state.value = value;
+          }
+        });
+
+        if (container.active) {
+          cur[key] = state;
+        }
+
+        return state;
+      }
+    };
+  })[0];
+  return /*#__PURE__*/(0,external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement)(external_zeta_dom_react_.ViewStateProvider, {
+    value: provider
+  }, props.children);
+}
 // EXTERNAL MODULE: ./src/include/external/waterpipe.js
 var waterpipe = __webpack_require__(43);
 ;// CONCATENATED MODULE: ./src/i18n.js
@@ -1238,160 +1463,6 @@ function useMixinRef(mixin) {
   return mixin && mixin.getMixin().reset();
 }
 
-;// CONCATENATED MODULE: ./tmp/brew-js/anim.js
-
-var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateIn,
-    animateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateOut,
-    addAnimateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAnimateIn,
-    addAnimateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAnimateOut;
-
-;// CONCATENATED MODULE: ./src/include/brew-js/anim.js
-
-;// CONCATENATED MODULE: ./src/view.js
-
-
-
-
-
-var routeMap = new Map();
-var usedParams = {};
-var stateId;
-
-function ViewContainer() {
-  /** @type {any} */
-  var self = this;
-  external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(self, arguments);
-  self.mounted = false;
-
-  if (!stateId) {
-    stateId = history.state;
-    app_app.on('navigate', function () {
-      stateId = history.state;
-    });
-  }
-
-  self.componentWillUnmount = app_app.on('navigate', function () {
-    if (self.mounted && self.getViewComponent()) {
-      self.forceUpdate();
-    }
-  });
-}
-
-definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react_root_React_.Component, {
-  componentDidMount: function componentDidMount() {
-    this.mounted = true;
-  },
-  render: function render() {
-    /** @type {any} */
-    var self = this;
-    var V = self.getViewComponent();
-
-    if (V && V !== self.currentViewComponent) {
-      self.currentViewComponent = V;
-
-      if (self.currentView && self.currentElement) {
-        self.prevView = self.currentView;
-        self.prevElement = self.currentElement;
-        self.currentElement = undefined;
-        animateOut(self.prevElement, 'show').then(function () {
-          self.prevElement = undefined;
-          self.prevView = undefined;
-          self.forceUpdate();
-        });
-      }
-
-      self.currentView = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
-        key: routeMap.get(V).id,
-        rootProps: self.props.rootProps,
-        onComponentLoaded: function onComponentLoaded(element) {
-          self.currentElement = element;
-          util_setImmediate(function () {
-            return animateIn(element, 'show');
-          });
-        }
-      });
-    }
-
-    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
-  },
-  getViewComponent: function getViewComponent() {
-    var props = this.props;
-    return any(props.views, isViewMatched) || history.state === stateId && void redirectTo(props.defaultView);
-  }
-});
-function isViewMatched(view) {
-  var params = routeMap.get(view);
-  return !!params && false === any(params.matchers, function (v, i) {
-    var value = app_app.route[i] || '';
-    return isFunction(v) ? !v(value) : (v || '') !== value;
-  });
-}
-function registerView(factory, routeParams) {
-  var Component = function Component(props) {
-    var Component = (0,external_zeta_dom_react_.useAsync)(factory)[0];
-    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, props.rootProps, {
-      ref: function ref(element) {
-        if (element && Component) {
-          (props.onComponentLoaded || noop)(element);
-        }
-      },
-      children: Component && /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(Component["default"])
-    }));
-  };
-
-  routeParams = extend({}, routeParams);
-  each(routeParams, function (i, v) {
-    usedParams[i] = true;
-
-    if (v instanceof RegExp) {
-      routeParams[i] = v.test.bind(v);
-    }
-  });
-  routeMap.set(Component, {
-    id: randomId(),
-    matchCount: keys(routeParams).length,
-    matchers: routeParams,
-    params: pick(routeParams, function (v) {
-      return typeof v === 'string';
-    })
-  });
-  return Component;
-}
-function renderView() {
-  var views = makeArray(arguments);
-  var rootProps = isFunction(views[0]) ? {} : views.shift();
-  var defaultView = views[0];
-  views.sort(function (a, b) {
-    return (routeMap.get(b) || {}).matchCount - (routeMap.get(a) || {}).matchCount;
-  });
-  return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewContainer, {
-    rootProps: rootProps,
-    views: views,
-    defaultView: defaultView
-  });
-}
-function linkTo(view, params) {
-  var viewParams = (routeMap.get(view) || {}).params;
-  var newParams = {};
-
-  for (var i in app_app.route) {
-    if (viewParams && i in viewParams) {
-      newParams[i] = viewParams[i];
-    } else if (params && i in params) {
-      newParams[i] = params[i];
-    } else if (!usedParams[i]) {
-      newParams[i] = app_app.route[i];
-    }
-  }
-
-  return app_app.route.getPath(newParams);
-}
-function navigateTo(view, params) {
-  return app_app.navigate(linkTo(view, params));
-}
-function redirectTo(view, params) {
-  return app_app.navigate(linkTo(view, params), true);
-}
 ;// CONCATENATED MODULE: ./src/index.js
 
 /* harmony default export */ const src = (brew_js_app);
