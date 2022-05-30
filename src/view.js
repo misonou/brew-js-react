@@ -1,11 +1,13 @@
 import React, { useRef } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
+import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { any, defineGetterProperty, definePrototype, each, extend, isFunction, keys, makeArray, noop, pick, randomId, setImmediate } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 import { ViewStateContainer } from "./hooks.js";
 
+const root = dom.root;
 const routeMap = new Map();
 const usedParams = {};
 const StateContext = React.createContext(Object.freeze({ active: true }));
@@ -35,11 +37,15 @@ definePrototype(ViewContainer, React.Component, {
         this.mounted = true;
     },
     componentDidCatch: function (error) {
-        dom.emit('error', this.parentElement || dom.root, { error }, true);
+        dom.emit('error', this.parentElement || root, { error }, true);
     },
     render: function () {
         /** @type {any} */
         var self = this;
+        var resolve;
+        var promise = new Promise(function (_resolve) {
+            resolve = _resolve;
+        });
         var V = self.getViewComponent();
         if (V && V !== self.currentViewComponent) {
             self.currentViewComponent = V;
@@ -65,6 +71,7 @@ definePrototype(ViewContainer, React.Component, {
                             self.currentElement = element;
                             self.parentElement = element.parentElement;
                             setImmediate(function () {
+                                resolve();
                                 return animateIn(element, 'show');
                             });
                         }
@@ -73,7 +80,10 @@ definePrototype(ViewContainer, React.Component, {
                 return self.currentView === view;
             });
             self.currentView = view;
+        } else {
+            resolve();
         }
+        notifyAsync(self.parentElement || root, promise);
         return React.createElement(React.Fragment, null, self.prevView, self.currentView);
     },
     getViewComponent: function () {
