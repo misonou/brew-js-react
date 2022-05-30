@@ -107,7 +107,7 @@ const brewJSPath = processModule('brew-js', {
         'extension/router': 'lib',
         anim: 'lib',
         app: 'lib',
-        core: 'lib',
+        dom: 'lib',
         defaults: 'lib.defaults',
         domAction: 'lib',
         index: 'lib'
