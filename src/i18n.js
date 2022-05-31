@@ -18,7 +18,8 @@ if (toPrimitive) {
 
 function createCallback(translate) {
     var callback = function (key, data) {
-        return translate(key, data, true);
+        var result = translate(key, data, true);
+        return result !== undefined ? result : key;
     };
     return extend(callback, {
         html: function (id, data) {
@@ -38,27 +39,33 @@ export function makeTranslation(resources, defaultLang) {
     const re = new RegExp('^(' + Object.keys(resources[defaultLang]).join('|') + ')\\.');
     const cache = {};
 
-    function getTranslation(prefix, name, data, noEncode) {
-        var str = ((resources[app.language] || empty)[prefix] || empty)[name] || ((resources[defaultLang] || empty)[prefix] || empty)[name] || '';
-        if (str && (!noEncode || data !== undefined)) {
-            return waterpipe(str, data, { noEncode });
+    function getTranslation(prefix, name, data, noEncode, lang) {
+        var str = ((resources[lang] || empty)[prefix] || empty)[name];
+        if (typeof str === 'string') {
+            if (str && (!noEncode || data !== undefined)) {
+                return waterpipe(str, data, { noEncode });
+            }
+            return str;
         }
-        return str;
+        if (lang !== defaultLang) {
+            return getTranslation(prefix, name, data, noEncode, defaultLang);
+        }
     }
 
     function translate(key, data, noEncode) {
         var prefix = re.test(key) ? RegExp.$1 : '';
         var name = prefix ? key.slice(RegExp.lastMatch.length) : key;
-        return getTranslation(prefix, name, data, noEncode) || key;
+        return getTranslation(prefix, name, data, noEncode, app.language);
     }
 
     function getTranslationCallback() {
         var prefix = makeArray(arguments);
         var key = prefix.join(' ');
         return cache[key] || (cache[key] = createCallback(function (key, data, noEncode) {
+            var lang = app.language;
             return single(prefix, function (v) {
-                return getTranslation(v, key, data, noEncode);
-            }) || key;
+                return getTranslation(v, key, data, noEncode, lang);
+            });
         }));
     }
 

@@ -96,6 +96,29 @@ describe('translate', () => {
         expect(translate.html('prefix.key')).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
         expect(translate.html('prefix.key', {})).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
     });
+
+    it('should return empty string as is', () => {
+        const { translate } = makeTranslation({
+            en: { prefix: { key1: '', key2: '' } },
+            de: { prefix: { key1: '', key2: 'foo' } }
+        }, 'de');
+        expect(translate('prefix.key1')).toBe('');
+        expect(translate('prefix.key2')).toBe('');
+    });
+
+    it('should return empty string from evaluation', () => {
+        const { translate } = makeTranslation({
+            en: { prefix: { key: '{{foo}}' } }
+        }, 'en');
+        expect(translate('prefix.key', {})).toBe('');
+    });
+
+    it('should discard non-string value', () => {
+        const { translate } = makeTranslation({
+            en: { prefix: { key: '' } }
+        }, 'en');
+        expect(translate('prefix.hasOwnProperty')).toBe('prefix.hasOwnProperty');
+    });
 });
 
 describe('getTranslation', () => {
@@ -150,6 +173,29 @@ describe('getTranslation', () => {
         }, 'en');
         expect(getTranslation('prefix').html('key')).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
         expect(getTranslation('prefix').html('key', {})).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
+    });
+
+    it('should return empty string as is', () => {
+        const { getTranslation } = makeTranslation({
+            en: { prefix: { key1: '', key2: '' } },
+            de: { prefix: { key1: '', key2: 'foo' } }
+        }, 'de');
+        expect(getTranslation('prefix')('key1')).toBe('');
+        expect(getTranslation('prefix')('key2')).toBe('');
+    });
+
+    it('should return empty string from evaluation', () => {
+        const { getTranslation } = makeTranslation({
+            en: { prefix: { key: '{{foo}}' } }
+        }, 'en');
+        expect(getTranslation('prefix')('key', {})).toBe('');
+    });
+
+    it('should discard non-string value', () => {
+        const { getTranslation } = makeTranslation({
+            en: { prefix: { key: '' } }
+        }, 'en');
+        expect(getTranslation('prefix')('hasOwnProperty')).toBe('hasOwnProperty');
     });
 });
 
@@ -223,6 +269,32 @@ describe('useTranslation', () => {
         const { result } = renderHook(() => useTranslation('prefix'));
         expect(result.current.t.html('key')).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
         expect(result.current.t.html('key', {})).toEqual({ __html: '&lt;&gt;&amp;&quot;&#39;' });
+    });
+
+    it('should return empty string as is', () => {
+        const { useTranslation } = makeTranslation({
+            en: { prefix: { key1: '', key2: '' } },
+            de: { prefix: { key1: '', key2: 'foo' } }
+        }, 'de');
+        const { result } = renderHook(() => useTranslation('prefix'));
+        expect(result.current.t('key1')).toBe('');
+        expect(result.current.t('key2')).toBe('');
+    });
+
+    it('should return empty string from evaluation', () => {
+        const { useTranslation } = makeTranslation({
+            en: { prefix: { key: '{{foo}}' } }
+        }, 'en');
+        const { result } = renderHook(() => useTranslation('prefix'));
+        expect(result.current.t('key', {})).toBe('');
+    });
+
+    it('should discard non-string value', () => {
+        const { useTranslation } = makeTranslation({
+            en: { prefix: { key: '' } }
+        }, 'en');
+        const { result } = renderHook(() => useTranslation('prefix'));
+        expect(result.current.t('hasOwnProperty')).toBe('hasOwnProperty');
     });
 
     it('should work without any prefixes', () => {
