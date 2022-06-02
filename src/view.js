@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { any, defineGetterProperty, definePrototype, each, extend, isFunction, keys, makeArray, noop, pick, randomId, setImmediate } from "./include/zeta-dom/util.js";
@@ -96,14 +96,14 @@ export function isViewMatched(view) {
 
 export function registerView(factory, routeParams) {
     var Component = function (props) {
-        var Component = useAsync(factory)[0];
+        var state = useAsync(factory);
+        var ref = useRef();
+        if (state[0] || state[1].error) {
+            (props.onComponentLoaded || noop)(ref.current);
+        }
         return React.createElement('div', extend({}, props.rootProps, {
-            ref: function (element) {
-                if (element && Component) {
-                    (props.onComponentLoaded || noop)(element);
-                }
-            },
-            children: Component && React.createElement(Component.default)
+            ref: ref,
+            children: state[0] && React.createElement(state[0].default)
         }));
     };
     routeParams = extend({}, routeParams);
