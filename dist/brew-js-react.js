@@ -225,6 +225,7 @@ var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __we
 
 var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
     noop = _lib$util.noop,
+    pipe = _lib$util.pipe,
     either = _lib$util.either,
     is = _lib$util.is,
     isUndefinedOrNull = _lib$util.isUndefinedOrNull,
@@ -480,6 +481,17 @@ install('react', function (app_) {
   app_app = app_;
 });
 brew_js_defaults.react = true;
+;// CONCATENATED MODULE: ./tmp/zeta-dom/domLock.js
+
+var domLock_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    lock = domLock_lib$dom.lock,
+    locked = domLock_lib$dom.locked,
+    cancelLock = domLock_lib$dom.cancelLock,
+    notifyAsync = domLock_lib$dom.notifyAsync,
+    preventLeave = domLock_lib$dom.preventLeave;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
+
 ;// CONCATENATED MODULE: ./tmp/brew-js/anim.js
 
 var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateIn,
@@ -497,6 +509,8 @@ var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_bre
 
 
 
+
+var view_root = zeta_dom_dom.root;
 var routeMap = new Map();
 var usedParams = {};
 var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext(Object.freeze({
@@ -529,13 +543,17 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
     this.mounted = true;
   },
   componentDidCatch: function componentDidCatch(error) {
-    zeta_dom_dom.emit('error', this.parentElement || zeta_dom_dom.root, {
+    zeta_dom_dom.emit('error', this.parentElement || view_root, {
       error: error
     }, true);
   },
   render: function render() {
     /** @type {any} */
     var self = this;
+    var resolve;
+    var promise = new Promise(function (_resolve) {
+      resolve = _resolve;
+    });
     var V = self.getViewComponent();
 
     if (V && V !== self.currentViewComponent) {
@@ -562,6 +580,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
           self.currentElement = element;
           self.parentElement = element.parentElement;
           util_setImmediate(function () {
+            resolve();
             return animateIn(element, 'show');
           });
         }
@@ -570,8 +589,11 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         return self.currentView === view;
       });
       self.currentView = view;
+    } else {
+      resolve();
     }
 
+    notifyAsync(self.parentElement || view_root, promise);
     return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
   },
   getViewComponent: function getViewComponent() {
@@ -591,14 +613,16 @@ function isViewMatched(view) {
 }
 function registerView(factory, routeParams) {
   var Component = function Component(props) {
-    var Component = (0,external_zeta_dom_react_.useAsync)(factory)[0];
+    var state = (0,external_zeta_dom_react_.useAsync)(factory);
+    var ref = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useRef)();
+
+    if (state[0] || state[1].error) {
+      (props.onComponentLoaded || noop)(ref.current);
+    }
+
     return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, props.rootProps, {
-      ref: function ref(element) {
-        if (element && Component) {
-          (props.onComponentLoaded || noop)(element);
-        }
-      },
-      children: Component && /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(Component["default"])
+      ref: ref,
+      children: state[0] && /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(state[0]["default"])
     }));
   };
 
@@ -770,7 +794,8 @@ if (toPrimitive) {
 
 function createCallback(translate) {
   var callback = function callback(key, data) {
-    return translate(key, data, true);
+    var result = translate(key, data, true);
+    return result !== undefined ? result : key;
   };
 
   return extend(callback, {
@@ -792,31 +817,38 @@ function makeTranslation(resources, defaultLang) {
   var re = new RegExp('^(' + Object.keys(resources[defaultLang]).join('|') + ')\\.');
   var cache = {};
 
-  function getTranslation(prefix, name, data, noEncode) {
-    var str = ((resources[app_app.language] || empty)[prefix] || empty)[name] || ((resources[defaultLang] || empty)[prefix] || empty)[name] || '';
+  function getTranslation(prefix, name, data, noEncode, lang) {
+    var str = ((resources[lang] || empty)[prefix] || empty)[name];
 
-    if (str && (!noEncode || data !== undefined)) {
-      return waterpipe(str, data, {
-        noEncode: noEncode
-      });
+    if (typeof str === 'string') {
+      if (str && (!noEncode || data !== undefined)) {
+        return waterpipe(str, data, {
+          noEncode: noEncode
+        });
+      }
+
+      return str;
     }
 
-    return str;
+    if (lang !== defaultLang) {
+      return getTranslation(prefix, name, data, noEncode, defaultLang);
+    }
   }
 
   function translate(key, data, noEncode) {
     var prefix = re.test(key) ? RegExp.$1 : '';
     var name = prefix ? key.slice(RegExp.lastMatch.length) : key;
-    return getTranslation(prefix, name, data, noEncode) || key;
+    return getTranslation(prefix, name, data, noEncode, app_app.language);
   }
 
   function getTranslationCallback() {
     var prefix = makeArray(arguments);
     var key = prefix.join(' ');
     return cache[key] || (cache[key] = createCallback(function (key, data, noEncode) {
+      var lang = app_app.language;
       return single(prefix, function (v) {
-        return getTranslation(v, key, data, noEncode);
-      }) || key;
+        return getTranslation(v, key, data, noEncode, lang);
+      });
     }));
   }
 
