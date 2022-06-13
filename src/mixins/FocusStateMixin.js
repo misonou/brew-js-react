@@ -13,9 +13,9 @@ definePrototype(FocusStateMixin, StatefulMixin, {
     initElement: function (element, state) {
         FocusStateMixinSuper.initElement.call(this, element, state);
         dom.on(element, {
-            focusin: function () {
+            focusin: function (e) {
                 state.focused = true;
-                setClass(element, 'focused', true);
+                setClass(element, 'focused', e.source);
             },
             focusout: function () {
                 state.focused = false;
