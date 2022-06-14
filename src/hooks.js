@@ -1,6 +1,6 @@
-import { createElement, useEffect, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 import { ViewStateProvider } from "zeta-dom-react";
-import { extend, kv, setImmediate } from "./include/zeta-dom/util.js";
+import { extend, kv, setImmediateOnce } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { useViewContainerState } from "./view.js";
 
@@ -24,27 +24,31 @@ export function useAppReady() {
 export function useRouteParam(name, defaultValue) {
     const container = useViewContainerState();
     const route = app.route;
-    const sValue = useState(route[name]);
-    const value = sValue[0], setValue = sValue[1];
+    const value = route[name] || '';
+    const ref = useRef(value);
+    const forceUpdate = useState()[1];
     useEffect(function () {
-        var current = route[name];
+        var setValue = function () {
+            var current = route[name] || '';
+            if (container.active && current !== ref.current) {
+                ref.current = current;
+                forceUpdate({});
+            }
+        };
         // route parameter might be changed after state initialization and before useEffect hook is called
-        setValue(current);
+        setValue();
         if (name in route) {
-            return route.watch(name, function (value) {
-                setImmediate(function () {
-                    if (container.active) {
-                        setValue(value);
-                    }
-                });
+            return route.watch(name, function () {
+                setImmediateOnce(setValue);
             });
         }
         console.error('Route parameter ' + name + ' does not exist');
     }, [name, defaultValue]);
+    ref.current = value;
     if (!value && defaultValue !== undefined) {
         app.navigate(route.getPath(extend({}, route, kv(name, defaultValue))), true);
     }
-    return value || '';
+    return value;
 }
 
 export function useRouteState(key, defaultValue) {

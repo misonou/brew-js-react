@@ -13,7 +13,7 @@ beforeAll(async () => {
         app.useRouter({
             baseUrl: '/',
             routes: [
-                '/{view}/*',
+                '/{view}/{sub?}/*',
                 '/*'
             ]
         });
@@ -44,6 +44,14 @@ describe('useRouteParam', () => {
 
         await waitForNextUpdate();
         expect(cb).toBeCalledTimes(1);
+    });
+
+    it('should cause component to re-render exactly once when multiple parameter changed', async () => {
+        const { result } = renderHook(() => [useRouteParam('view'), useRouteParam('sub')]);
+        expect(result.all.length).toBe(1);
+
+        await app.navigate('/foo/bar');
+        expect(result.all.length).toBe(2);
     });
 
     it('should not cause component to re-render when the parent view is going to unmount', async () => {
