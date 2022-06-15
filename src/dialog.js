@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { always, either, extend, noop } from "./include/zeta-dom/util.js";
+import { always, catchAsync, either, extend, noop, pipe, resolve } from "./include/zeta-dom/util.js";
 import { containsOrEquals, removeNode } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
+import { lock } from "./include/zeta-dom/domLock.js";
 import { closeFlyout, openFlyout } from "./include/brew-js/domAction.js";
 
 /**
@@ -42,14 +43,19 @@ export function createDialog(props) {
                 dom.setModal(root);
             }
             if (props.onRender) {
-                ReactDOM.render(React.createElement(props.onRender, extend({ closeDialog }, props)), root);
+                var dialogProps = extend({}, props, {
+                    closeDialog: function (value) {
+                        var promise = resolve((props.onCommit || pipe)(value));
+                        catchAsync(lock(dom.activeElement, promise));
+                        promise.then(closeDialog);
+                    }
+                });
+                ReactDOM.render(React.createElement(props.onRender, dialogProps), root);
             }
-
             promise = openFlyout(root);
             always(promise, function () {
                 promise = null;
             });
-            promise.then(props.onCommit);
             (props.onOpen || noop)(root);
             return promise;
         }
