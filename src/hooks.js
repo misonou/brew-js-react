@@ -1,14 +1,35 @@
 import { createElement, useEffect, useRef, useState } from "react";
 import { ViewStateProvider } from "zeta-dom-react";
-import { extend, kv, setImmediateOnce } from "./include/zeta-dom/util.js";
+import { definePrototype, extend, kv, setImmediateOnce, throwNotFunction } from "./include/zeta-dom/util.js";
+import { ZetaEventContainer } from "./include/zeta-dom/events.js";
 import { app } from "./app.js";
 import { useViewContainerState } from "./view.js";
 
+const emitter = new ZetaEventContainer();
 const states = {};
 
 function getCurrentStates() {
     return states[history.state] || (states[history.state] = {});
 }
+
+function ViewState(value) {
+    this.value = value;
+}
+
+definePrototype(ViewState, {
+    get: function () {
+        return this.value;
+    },
+    set: function (value) {
+        this.value = value;
+    },
+    onPopState: function (callback) {
+        throwNotFunction(callback);
+        return emitter.add(this, 'popstate', function (e) {
+            callback.call(this, e.newValue);
+        });
+    }
+});
 
 export function useAppReady() {
     const sReady = useState(false);
@@ -68,16 +89,20 @@ export function ViewStateContainer(props) {
         return {
             getState: function (uniqueId, key) {
                 var cur = getCurrentStates();
-                var state = cache[uniqueId] || (cache[uniqueId] = {
-                    value: cur[key] && cur[key].value,
-                    get: function () {
-                        return state.value;
-                    },
-                    set: function (value) {
-                        state.value = value;
-                    }
-                });
+                var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(cur[key] && cur[key].value));
                 if (container.active) {
+                    var stateId = state.stateId;
+                    if (stateId && stateId !== history.state) {
+                        var newValue = cur[key] && cur[key].value;
+                        emitter.emit('popstate', state, {
+                            newValue: newValue
+                        });
+                        // detach value in previous history state from current one
+                        var previous = new ViewState(state.value);
+                        states[stateId][key] = previous;
+                        state.value = newValue;
+                    }
+                    state.stateId = history.state;
                     cur[key] = state;
                 }
                 return state;
