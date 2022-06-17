@@ -10,6 +10,7 @@ export default function FlyoutMixin() {
     var self = this;
     ClassNameMixin.call(self, ['open', 'closing', 'tweening-in', 'tweening-out']);
     self.modal = false;
+    self.tabThrough = false;
     self.isFlyoutOpened = false;
     self.animating = false;
     self.visible = false;
@@ -36,6 +37,8 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
             'swipe-dismiss': self.swipeToDismiss
         }, self.modal && {
             'is-modal': ''
+        }, self.tabThrough && {
+            'tab-through': ''
         }, self.effects && {
             'animate-on': 'open',
             'animate-in': self.effects.join(' '),
