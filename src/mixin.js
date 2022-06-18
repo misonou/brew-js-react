@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { extend } from "./include/zeta-dom/util.js";
 import Mixin from "./mixins/Mixin.js";
 import AnimateMixin from "./mixins/AnimateMixin.js";
@@ -34,9 +34,13 @@ export const useLoadingStateMixin = createUseFunction(LoadingStateMixin);
 export const useScrollableMixin = createUseFunction(ScrollableMixin);
 
 export function useMixin(ctor) {
-    return useState(function () {
+    var mixin = useState(function () {
         return new ctor();
     })[0].reset();
+    useEffect(function () {
+        return mixin.dispose.bind(mixin);
+    }, []);
+    return mixin;
 }
 
 export function useMixinRef(mixin) {

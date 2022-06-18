@@ -30,6 +30,10 @@ export default abstract class Mixin implements ClassNameProvider {
      * @private Internal use.
      */
     getCustomAttributes(): Zeta.Dictionary<string>;
+    /**
+     * @private Internal use.
+     */
+    dispose(): void;
 
     /**
      * Watches a property on the object.

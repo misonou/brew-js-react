@@ -16,6 +16,8 @@ definePrototype(Mixin, {
     },
     getCustomAttributes: function () {
         return {};
+    },
+    dispose: function () {
     }
 });
 watchable(Mixin.prototype);
