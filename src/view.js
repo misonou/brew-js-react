@@ -50,11 +50,12 @@ definePrototype(ViewContainer, React.Component, {
         if (V && V !== self.currentViewComponent) {
             self.currentViewComponent = V;
             if (self.currentView && self.currentElement) {
+                var prevPath = self.currentPath;
+                var prevElement = self.currentElement;
                 self.prevView = self.currentView;
-                self.prevElement = self.currentElement;
                 self.currentElement = undefined;
-                animateOut(self.prevElement, 'show').then(function () {
-                    self.prevElement = undefined;
+                app.emit('pageleave', prevElement, { pathname: prevPath }, true);
+                animateOut(prevElement, 'show').then(function () {
                     self.prevView = undefined;
                     self.forceUpdate();
                 });
@@ -72,15 +73,18 @@ definePrototype(ViewContainer, React.Component, {
                             self.parentElement = element.parentElement;
                             setImmediate(function () {
                                 resolve();
-                                return animateIn(element, 'show');
+                                animateIn(element, 'show');
+                                app.emit('pageenter', element, { pathname: app.path }, true);
                             });
                         }
                     })));
             defineGetterProperty(providerProps.value, 'active', function () {
                 return self.currentView === view;
             });
+            self.currentPath = app.path;
             self.currentView = view;
         } else {
+            app.emit('pageenter', self.currentElement, { pathname: app.path }, true);
             resolve();
         }
         notifyAsync(self.parentElement || root, promise);
