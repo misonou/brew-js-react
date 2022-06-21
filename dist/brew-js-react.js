@@ -276,6 +276,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     watchOnce = _lib$util.watchOnce,
     watchable = _lib$util.watchable,
     inherit = _lib$util.inherit,
+    freeze = _lib$util.freeze,
     deepFreeze = _lib$util.deepFreeze,
     iequal = _lib$util.iequal,
     randomId = _lib$util.randomId,
@@ -363,6 +364,17 @@ var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
 
 
 /* harmony default export */ const zeta_dom_dom = (dom);
+;// CONCATENATED MODULE: ./tmp/zeta-dom/domLock.js
+
+var domLock_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    lock = domLock_lib$dom.lock,
+    locked = domLock_lib$dom.locked,
+    cancelLock = domLock_lib$dom.cancelLock,
+    notifyAsync = domLock_lib$dom.notifyAsync,
+    preventLeave = domLock_lib$dom.preventLeave;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
+
 ;// CONCATENATED MODULE: ./tmp/brew-js/domAction.js
 
 var addAsyncAction = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAsyncAction,
@@ -378,6 +390,7 @@ var addAsyncAction = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_roo
 
 
 
+
 /**
  * @param {Partial<import("./dialog").DialogOptions<any>>} props
  */
@@ -387,7 +400,7 @@ function createDialog(props) {
   var closing = false;
   var promise;
 
-  function closeDialog(value) {
+  function _closeDialog(value) {
     if (!closing) {
       closing = true;
       closeFlyout(root, value).then(function () {
@@ -404,7 +417,7 @@ function createDialog(props) {
 
   return {
     root: root,
-    close: closeDialog,
+    close: _closeDialog,
     open: function open() {
       if (promise) {
         return promise;
@@ -420,16 +433,20 @@ function createDialog(props) {
       }
 
       if (props.onRender) {
-        external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.render( /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.onRender, extend({
-          closeDialog: closeDialog
-        }, props)), root);
+        var dialogProps = extend({}, props, {
+          closeDialog: function closeDialog(value) {
+            var promise = resolve((props.onCommit || pipe)(value));
+            catchAsync(lock(zeta_dom_dom.activeElement, promise));
+            promise.then(_closeDialog);
+          }
+        });
+        external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.render( /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.onRender, dialogProps), root);
       }
 
       promise = openFlyout(root);
       always(promise, function () {
         promise = null;
       });
-      promise.then(props.onCommit);
       (props.onOpen || noop)(root);
       return promise;
     }
@@ -463,6 +480,12 @@ function Dialog(props) {
 }
 // EXTERNAL MODULE: external "zeta-dom-react"
 var external_zeta_dom_react_ = __webpack_require__(103);
+;// CONCATENATED MODULE: ./tmp/zeta-dom/events.js
+
+var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/events.js
+
 ;// CONCATENATED MODULE: ./tmp/brew-js/defaults.js
 
 var defaults_defaultExport = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.defaults;
@@ -481,17 +504,6 @@ install('react', function (app_) {
   app_app = app_;
 });
 brew_js_defaults.react = true;
-;// CONCATENATED MODULE: ./tmp/zeta-dom/domLock.js
-
-var domLock_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
-    lock = domLock_lib$dom.lock,
-    locked = domLock_lib$dom.locked,
-    cancelLock = domLock_lib$dom.cancelLock,
-    notifyAsync = domLock_lib$dom.notifyAsync,
-    preventLeave = domLock_lib$dom.preventLeave;
-
-;// CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
-
 ;// CONCATENATED MODULE: ./tmp/brew-js/anim.js
 
 var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateIn,
@@ -560,11 +572,14 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       self.currentViewComponent = V;
 
       if (self.currentView && self.currentElement) {
+        var prevPath = self.currentPath;
+        var prevElement = self.currentElement;
         self.prevView = self.currentView;
-        self.prevElement = self.currentElement;
         self.currentElement = undefined;
-        animateOut(self.prevElement, 'show').then(function () {
-          self.prevElement = undefined;
+        app_app.emit('pageleave', prevElement, {
+          pathname: prevPath
+        }, true);
+        animateOut(prevElement, 'show').then(function () {
           self.prevView = undefined;
           self.forceUpdate();
         });
@@ -581,15 +596,22 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
           self.parentElement = element.parentElement;
           util_setImmediate(function () {
             resolve();
-            return animateIn(element, 'show');
+            animateIn(element, 'show');
+            app_app.emit('pageenter', element, {
+              pathname: app_app.path
+            }, true);
           });
         }
       })));
       defineGetterProperty(providerProps.value, 'active', function () {
         return self.currentView === view;
       });
+      self.currentPath = app_app.path;
       self.currentView = view;
     } else {
+      app_app.emit('pageenter', self.currentElement, {
+        pathname: app_app.path
+      }, true);
       resolve();
     }
 
@@ -685,12 +707,32 @@ function redirectTo(view, params) {
 
 
 
+
+var emitter = new ZetaEventContainer();
 var states = {};
 
 function getCurrentStates() {
   return states[history.state] || (states[history.state] = {});
 }
 
+function ViewState(value) {
+  this.value = value;
+}
+
+definePrototype(ViewState, {
+  get: function get() {
+    return this.value;
+  },
+  set: function set(value) {
+    this.value = value;
+  },
+  onPopState: function onPopState(callback) {
+    throwNotFunction(callback);
+    return emitter.add(this, 'popstate', function (e) {
+      callback.call(this, e.newValue);
+    });
+  }
+});
 function useAppReady() {
   var sReady = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(false);
   var ready = sReady[0],
@@ -705,32 +747,37 @@ function useAppReady() {
 function useRouteParam(name, defaultValue) {
   var container = useViewContainerState();
   var route = app_app.route;
-  var sValue = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(route[name]);
-  var value = sValue[0],
-      setValue = sValue[1];
+  var value = route[name] || '';
+  var ref = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useRef)(value);
+  var forceUpdate = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)()[1];
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
-    var current = route[name]; // route parameter might be changed after state initialization and before useEffect hook is called
+    var setValue = function setValue() {
+      var current = route[name] || '';
 
-    setValue(current);
+      if (container.active && current !== ref.current) {
+        ref.current = current;
+        forceUpdate({});
+      }
+    }; // route parameter might be changed after state initialization and before useEffect hook is called
+
+
+    setValue();
 
     if (name in route) {
-      return route.watch(name, function (value) {
-        util_setImmediate(function () {
-          if (container.active) {
-            setValue(value);
-          }
-        });
+      return route.watch(name, function () {
+        setImmediateOnce(setValue);
       });
     }
 
     console.error('Route parameter ' + name + ' does not exist');
   }, [name, defaultValue]);
+  ref.current = value;
 
   if (!value && defaultValue !== undefined) {
     app_app.navigate(route.getPath(extend({}, route, kv(name, defaultValue))), true);
   }
 
-  return value || '';
+  return value;
 }
 function useRouteState(key, defaultValue) {
   var container = useViewContainerState();
@@ -750,17 +797,23 @@ function ViewStateContainer(props) {
     return {
       getState: function getState(uniqueId, key) {
         var cur = getCurrentStates();
-        var state = cache[uniqueId] || (cache[uniqueId] = {
-          value: cur[key] && cur[key].value,
-          get: function get() {
-            return state.value;
-          },
-          set: function set(value) {
-            state.value = value;
-          }
-        });
+        var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(cur[key] && cur[key].value));
 
         if (container.active) {
+          var stateId = state.stateId;
+
+          if (stateId && stateId !== history.state) {
+            var newValue = cur[key] && cur[key].value;
+            emitter.emit('popstate', state, {
+              newValue: newValue
+            }); // detach value in previous history state from current one
+
+            var previous = new ViewState(state.value);
+            states[stateId][key] = previous;
+            state.value = newValue;
+          }
+
+          state.stateId = history.state;
           cur[key] = state;
         }
 
@@ -895,7 +948,8 @@ definePrototype(Mixin, {
   },
   getCustomAttributes: function getCustomAttributes() {
     return {};
-  }
+  },
+  dispose: function dispose() {}
 });
 watchable(Mixin.prototype);
 util_define(Mixin, {
@@ -1023,6 +1077,13 @@ definePrototype(StatefulMixin, Mixin, {
     });
 
     return clone;
+  },
+  dispose: function dispose() {
+    var states = _(this).states;
+
+    each(states, function (i, v) {
+      delete states[i];
+    });
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/ClassNameMixin.js
@@ -1162,19 +1223,13 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
     });
   }
 });
-;// CONCATENATED MODULE: ./tmp/zeta-dom/events.js
-
-var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
-
-;// CONCATENATED MODULE: ./src/include/zeta-dom/events.js
-
 ;// CONCATENATED MODULE: ./src/mixins/ErrorHandlerMixin.js
 
 
 
 
 var ErrorHandlerMixinSuper = StatefulMixin.prototype;
-var emitter = new ZetaEventContainer();
+var ErrorHandlerMixin_emitter = new ZetaEventContainer();
 
 function isErrorMatched(filter, error) {
   if (isFunction(filter)) {
@@ -1194,7 +1249,7 @@ definePrototype(ErrorHandlerMixin, StatefulMixin, {
       filter = null;
     }
 
-    return emitter.add(this, filter ? 'error' : 'default', function (e) {
+    return ErrorHandlerMixin_emitter.add(this, filter ? 'error' : 'default', function (e) {
       if (!filter || isErrorMatched(filter, e.error)) {
         return callback(e.error);
       }
@@ -1207,7 +1262,7 @@ definePrototype(ErrorHandlerMixin, StatefulMixin, {
       var data = {
         error: e.error
       };
-      return emitter.emit('error', self, data) || emitter.emit('default', self, data);
+      return ErrorHandlerMixin_emitter.emit('error', self, data) || ErrorHandlerMixin_emitter.emit('default', self, data);
     });
   }
 });
@@ -1243,6 +1298,7 @@ function FlyoutMixin() {
   var self = this;
   ClassNameMixin.call(self, ['open', 'closing', 'tweening-in', 'tweening-out']);
   self.modal = false;
+  self.tabThrough = false;
   self.isFlyoutOpened = false;
   self.animating = false;
   self.visible = false;
@@ -1268,6 +1324,8 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
       'swipe-dismiss': self.swipeToDismiss
     }, self.modal && {
       'is-modal': ''
+    }, self.tabThrough && {
+      'tab-through': ''
     }, self.effects && {
       'animate-on': 'open',
       'animate-in': self.effects.join(' '),
@@ -1337,9 +1395,9 @@ definePrototype(FocusStateMixin, StatefulMixin, {
   initElement: function initElement(element, state) {
     FocusStateMixinSuper.initElement.call(this, element, state);
     zeta_dom_dom.on(element, {
-      focusin: function focusin() {
+      focusin: function focusin(e) {
         state.focused = true;
-        setClass(element, 'focused', true);
+        setClass(element, 'focused', e.source);
       },
       focusout: function focusout() {
         state.focused = false;
@@ -1487,9 +1545,13 @@ var useFocusStateMixin = createUseFunction(FocusStateMixin);
 var useLoadingStateMixin = createUseFunction(LoadingStateMixin);
 var useScrollableMixin = createUseFunction(ScrollableMixin);
 function useMixin(ctor) {
-  return (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
+  var mixin = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
     return new ctor();
   })[0].reset();
+  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
+    return mixin.dispose.bind(mixin);
+  }, []);
+  return mixin;
 }
 function useMixinRef(mixin) {
   return mixin && mixin.getMixin().reset();
