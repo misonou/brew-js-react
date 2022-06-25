@@ -8,7 +8,7 @@ var flyoutMixinCounter = 0;
 
 export default function FlyoutMixin() {
     var self = this;
-    ClassNameMixin.call(self, ['open', 'closing', 'tweening-in', 'tweening-out']);
+    ClassNameMixin.call(self, ['open', 'closing', 'visible', 'tweening-in', 'tweening-out']);
     self.modal = false;
     self.tabThrough = false;
     self.isFlyoutOpened = false;
