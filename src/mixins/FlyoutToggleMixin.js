@@ -9,6 +9,12 @@ export default function FlyoutToggleMixin(mixin) {
 }
 
 definePrototype(FlyoutToggleMixin, ClassNameMixin, {
+    open: function (value) {
+        return this.flyoutMixin.open(value);
+    },
+    close: function (value) {
+        return this.flyoutMixin.close(value);
+    },
     getCustomAttributes: function () {
         var element = this.flyoutMixin.elements()[0];
         return extend({}, FlyoutToggleMixinSuper.getCustomAttributes.call(this), {

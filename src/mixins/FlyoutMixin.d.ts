@@ -16,7 +16,9 @@ export default class FlyoutMixin extends ClassNameMixin {
     modal: boolean;
 
     withEffects(...effects: AnimationEffect[]): this;
-    onOpen(callback: () => void): Zeta.UnregisterCallback;
+    onOpen(callback: (state: any) => void): Zeta.UnregisterCallback;
     onToggleState(callback: (state: boolean) => void): Zeta.UnregisterCallback;
     onVisibilityChanged(callback: (state: boolean) => void): Zeta.UnregisterCallback;
+    open(state?: any): Promise<any>;
+    close(state?: any): Promise<void>;
 }
