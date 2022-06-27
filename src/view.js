@@ -27,6 +27,7 @@ function ViewContainer() {
     }
     self.componentWillUnmount = app.on('navigate', function () {
         if (self.mounted && self.getViewComponent()) {
+            self.isForceUpdate = true;
             self.forceUpdate();
         }
     });
@@ -84,7 +85,10 @@ definePrototype(ViewContainer, React.Component, {
             self.currentPath = app.path;
             self.currentView = view;
         } else {
-            app.emit('pageenter', self.currentElement, { pathname: app.path }, true);
+            if (self.isForceUpdate) {
+                self.isForceUpdate = false;
+                app.emit('pageenter', self.currentElement, { pathname: app.path }, true);
+            }
             resolve();
         }
         notifyAsync(self.parentElement || root, promise);
