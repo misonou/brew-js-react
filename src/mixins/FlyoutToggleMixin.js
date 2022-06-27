@@ -14,8 +14,5 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
         return extend({}, FlyoutToggleMixinSuper.getCustomAttributes.call(this), {
             'toggle': element && ('#' + element.id)
         });
-    },
-    clone: function () {
-        return extend(FlyoutToggleMixinSuper.clone.call(this), { flyoutMixin: this.flyoutMixin });
     }
 });

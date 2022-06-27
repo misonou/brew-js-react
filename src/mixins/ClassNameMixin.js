@@ -52,9 +52,6 @@ definePrototype(ClassNameMixin, StatefulMixin, {
             }
         });
     },
-    clone: function () {
-        return extend(ClassNameMixinSuper.clone.call(this), { classNames: this.classNames });
-    },
     onClassNameUpdated: function (element, prevState, state) {
     }
 });

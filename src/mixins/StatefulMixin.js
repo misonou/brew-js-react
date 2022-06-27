@@ -65,9 +65,10 @@ definePrototype(StatefulMixin, Mixin, {
     initElement: function (element, state) {
     },
     clone: function () {
-        const clone = inherit(Object.getPrototypeOf(this));
+        const self = this;
+        const clone = inherit(Object.getPrototypeOf(self), self);
         _(clone, {
-            states: _(this).states,
+            states: _(self).states,
             prefix: randomId() + '.',
             counter: 0
         });
