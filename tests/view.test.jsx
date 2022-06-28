@@ -12,6 +12,8 @@ let Foo;
 let Bar;
 /** @type {import("src/view").ViewComponent<{}>} */
 let Baz;
+/** @type {import("src/view").ViewComponent<{}>} */
+let Test;
 
 let bazCallback = mockFn(v => v === 'baz');
 
@@ -20,6 +22,8 @@ beforeAll(async () => {
         app.useRouter({
             baseUrl: '/',
             routes: [
+                '/{dummy}/{view:test}/a/{params1?}/{params2?}',
+                '/{dummy}/{view:test}/b/{params3?}',
                 '/{dummy}/{view:foo}/{baz?}',
                 '/{dummy}/{view}/*',
                 '/{dummy}',
@@ -51,6 +55,14 @@ beforeAll(async () => {
             }
         }
     }, { view: 'foo', baz: /./ })
+
+    Test = registerView(async () => {
+        return {
+            default: () => {
+                return (<div>test</div>)
+            }
+        }
+    }, { view: 'test' });
 });
 
 beforeEach(async () => {
@@ -202,6 +214,9 @@ describe('renderView', () => {
 describe('linkTo', () => {
     it('should return path that will render specified view with params', () => {
         expect(linkTo(Foo, { baz: 'baz' })).toBe('/dummy/foo/baz');
+        expect(linkTo(Test, { params1: 'baz' })).toBe('/dummy/test/a/baz');
+        expect(linkTo(Test, { params1: 'baz', params2: 'bee' })).toBe('/dummy/test/a/baz/bee');
+        expect(linkTo(Test, { params3: 'baz' })).toBe('/dummy/test/b/baz');
     });
 
     it('should return minimum path matching the specified view', async () => {

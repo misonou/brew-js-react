@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { any, defineGetterProperty, definePrototype, each, extend, isFunction, keys, makeArray, noop, pick, randomId, setImmediate } from "./include/zeta-dom/util.js";
+import { any, defineGetterProperty, definePrototype, each, either, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 import { ViewStateContainer } from "./hooks.js";
@@ -100,6 +100,37 @@ definePrototype(ViewContainer, React.Component, {
     }
 });
 
+function getCurrentParams(view, includeAll) {
+    var state = routeMap.get(view);
+    if (!state.maxParams) {
+        var matched = map(app.routes, function (v) {
+            var route = app.parseRoute(v);
+            var matched = route.length && !any(state.matchers, function (v, i) {
+                var pos = route.params[i];
+                return (v ? !(pos >= 0) : pos < route.minLength) || (!isFunction(v) && !route.match(i, v));
+            });
+            return matched ? route : null;
+        });
+        if (matched[1]) {
+            matched = grep(matched, function (v) {
+                return !any(v.params, function (v, i) {
+                    return usedParams[i] && !state.matchers[i];
+                });
+            });
+        }
+        if (matched[0]) {
+            var last = matched.slice(-1)[0];
+            state.maxParams = keys(extend.apply(0, [{}].concat(matched.map(function (v) {
+                return v.params;
+            }))));
+            state.minParams = map(last.params, function (v, i) {
+                return state.params[i] || v >= last.minLength ? null : i;
+            });
+        }
+    }
+    return pick(app.route, includeAll ? state.maxParams : state.minParams);
+}
+
 export function useViewContainerState() {
     return React.useContext(StateContext);
 }
@@ -153,17 +184,11 @@ export function renderView() {
 }
 
 export function linkTo(view, params) {
-    var viewParams = (routeMap.get(view) || {}).params;
-    var newParams = {};
-    for (var i in app.route) {
-        if (viewParams && i in viewParams) {
-            newParams[i] = viewParams[i];
-        } else if (params && i in params) {
-            newParams[i] = params[i];
-        } else if (!usedParams[i]) {
-            newParams[i] = app.route[i];
-        }
+    var state = routeMap.get(view);
+    if (!state) {
+        return '/';
     }
+    var newParams = extend(getCurrentParams(view), params, state.params);
     return app.route.getPath(newParams);
 }
 
