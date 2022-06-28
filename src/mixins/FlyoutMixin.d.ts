@@ -12,7 +12,7 @@ export default class FlyoutMixin extends ClassNameMixin {
     readonly isFlyoutOpened: boolean;
     readonly animating: boolean;
     readonly visible: boolean;
-    readonly toggle: ClassNameMixin;
+    readonly toggle: FlyoutToggleMixin;
     modal: boolean;
 
     withEffects(...effects: AnimationEffect[]): this;
