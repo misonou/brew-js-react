@@ -198,6 +198,40 @@ describe('renderView', () => {
         expect(app.path).toBe('/dummy/foo/baz');
     });
 
+    it('should redirect to minimum path of matching view', async () => {
+        const Baz2 = registerView(async () => {
+            return {
+                default: () => {
+                    return (<div>baz</div>)
+                }
+            }
+        }, { view: 'foo', baz: 'xxx' });
+
+        await app.navigate('/dummy/foo/baz');
+        var { unmount } = render(<div>{renderView(Foo, Baz2)}</div>);
+        await screen.findByText('foo');
+        expect(app.path).toBe('/dummy/foo');
+        unmount();
+
+        await app.navigate('/dummy/test/a/p1/p2');
+        var { unmount } = render(<div>{renderView(Test, Foo)}</div>);
+        await screen.findByText('test');
+        expect(app.path).toBe('/dummy/test/a/p1/p2');
+        unmount();
+
+        await app.navigate('/dummy/test/a/p1');
+        var { unmount } = render(<div>{renderView(Test, Foo)}</div>);
+        await screen.findByText('test');
+        expect(app.path).toBe('/dummy/test/a/p1');
+        unmount();
+
+        await app.navigate('/dummy/test/b/p3');
+        var { unmount } = render(<div>{renderView(Test, Foo)}</div>);
+        await screen.findByText('test');
+        expect(app.path).toBe('/dummy/test/b/p3');
+        unmount();
+    });
+
     it('should not trigger redirection when app is about to navigate', async () => {
         const Component = function ({ view }) {
             return renderView(view);

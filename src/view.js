@@ -96,7 +96,17 @@ definePrototype(ViewContainer, React.Component, {
     },
     getViewComponent: function () {
         var props = this.props;
-        return any(props.views, isViewMatched) || (history.state === stateId && void redirectTo(props.defaultView));
+        var matched = any(props.views, isViewMatched) || props.defaultView;
+        if (history.state === stateId) {
+            // ensure the current path actually corresponds to the matched view
+            // when some views are not included in the list of allowed views
+            var targetPath = linkTo(matched, getCurrentParams(matched, true));
+            if (targetPath !== app.path) {
+                app.navigate(targetPath, true);
+                return;
+            }
+        }
+        return matched;
     }
 });
 
