@@ -1,6 +1,6 @@
 import { useObservableProperty } from "zeta-dom-react";
 import waterpipe from "./include/external/waterpipe.js"
-import { extend, makeArray, single } from "./include/zeta-dom/util.js";
+import { extend, keys, makeArray, single } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 
 const empty = Object.create(null);
@@ -79,6 +79,9 @@ export function makeTranslation(resources, defaultLang) {
     return {
         translate: cache[''],
         getTranslation: getTranslationCallback,
-        useTranslation
+        useTranslation: useTranslation,
+        keys: function (prefix) {
+            return keys(resources[defaultLang][prefix] || empty);
+        }
     };
 }
