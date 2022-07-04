@@ -261,7 +261,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     setImmediateOnce = _lib$util.setImmediateOnce,
     throwNotFunction = _lib$util.throwNotFunction,
     errorWithCode = _lib$util.errorWithCode,
-    keys = _lib$util.keys,
+    util_keys = _lib$util.keys,
     values = _lib$util.values,
     util_hasOwnProperty = _lib$util.hasOwnProperty,
     getOwnPropertyDescriptors = _lib$util.getOwnPropertyDescriptors,
@@ -545,6 +545,7 @@ function ViewContainer() {
 
   self.componentWillUnmount = app_app.on('navigate', function () {
     if (self.mounted && self.getViewComponent()) {
+      self.isForceUpdate = true;
       self.forceUpdate();
     }
   });
@@ -609,9 +610,13 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       self.currentPath = app_app.path;
       self.currentView = view;
     } else {
-      app_app.emit('pageenter', self.currentElement, {
-        pathname: app_app.path
-      }, true);
+      if (self.isForceUpdate) {
+        self.isForceUpdate = false;
+        app_app.emit('pageenter', self.currentElement, {
+          pathname: app_app.path
+        }, true);
+      }
+
       resolve();
     }
 
@@ -620,9 +625,58 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
   },
   getViewComponent: function getViewComponent() {
     var props = this.props;
-    return any(props.views, isViewMatched) || history.state === stateId && void redirectTo(props.defaultView);
+    var matched = any(props.views, isViewMatched) || props.defaultView;
+
+    if (history.state === stateId) {
+      // ensure the current path actually corresponds to the matched view
+      // when some views are not included in the list of allowed views
+      var targetPath = linkTo(matched, getCurrentParams(matched, true));
+
+      if (targetPath !== app_app.path) {
+        app_app.navigate(targetPath, true);
+        return;
+      }
+    }
+
+    return matched;
   }
 });
+
+function getCurrentParams(view, includeAll) {
+  var state = routeMap.get(view);
+
+  if (!state.maxParams) {
+    var matched = map(app_app.routes, function (v) {
+      var route = app_app.parseRoute(v);
+      var matched = route.length && !any(state.matchers, function (v, i) {
+        var pos = route.params[i];
+        return (v ? !(pos >= 0) : pos < route.minLength) || !isFunction(v) && !route.match(i, v);
+      });
+      return matched ? route : null;
+    });
+
+    if (matched[1]) {
+      matched = grep(matched, function (v) {
+        return !any(v.params, function (v, i) {
+          return usedParams[i] && !state.matchers[i];
+        });
+      });
+    }
+
+    if (matched[0]) {
+      var last = matched.slice(-1)[0];
+      state.maxParams = util_keys(extend.apply(0, [{}].concat(matched.map(function (v) {
+        return v.params;
+      }))));
+      state.minParams = map(last.params, function (v, i) {
+        return state.params[i] || v >= last.minLength ? null : i;
+      });
+    }
+  }
+
+  return pick(app_app.route, includeAll ? state.maxParams : state.minParams);
+}
+
 function useViewContainerState() {
   return external_commonjs_react_commonjs2_react_amd_react_root_React_.useContext(StateContext);
 }
@@ -658,7 +712,7 @@ function registerView(factory, routeParams) {
   });
   routeMap.set(Component, {
     id: randomId(),
-    matchCount: keys(routeParams).length,
+    matchCount: util_keys(routeParams).length,
     matchers: routeParams,
     params: pick(routeParams, function (v) {
       return typeof v === 'string';
@@ -680,19 +734,13 @@ function renderView() {
   });
 }
 function linkTo(view, params) {
-  var viewParams = (routeMap.get(view) || {}).params;
-  var newParams = {};
+  var state = routeMap.get(view);
 
-  for (var i in app_app.route) {
-    if (viewParams && i in viewParams) {
-      newParams[i] = viewParams[i];
-    } else if (params && i in params) {
-      newParams[i] = params[i];
-    } else if (!usedParams[i]) {
-      newParams[i] = app_app.route[i];
-    }
+  if (!state) {
+    return '/';
   }
 
+  var newParams = extend(getCurrentParams(view), params, state.params);
   return app_app.route.getPath(newParams);
 }
 function navigateTo(view, params) {
@@ -918,7 +966,10 @@ function makeTranslation(resources, defaultLang) {
   return {
     translate: cache[''],
     getTranslation: getTranslationCallback,
-    useTranslation: useTranslation
+    useTranslation: useTranslation,
+    keys: function keys(prefix) {
+      return util_keys(resources[defaultLang][prefix] || empty);
+    }
   };
 }
 ;// CONCATENATED MODULE: ./src/mixins/StaticAttributeMixin.js
@@ -1068,10 +1119,11 @@ definePrototype(StatefulMixin, Mixin, {
   },
   initElement: function initElement(element, state) {},
   clone: function clone() {
-    var clone = inherit(Object.getPrototypeOf(this));
+    var self = this;
+    var clone = inherit(Object.getPrototypeOf(self), self);
 
     _(clone, {
-      states: _(this).states,
+      states: _(self).states,
       prefix: randomId() + '.',
       counter: 0
     });
@@ -1141,11 +1193,6 @@ definePrototype(ClassNameMixin, StatefulMixin, {
       if (nodes.includes(element)) {
         checkState(self, element, state);
       }
-    });
-  },
-  clone: function clone() {
-    return extend(ClassNameMixinSuper.clone.call(this), {
-      classNames: this.classNames
     });
   },
   onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {}
@@ -1266,6 +1313,18 @@ definePrototype(ErrorHandlerMixin, StatefulMixin, {
     });
   }
 });
+;// CONCATENATED MODULE: ./tmp/brew-js/var.js
+
+var getVarScope = undefined.getVarScope,
+    setVar = undefined.setVar,
+    declareVar = undefined.declareVar,
+    resetVar = undefined.resetVar,
+    getVar = undefined.getVar,
+    evaluate = undefined.evaluate,
+    evalAttr = undefined.evalAttr;
+
+;// CONCATENATED MODULE: ./src/include/brew-js/var.js
+
 ;// CONCATENATED MODULE: ./src/mixins/FlyoutToggleMixin.js
 
 
@@ -1275,15 +1334,16 @@ function FlyoutToggleMixin(mixin) {
   this.flyoutMixin = mixin;
 }
 definePrototype(FlyoutToggleMixin, ClassNameMixin, {
+  open: function open(value) {
+    return this.flyoutMixin.open(value);
+  },
+  close: function close(value) {
+    return this.flyoutMixin.close(value);
+  },
   getCustomAttributes: function getCustomAttributes() {
     var element = this.flyoutMixin.elements()[0];
     return extend({}, FlyoutToggleMixinSuper.getCustomAttributes.call(this), {
       'toggle': element && '#' + element.id
-    });
-  },
-  clone: function clone() {
-    return extend(FlyoutToggleMixinSuper.clone.call(this), {
-      flyoutMixin: this.flyoutMixin
     });
   }
 });
@@ -1292,11 +1352,14 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
 
 
 
+
+
 var FlyoutMixinSuper = ClassNameMixin.prototype;
+var varname = '__flyout' + randomId();
 var flyoutMixinCounter = 0;
 function FlyoutMixin() {
   var self = this;
-  ClassNameMixin.call(self, ['open', 'closing', 'tweening-in', 'tweening-out']);
+  ClassNameMixin.call(self, ['open', 'closing', 'visible', 'tweening-in', 'tweening-out']);
   self.modal = false;
   self.tabThrough = false;
   self.isFlyoutOpened = false;
@@ -1332,10 +1395,17 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
       'animate-out': ''
     });
   },
+  open: function open(value) {
+    return openFlyout(this.elements()[0], kv(varname, value));
+  },
+  close: function close(value) {
+    return closeFlyout(this.elements()[0], value);
+  },
   onOpen: function onOpen(callback) {
+    var element = this.elements()[0];
     return this.onToggleState(function (opened) {
       if (opened) {
-        return callback();
+        return callback(getVar(element, varname));
       }
     });
   },
@@ -1351,6 +1421,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
 
     if (!element.id) {
       element.id = 'flyout-' + ++flyoutMixinCounter;
+      declareVar(element, varname, undefined);
     }
 
     app_app.on(element, {
