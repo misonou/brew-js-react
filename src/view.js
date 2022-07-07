@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { any, defineGetterProperty, definePrototype, each, either, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single } from "./include/zeta-dom/util.js";
+import { any, defineGetterProperty, definePrototype, each, either, exclude, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 import { ViewStateContainer } from "./hooks.js";
@@ -113,9 +113,10 @@ definePrototype(ViewContainer, React.Component, {
 function getCurrentParams(view, includeAll) {
     var state = routeMap.get(view);
     if (!state.maxParams) {
+        var matchers = exclude(state.matchers, ['remainingSegments']);
         var matched = map(app.routes, function (v) {
             var route = app.parseRoute(v);
-            var matched = route.length && !any(state.matchers, function (v, i) {
+            var matched = route.length && !any(matchers, function (v, i) {
                 var pos = route.params[i];
                 return (v ? !(pos >= 0) : pos < route.minLength) || (!isFunction(v) && !route.match(i, v));
             });
@@ -124,7 +125,7 @@ function getCurrentParams(view, includeAll) {
         if (matched[1]) {
             matched = grep(matched, function (v) {
                 return !single(v.params, function (v, i) {
-                    return usedParams[i] && !state.matchers[i];
+                    return usedParams[i] && !matchers[i];
                 });
             });
         }

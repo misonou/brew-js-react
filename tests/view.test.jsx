@@ -13,6 +13,8 @@ let Bar;
 /** @type {import("src/view").ViewComponent<{}>} */
 let Baz;
 /** @type {import("src/view").ViewComponent<{}>} */
+let BarBaz;
+/** @type {import("src/view").ViewComponent<{}>} */
 let Test;
 /** @type {import("src/view").ViewComponent<{}>} */
 let Var1;
@@ -61,6 +63,14 @@ beforeAll(async () => {
             }
         }
     }, { view: 'foo', baz: /./ })
+
+    BarBaz = registerView(async () => {
+        return {
+            default: () => {
+                return (<div>b_a_r_b_a_z</div>)
+            }
+        }
+    }, { view: 'bar', remainingSegments: '/baz' })
 
     Test = registerView(async () => {
         return {
@@ -276,6 +286,7 @@ describe('renderView', () => {
 describe('linkTo', () => {
     it('should return path that will render specified view with params', () => {
         expect(linkTo(Foo, { baz: 'baz' })).toBe('/dummy/foo/baz');
+        expect(linkTo(BarBaz)).toBe('/dummy/bar/baz');
         expect(linkTo(Test, { params1: 'baz' })).toBe('/dummy/test/a/baz');
         expect(linkTo(Test, { params1: 'baz', params2: 'bee' })).toBe('/dummy/test/a/baz/bee');
         expect(linkTo(Test, { params3: 'baz' })).toBe('/dummy/test/b/baz');
