@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { any, defineGetterProperty, definePrototype, each, either, exclude, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single } from "./include/zeta-dom/util.js";
+import { any, defineGetterProperty, definePrototype, each, exclude, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 import { ViewStateContainer } from "./hooks.js";
@@ -10,6 +10,7 @@ import { ViewStateContainer } from "./hooks.js";
 const root = dom.root;
 const routeMap = new Map();
 const usedParams = {};
+const sortedViews = [];
 const StateContext = React.createContext(Object.freeze({ active: true }));
 
 let stateId;
@@ -141,16 +142,37 @@ function getCurrentParams(view, includeAll, params) {
     return pick(params || app.route, includeAll ? state.maxParams : state.minParams);
 }
 
+function sortViews(a, b) {
+    return (routeMap.get(b) || {}).matchCount - (routeMap.get(a) || {}).matchCount;
+}
+
+function matchViewParams(view, route) {
+    var params = routeMap.get(view);
+    return !!params && !single(params.matchers, function (v, i) {
+        var value = route[i] || '';
+        return isFunction(v) ? !v(value) : (v || '') !== value;
+    });
+}
+
 export function useViewContainerState() {
     return React.useContext(StateContext);
 }
 
 export function isViewMatched(view) {
-    var params = routeMap.get(view);
-    return !!params && false === any(params.matchers, function (v, i) {
-        var value = app.route[i] || '';
-        return isFunction(v) ? !v(value) : (v || '') !== value;
-    });
+    return matchViewParams(view, app.route);
+}
+
+export function matchView(path, views) {
+    var route = app.route;
+    if (typeof path === 'string') {
+        route = route.parse(path);
+    } else {
+        views = path;
+    }
+    views = views ? makeArray(views).sort(sortViews) : sortedViews;
+    return any(views, function (v) {
+        return matchViewParams(v, route);
+    }) || undefined;
 }
 
 export function registerView(factory, routeParams) {
@@ -180,6 +202,8 @@ export function registerView(factory, routeParams) {
             return typeof v === 'string';
         })
     });
+    sortedViews.push(Component);
+    sortedViews.sort(sortViews);
     return Component;
 }
 
@@ -187,9 +211,7 @@ export function renderView() {
     var views = makeArray(arguments);
     var rootProps = isFunction(views[0]) ? {} : views.shift();
     var defaultView = views[0];
-    views.sort(function (a, b) {
-        return (routeMap.get(b) || {}).matchCount - (routeMap.get(a) || {}).matchCount;
-    });
+    views.sort(sortViews);
     return React.createElement(ViewContainer, { rootProps, views, defaultView });
 }
 
