@@ -63,7 +63,7 @@ definePrototype(ViewContainer, React.Component, {
             }
             var providerProps = {
                 key: routeMap.get(V).id,
-                value: {}
+                value: { view: V }
             };
             var view = React.createElement(StateContext.Provider, providerProps,
                 React.createElement(ViewStateContainer, null,

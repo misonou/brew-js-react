@@ -2,6 +2,7 @@ export type ViewComponentRootProps = React.DetailedHTMLProps<React.HTMLAttribute
 export type ViewComponent<P> = React.FC<P>;
 
 export interface ViewContainerState {
+    readonly view: ViewComponent<any>;
     readonly active: boolean;
 }
 
