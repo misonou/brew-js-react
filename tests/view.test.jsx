@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import { useObservableProperty, useViewState } from "zeta-dom-react";
 import { isViewMatched, linkTo, registerView, renderView } from "src/view";
 import { initApp, mockFn, verifyCalls } from "./testUtil";
 import { async } from "regenerator-runtime";
@@ -83,7 +84,12 @@ beforeAll(async () => {
     Var1 = registerView(async () => {
         return {
             default: () => {
-                return (<div>var1</div>)
+                useObservableProperty(app.route, 'var2');
+                var state = useViewState('var');
+                if (!state.get()) {
+                    state.set('var1');
+                }
+                return (<div>{state.get() || 'var1'}</div>);
             }
         }
     }, { var1: 'var1' });
@@ -91,10 +97,15 @@ beforeAll(async () => {
     Var2 = registerView(async () => {
         return {
             default: () => {
-                return (<div>var2</div>)
+                useObservableProperty(app.route, 'var2');
+                var state = useViewState('var');
+                if (!state.get()) {
+                    state.set('var2');
+                }
+                return (<div>{state.get() || 'var2'}</div>);
             }
         }
-    }, { var2: 'xxx' });
+    }, { var1: 'var1', var2: 'xxx' });
 });
 
 beforeEach(async () => {
@@ -280,6 +291,16 @@ describe('renderView', () => {
 
         await expect(promise).resolves.toBeTruthy();
         expect(app.path).toBe('/dummy/bar');
+    });
+
+    it('should not carry view state across different views when redirection is triggered', async () => {
+        await app.navigate('/xxx/a/var1');
+        var { unmount } = render(<div>{renderView(Var1, Var2)}</div>);
+        await screen.findByText('var2');
+        await app.navigate('/var1/a/var1');
+        expect(app.path).toBe('/var1');
+        await screen.findByText('var1');
+        unmount();
     });
 });
 

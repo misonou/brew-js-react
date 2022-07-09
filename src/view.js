@@ -103,7 +103,6 @@ definePrototype(ViewContainer, React.Component, {
             var targetPath = linkTo(matched, getCurrentParams(matched, true));
             if (targetPath !== app.path) {
                 app.navigate(targetPath, true);
-                return;
             }
         }
         return matched;
