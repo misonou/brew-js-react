@@ -14,6 +14,10 @@ let Bar;
 let Baz;
 /** @type {import("src/view").ViewComponent<{}>} */
 let Test;
+/** @type {import("src/view").ViewComponent<{}>} */
+let Var1;
+/** @type {import("src/view").ViewComponent<{}>} */
+let Var2;
 
 let bazCallback = mockFn(v => v === 'baz');
 
@@ -22,11 +26,13 @@ beforeAll(async () => {
         app.useRouter({
             baseUrl: '/',
             routes: [
-                '/{dummy}/{view:test}/a/{params1?}/{params2?}',
-                '/{dummy}/{view:test}/b/{params3?}',
-                '/{dummy}/{view:foo}/{baz?}',
-                '/{dummy}/{view}/*',
-                '/{dummy}',
+                '/{dummy:dummy}/{view:test}/a/{params1?}/{params2?}',
+                '/{dummy:dummy}/{view:test}/b/{params3?}',
+                '/{dummy:dummy}/{view:foo}/{baz?}',
+                '/{dummy:dummy}/{view}/*',
+                '/{dummy:dummy}',
+                '/{var2}/a/{var1}',
+                '/{var1:var1}',
                 '/*'
             ]
         });
@@ -63,6 +69,22 @@ beforeAll(async () => {
             }
         }
     }, { view: 'test' });
+
+    Var1 = registerView(async () => {
+        return {
+            default: () => {
+                return (<div>var1</div>)
+            }
+        }
+    }, { var1: 'var1' });
+
+    Var2 = registerView(async () => {
+        return {
+            default: () => {
+                return (<div>var2</div>)
+            }
+        }
+    }, { var2: 'xxx' });
 });
 
 beforeEach(async () => {
@@ -229,6 +251,12 @@ describe('renderView', () => {
         var { unmount } = render(<div>{renderView(Test, Foo)}</div>);
         await screen.findByText('test');
         expect(app.path).toBe('/dummy/test/b/p3');
+        unmount();
+
+        await app.navigate('/var1/a/var2');
+        var { unmount } = render(<div>{renderView(Var1, Var2)}</div>);
+        await screen.findByText('var1');
+        expect(app.path).toBe('/var1');
         unmount();
     });
 

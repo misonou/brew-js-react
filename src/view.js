@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { any, defineGetterProperty, definePrototype, each, either, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate } from "./include/zeta-dom/util.js";
+import { any, defineGetterProperty, definePrototype, each, either, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { app } from "./app.js";
 import { ViewStateContainer } from "./hooks.js";
@@ -123,7 +123,7 @@ function getCurrentParams(view, includeAll) {
         });
         if (matched[1]) {
             matched = grep(matched, function (v) {
-                return !any(v.params, function (v, i) {
+                return !single(v.params, function (v, i) {
                     return usedParams[i] && !state.matchers[i];
                 });
             });
