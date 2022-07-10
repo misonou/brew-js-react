@@ -110,7 +110,7 @@ definePrototype(ViewContainer, React.Component, {
     }
 });
 
-function getCurrentParams(view, includeAll) {
+function getCurrentParams(view, includeAll, params) {
     var state = routeMap.get(view);
     if (!state.maxParams) {
         var matchers = exclude(state.matchers, ['remainingSegments']);
@@ -139,7 +139,7 @@ function getCurrentParams(view, includeAll) {
             });
         }
     }
-    return pick(app.route, includeAll ? state.maxParams : state.minParams);
+    return pick(params || app.route, includeAll ? state.maxParams : state.minParams);
 }
 
 export function useViewContainerState() {
@@ -199,7 +199,7 @@ export function linkTo(view, params) {
     if (!state) {
         return '/';
     }
-    var newParams = extend(getCurrentParams(view), params, state.params);
+    var newParams = extend(getCurrentParams(view), getCurrentParams(view, true, params), state.params);
     return app.route.getPath(newParams);
 }
 

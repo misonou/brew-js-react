@@ -285,11 +285,13 @@ describe('renderView', () => {
 
 describe('linkTo', () => {
     it('should return path that will render specified view with params', () => {
-        expect(linkTo(Foo, { baz: 'baz' })).toBe('/dummy/foo/baz');
+        expect(linkTo(Foo, { baz: 'baz' })).toBe('/dummy/foo');
+        expect(linkTo(Baz, { baz: 'baz' })).toBe('/dummy/foo/baz');
         expect(linkTo(BarBaz)).toBe('/dummy/bar/baz');
         expect(linkTo(Test, { params1: 'baz' })).toBe('/dummy/test/a/baz');
         expect(linkTo(Test, { params1: 'baz', params2: 'bee' })).toBe('/dummy/test/a/baz/bee');
         expect(linkTo(Test, { params3: 'baz' })).toBe('/dummy/test/b/baz');
+        expect(linkTo(Var1, { var2: 'xxx' })).toBe('/var1');
     });
 
     it('should return minimum path matching the specified view', async () => {
