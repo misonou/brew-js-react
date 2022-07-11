@@ -181,6 +181,7 @@ __webpack_require__.d(src_namespaceObject, {
   "isViewMatched": () => (isViewMatched),
   "linkTo": () => (linkTo),
   "makeTranslation": () => (makeTranslation),
+  "matchView": () => (matchView),
   "navigateTo": () => (navigateTo),
   "redirectTo": () => (redirectTo),
   "registerView": () => (registerView),
@@ -525,6 +526,7 @@ var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_bre
 var view_root = zeta_dom_dom.root;
 var routeMap = new Map();
 var usedParams = {};
+var sortedViews = [];
 var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext(Object.freeze({
   active: true
 }));
@@ -588,7 +590,9 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
 
       var providerProps = {
         key: routeMap.get(V).id,
-        value: {}
+        value: {
+          view: V
+        }
       };
       var view = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(StateContext.Provider, providerProps, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewStateContainer, null, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
         rootProps: self.props.rootProps,
@@ -634,7 +638,6 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
 
       if (targetPath !== app_app.path) {
         app_app.navigate(targetPath, true);
-        return;
       }
     }
 
@@ -642,13 +645,14 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
   }
 });
 
-function getCurrentParams(view, includeAll) {
+function getCurrentParams(view, includeAll, params) {
   var state = routeMap.get(view);
 
   if (!state.maxParams) {
+    var matchers = exclude(state.matchers, ['remainingSegments']);
     var matched = map(app_app.routes, function (v) {
       var route = app_app.parseRoute(v);
-      var matched = route.length && !any(state.matchers, function (v, i) {
+      var matched = route.length && !any(matchers, function (v, i) {
         var pos = route.params[i];
         return (v ? !(pos >= 0) : pos < route.minLength) || !isFunction(v) && !route.match(i, v);
       });
@@ -657,8 +661,8 @@ function getCurrentParams(view, includeAll) {
 
     if (matched[1]) {
       matched = grep(matched, function (v) {
-        return !any(v.params, function (v, i) {
-          return usedParams[i] && !state.matchers[i];
+        return !single(v.params, function (v, i) {
+          return usedParams[i] && !matchers[i];
         });
       });
     }
@@ -674,18 +678,40 @@ function getCurrentParams(view, includeAll) {
     }
   }
 
-  return pick(app_app.route, includeAll ? state.maxParams : state.minParams);
+  return pick(params || app_app.route, includeAll ? state.maxParams : state.minParams);
+}
+
+function sortViews(a, b) {
+  return (routeMap.get(b) || {}).matchCount - (routeMap.get(a) || {}).matchCount;
+}
+
+function matchViewParams(view, route) {
+  var params = routeMap.get(view);
+  return !!params && !single(params.matchers, function (v, i) {
+    var value = route[i] || '';
+    return isFunction(v) ? !v(value) : (v || '') !== value;
+  });
 }
 
 function useViewContainerState() {
   return external_commonjs_react_commonjs2_react_amd_react_root_React_.useContext(StateContext);
 }
 function isViewMatched(view) {
-  var params = routeMap.get(view);
-  return !!params && false === any(params.matchers, function (v, i) {
-    var value = app_app.route[i] || '';
-    return isFunction(v) ? !v(value) : (v || '') !== value;
-  });
+  return matchViewParams(view, app_app.route);
+}
+function matchView(path, views) {
+  var route = app_app.route;
+
+  if (typeof path === 'string') {
+    route = route.parse(path);
+  } else {
+    views = path;
+  }
+
+  views = views ? makeArray(views).sort(sortViews) : sortedViews;
+  return any(views, function (v) {
+    return matchViewParams(v, route);
+  }) || undefined;
 }
 function registerView(factory, routeParams) {
   var Component = function Component(props) {
@@ -718,15 +744,15 @@ function registerView(factory, routeParams) {
       return typeof v === 'string';
     })
   });
+  sortedViews.push(Component);
+  sortedViews.sort(sortViews);
   return Component;
 }
 function renderView() {
   var views = makeArray(arguments);
   var rootProps = isFunction(views[0]) ? {} : views.shift();
   var defaultView = views[0];
-  views.sort(function (a, b) {
-    return (routeMap.get(b) || {}).matchCount - (routeMap.get(a) || {}).matchCount;
-  });
+  views.sort(sortViews);
   return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewContainer, {
     rootProps: rootProps,
     views: views,
@@ -740,7 +766,7 @@ function linkTo(view, params) {
     return '/';
   }
 
-  var newParams = extend(getCurrentParams(view), params, state.params);
+  var newParams = extend(getCurrentParams(view), getCurrentParams(view, true, params), state.params);
   return app_app.route.getPath(newParams);
 }
 function navigateTo(view, params) {
