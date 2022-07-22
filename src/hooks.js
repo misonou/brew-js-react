@@ -12,7 +12,8 @@ function getCurrentStates() {
     return states[history.state] || (states[history.state] = {});
 }
 
-function ViewState(value) {
+function ViewState(key, value) {
+    this.key = key;
     this.value = value;
 }
 
@@ -89,18 +90,19 @@ export function ViewStateContainer(props) {
         return {
             getState: function (uniqueId, key) {
                 var cur = getCurrentStates();
-                var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(cur[key] && cur[key].value));
+                var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(key, cur[key] && cur[key].value));
                 if (container.active) {
                     var stateId = state.stateId;
-                    if (stateId && stateId !== history.state) {
+                    if (stateId && (stateId !== history.state || key !== state.key)) {
                         var newValue = cur[key] && cur[key].value;
                         emitter.emit('popstate', state, {
                             newValue: newValue
                         });
                         // detach value in previous history state from current one
-                        var previous = new ViewState(state.value);
-                        states[stateId][key] = previous;
+                        var previous = new ViewState(state.key, state.value);
+                        states[stateId][previous.key] = previous;
                         state.value = newValue;
+                        state.key = key;
                     }
                     state.stateId = history.state;
                     cur[key] = state;
