@@ -17,7 +17,7 @@
   "homepage": "https://hackmd.io/@misonou/brew-js-react",
   "repository": "github:misonou/brew-js-react",
   "dependencies": {
-    "brew-js": ">=0.3.2",
+    "brew-js": ">=0.3.10",
     "waterpipe": "^2.5.0",
     "zeta-dom": ">=0.2.3",
     "zeta-dom-react": ">=0.2.1"

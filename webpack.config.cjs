@@ -105,6 +105,7 @@ const brewJSPath = processModule('brew-js', {
     exportNameMappings: {},
     subModuleExpressions: {
         'extension/router': 'lib',
+        'util/path': 'lib',
         anim: 'lib',
         app: 'lib',
         dom: 'lib',

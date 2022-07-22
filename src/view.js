@@ -4,6 +4,7 @@ import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { any, defineGetterProperty, definePrototype, each, exclude, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
+import { removeQueryAndHash } from "./include/brew-js/util/path.js";
 import { app } from "./app.js";
 import { ViewStateContainer } from "./hooks.js";
 
@@ -102,7 +103,7 @@ definePrototype(ViewContainer, React.Component, {
             // ensure the current path actually corresponds to the matched view
             // when some views are not included in the list of allowed views
             var targetPath = linkTo(matched, getCurrentParams(matched, true));
-            if (targetPath !== app.path) {
+            if (targetPath !== removeQueryAndHash(app.path)) {
                 app.navigate(targetPath, true);
             }
         }
