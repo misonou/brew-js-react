@@ -1,12 +1,11 @@
-import { defineAliasProperty, definePrototype, each, extend, kv, makeArray, randomId } from "../include/zeta-dom/util.js";
+import { defineAliasProperty, definePrototype, each, extend, makeArray } from "../include/zeta-dom/util.js";
 import { closeFlyout, openFlyout } from "../include/brew-js/domAction.js";
-import { declareVar, getVar } from "../include/brew-js/var.js";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
 import FlyoutToggleMixin from "./FlyoutToggleMixin.js";
 
 const FlyoutMixinSuper = ClassNameMixin.prototype;
-const varname = '__flyout' + randomId();
+const valueMap = new WeakMap();
 var flyoutMixinCounter = 0;
 
 export default function FlyoutMixin() {
@@ -49,7 +48,9 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         });
     },
     open: function (value) {
-        return openFlyout(this.elements()[0], kv(varname, value));
+        var element = this.elements()[0];
+        valueMap.set(element, value);
+        return openFlyout(element);
     },
     close: function (value) {
         return closeFlyout(this.elements()[0], value);
@@ -58,7 +59,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         var element = this.elements()[0];
         return this.onToggleState(function (opened) {
             if (opened) {
-                return callback(getVar(element, varname));
+                return callback(valueMap.get(element));
             }
         });
     },
@@ -73,7 +74,6 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         FlyoutMixinSuper.initElement.call(self, element, state);
         if (!element.id) {
             element.id = 'flyout-' + (++flyoutMixinCounter);
-            declareVar(element, varname, undefined);
         }
         app.on(element, {
             animationstart: function () {
