@@ -5,7 +5,7 @@ import { AnimationEffect } from "./AnimateMixin";
 export interface FlyoutMixinOptions {
     modal?: boolean;
     tabThrough?: boolean;
-    swipeToDismiss?: Zeta.Direction;
+    swipeToDismiss?: 'up' | 'down' | 'left' | 'right';
 }
 
 export default class FlyoutMixin extends ClassNameMixin {
