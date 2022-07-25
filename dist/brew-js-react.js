@@ -244,8 +244,10 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     any = _lib$util.any,
     single = _lib$util.single,
     kv = _lib$util.kv,
+    fill = _lib$util.fill,
     pick = _lib$util.pick,
     exclude = _lib$util.exclude,
+    mapObject = _lib$util.mapObject,
     mapGet = _lib$util.mapGet,
     mapRemove = _lib$util.mapRemove,
     arrRemove = _lib$util.arrRemove,
@@ -262,6 +264,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     setImmediateOnce = _lib$util.setImmediateOnce,
     throwNotFunction = _lib$util.throwNotFunction,
     errorWithCode = _lib$util.errorWithCode,
+    isErrorWithCode = _lib$util.isErrorWithCode,
     util_keys = _lib$util.keys,
     values = _lib$util.values,
     util_hasOwnProperty = _lib$util.hasOwnProperty,
@@ -514,7 +517,21 @@ var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_bre
 
 ;// CONCATENATED MODULE: ./src/include/brew-js/anim.js
 
+;// CONCATENATED MODULE: ./tmp/brew-js/util/path.js
+
+var setBaseUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.setBaseUrl,
+    combinePath = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.combinePath,
+    normalizePath = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.normalizePath,
+    removeQueryAndHash = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.removeQueryAndHash,
+    withBaseUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.withBaseUrl,
+    toAbsoluteUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toAbsoluteUrl,
+    toRelativeUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toRelativeUrl,
+    isSubPathOf = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.isSubPathOf;
+
+;// CONCATENATED MODULE: ./src/include/brew-js/util/path.js
+
 ;// CONCATENATED MODULE: ./src/view.js
+
 
 
 
@@ -636,7 +653,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       // when some views are not included in the list of allowed views
       var targetPath = linkTo(matched, getCurrentParams(matched, true));
 
-      if (targetPath !== app_app.path) {
+      if (targetPath !== removeQueryAndHash(app_app.path)) {
         app_app.navigate(targetPath, true);
       }
     }
@@ -789,7 +806,8 @@ function getCurrentStates() {
   return states[history.state] || (states[history.state] = {});
 }
 
-function ViewState(value) {
+function ViewState(key, value) {
+  this.key = key;
   this.value = value;
 }
 
@@ -871,20 +889,21 @@ function ViewStateContainer(props) {
     return {
       getState: function getState(uniqueId, key) {
         var cur = getCurrentStates();
-        var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(cur[key] && cur[key].value));
+        var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(key, cur[key] && cur[key].value));
 
         if (container.active) {
           var stateId = state.stateId;
 
-          if (stateId && stateId !== history.state) {
+          if (stateId && (stateId !== history.state || key !== state.key)) {
             var newValue = cur[key] && cur[key].value;
             emitter.emit('popstate', state, {
               newValue: newValue
             }); // detach value in previous history state from current one
 
-            var previous = new ViewState(state.value);
-            states[stateId][key] = previous;
+            var previous = new ViewState(state.key, state.value);
+            states[stateId][previous.key] = previous;
             state.value = newValue;
+            state.key = key;
           }
 
           state.stateId = history.state;
@@ -1093,6 +1112,7 @@ function StatefulMixin() {
   Mixin.call(this);
 
   _(this, {
+    elements: new WeakSet(),
     states: {},
     prefix: '',
     counter: 0
@@ -1125,8 +1145,9 @@ definePrototype(StatefulMixin, Mixin, {
     var self = this;
     var state = self.state;
     return function (current) {
-      if (current && current !== state.element) {
-        state.element = current;
+      state.element = current;
+
+      if (current && setAdd(_(self).elements, current)) {
         self.initElement(current, state);
       }
     };
@@ -1148,11 +1169,10 @@ definePrototype(StatefulMixin, Mixin, {
     var self = this;
     var clone = inherit(Object.getPrototypeOf(self), self);
 
-    _(clone, {
-      states: _(self).states,
+    _(clone, extend({}, _(self), {
       prefix: randomId() + '.',
       counter: 0
-    });
+    }));
 
     return clone;
   },
@@ -1339,18 +1359,6 @@ definePrototype(ErrorHandlerMixin, StatefulMixin, {
     });
   }
 });
-;// CONCATENATED MODULE: ./tmp/brew-js/var.js
-
-var getVarScope = undefined.getVarScope,
-    setVar = undefined.setVar,
-    declareVar = undefined.declareVar,
-    resetVar = undefined.resetVar,
-    getVar = undefined.getVar,
-    evaluate = undefined.evaluate,
-    evalAttr = undefined.evalAttr;
-
-;// CONCATENATED MODULE: ./src/include/brew-js/var.js
-
 ;// CONCATENATED MODULE: ./src/mixins/FlyoutToggleMixin.js
 
 
@@ -1379,9 +1387,8 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
 
 
 
-
 var FlyoutMixinSuper = ClassNameMixin.prototype;
-var varname = '__flyout' + randomId();
+var valueMap = new WeakMap();
 var flyoutMixinCounter = 0;
 function FlyoutMixin() {
   var self = this;
@@ -1422,7 +1429,9 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     });
   },
   open: function open(value) {
-    return openFlyout(this.elements()[0], kv(varname, value));
+    var element = this.elements()[0];
+    valueMap.set(element, value);
+    return openFlyout(element);
   },
   close: function close(value) {
     return closeFlyout(this.elements()[0], value);
@@ -1431,7 +1440,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     var element = this.elements()[0];
     return this.onToggleState(function (opened) {
       if (opened) {
-        return callback(getVar(element, varname));
+        return callback(valueMap.get(element));
       }
     });
   },
@@ -1447,7 +1456,6 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
 
     if (!element.id) {
       element.id = 'flyout-' + ++flyoutMixinCounter;
-      declareVar(element, varname, undefined);
     }
 
     app_app.on(element, {
