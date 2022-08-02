@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { any, defineGetterProperty, definePrototype, each, exclude, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single } from "./include/zeta-dom/util.js";
+import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { removeQueryAndHash } from "./include/brew-js/util/path.js";
 import { app } from "./app.js";
@@ -14,30 +14,24 @@ const usedParams = {};
 const sortedViews = [];
 const StateContext = React.createContext(Object.freeze({ active: true }));
 
-let stateId;
-
 function ViewContainer() {
-    /** @type {any} */
-    var self = this;
-    React.Component.apply(self, arguments);
-    self.mounted = false;
-    if (!stateId) {
-        stateId = history.state;
-        app.on('navigate', function () {
-            stateId = history.state;
-        });
-    }
-    self.componentWillUnmount = app.on('navigate', function () {
-        if (self.mounted && self.getViewComponent()) {
-            self.isForceUpdate = true;
-            self.forceUpdate();
-        }
-    });
+    React.Component.apply(this, arguments);
+    this.stateId = history.state;
 }
 
 definePrototype(ViewContainer, React.Component, {
     componentDidMount: function () {
-        this.mounted = true;
+        /** @type {any} */
+        var self = this;
+        self.componentWillUnmount = combineFn(
+            watch(app.route, function () {
+                self.setActive(self.getViewComponent() === self.currentViewComponent);
+            }),
+            app.on('beforepageload', function () {
+                self.stateId = history.state;
+                self.forceUpdate();
+            })
+        );
     },
     componentDidCatch: function (error) {
         dom.emit('error', this.parentElement || root, { error }, true);
@@ -45,29 +39,36 @@ definePrototype(ViewContainer, React.Component, {
     render: function () {
         /** @type {any} */
         var self = this;
-        var resolve;
-        var promise = new Promise(function (_resolve) {
-            resolve = _resolve;
-        });
+        if (history.state !== self.stateId) {
+            return self.lastChild || null;
+        }
         var V = self.getViewComponent();
+        if (V) {
+            // ensure the current path actually corresponds to the matched view
+            // when some views are not included in the list of allowed views
+            var targetPath = linkTo(V, getCurrentParams(V, true));
+            if (targetPath !== removeQueryAndHash(app.path)) {
+                app.navigate(targetPath, true);
+            }
+        }
         if (V && V !== self.currentViewComponent) {
-            self.currentViewComponent = V;
-            if (self.currentView && self.currentElement) {
-                var prevPath = self.currentPath;
-                var prevElement = self.currentElement;
+            var prevElement = self.currentElement;
+            if (prevElement) {
+                self.setActive(false);
                 self.prevView = self.currentView;
                 self.currentElement = undefined;
-                app.emit('pageleave', prevElement, { pathname: prevPath }, true);
+                app.emit('pageleave', prevElement, { pathname: self.currentPath }, true);
                 animateOut(prevElement, 'show').then(function () {
                     self.prevView = undefined;
                     self.forceUpdate();
                 });
             }
-            var providerProps = {
-                key: routeMap.get(V).id,
-                value: { view: V }
-            };
-            var view = React.createElement(StateContext.Provider, providerProps,
+            var resolve;
+            var promise = new Promise(function (resolve_) {
+                resolve = resolve_;
+            });
+            var state = { view: V };
+            var view = React.createElement(StateContext.Provider, { key: routeMap.get(V).id, value: state },
                 React.createElement(ViewStateContainer, null,
                     React.createElement(V, {
                         rootProps: self.props.rootProps,
@@ -81,33 +82,21 @@ definePrototype(ViewContainer, React.Component, {
                             });
                         }
                     })));
-            defineGetterProperty(providerProps.value, 'active', function () {
-                return self.currentView === view;
+            extend(self, {
+                currentPath: app.path,
+                currentView: view,
+                currentViewComponent: V,
+                setActive: defineObservableProperty(state, 'active', true, true)
             });
-            self.currentPath = app.path;
-            self.currentView = view;
-        } else {
-            if (self.isForceUpdate) {
-                self.isForceUpdate = false;
-                app.emit('pageenter', self.currentElement, { pathname: app.path }, true);
-            }
-            resolve();
+            notifyAsync(self.parentElement || root, promise);
         }
-        notifyAsync(self.parentElement || root, promise);
-        return React.createElement(React.Fragment, null, self.prevView, self.currentView);
+        var child = React.createElement(React.Fragment, null, self.prevView, self.currentView);
+        self.lastChild = child;
+        return child;
     },
     getViewComponent: function () {
         var props = this.props;
-        var matched = any(props.views, isViewMatched) || props.defaultView;
-        if (history.state === stateId) {
-            // ensure the current path actually corresponds to the matched view
-            // when some views are not included in the list of allowed views
-            var targetPath = linkTo(matched, getCurrentParams(matched, true));
-            if (targetPath !== removeQueryAndHash(app.path)) {
-                app.navigate(targetPath, true);
-            }
-        }
-        return matched;
+        return any(props.views, isViewMatched) || props.defaultView;
     }
 });
 

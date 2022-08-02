@@ -1,6 +1,6 @@
 import { createElement, useEffect, useRef, useState } from "react";
 import { ViewStateProvider } from "zeta-dom-react";
-import { definePrototype, extend, kv, setImmediateOnce, throwNotFunction } from "./include/zeta-dom/util.js";
+import { definePrototype, extend, kv, setImmediateOnce, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
 import { app } from "./app.js";
 import { useViewContainerState } from "./view.js";
@@ -52,9 +52,13 @@ export function useRouteParam(name, defaultValue) {
     useEffect(function () {
         var setValue = function () {
             var current = route[name] || '';
-            if (container.active && current !== ref.current) {
-                ref.current = current;
-                forceUpdate({});
+            if (current !== ref.current) {
+                if (container.active) {
+                    ref.current = current;
+                    forceUpdate({});
+                } else {
+                    watch(container, 'active', setValue);
+                }
             }
         };
         // route parameter might be changed after state initialization and before useEffect hook is called
