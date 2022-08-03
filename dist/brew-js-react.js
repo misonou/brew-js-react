@@ -547,32 +547,22 @@ var sortedViews = [];
 var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext(Object.freeze({
   active: true
 }));
-var stateId;
 
 function ViewContainer() {
-  /** @type {any} */
-  var self = this;
-  external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(self, arguments);
-  self.mounted = false;
-
-  if (!stateId) {
-    stateId = history.state;
-    app_app.on('navigate', function () {
-      stateId = history.state;
-    });
-  }
-
-  self.componentWillUnmount = app_app.on('navigate', function () {
-    if (self.mounted && self.getViewComponent()) {
-      self.isForceUpdate = true;
-      self.forceUpdate();
-    }
-  });
+  external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(this, arguments);
+  this.stateId = history.state;
 }
 
 definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react_root_React_.Component, {
   componentDidMount: function componentDidMount() {
-    this.mounted = true;
+    /** @type {any} */
+    var self = this;
+    self.componentWillUnmount = combineFn(watch(app_app.route, function () {
+      self.setActive(self.getViewComponent() === self.currentViewComponent);
+    }), app_app.on('beforepageload', function () {
+      self.stateId = history.state;
+      self.forceUpdate();
+    }));
   },
   componentDidCatch: function componentDidCatch(error) {
     zeta_dom_dom.emit('error', this.parentElement || view_root, {
@@ -582,22 +572,32 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
   render: function render() {
     /** @type {any} */
     var self = this;
-    var resolve;
-    var promise = new Promise(function (_resolve) {
-      resolve = _resolve;
-    });
+
+    if (history.state !== self.stateId) {
+      return self.lastChild || null;
+    }
+
     var V = self.getViewComponent();
 
-    if (V && V !== self.currentViewComponent) {
-      self.currentViewComponent = V;
+    if (V) {
+      // ensure the current path actually corresponds to the matched view
+      // when some views are not included in the list of allowed views
+      var targetPath = linkTo(V, getCurrentParams(V, true));
 
-      if (self.currentView && self.currentElement) {
-        var prevPath = self.currentPath;
-        var prevElement = self.currentElement;
+      if (targetPath !== removeQueryAndHash(app_app.path)) {
+        app_app.navigate(targetPath, true);
+      }
+    }
+
+    if (V && V !== self.currentViewComponent) {
+      var prevElement = self.currentElement;
+
+      if (prevElement) {
+        self.setActive(false);
         self.prevView = self.currentView;
         self.currentElement = undefined;
         app_app.emit('pageleave', prevElement, {
-          pathname: prevPath
+          pathname: self.currentPath
         }, true);
         animateOut(prevElement, 'show').then(function () {
           self.prevView = undefined;
@@ -605,13 +605,17 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         });
       }
 
-      var providerProps = {
-        key: routeMap.get(V).id,
-        value: {
-          view: V
-        }
+      var resolve;
+      var promise = new Promise(function (resolve_) {
+        resolve = resolve_;
+      });
+      var state = {
+        view: V
       };
-      var view = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(StateContext.Provider, providerProps, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewStateContainer, null, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
+      var view = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(StateContext.Provider, {
+        key: routeMap.get(V).id,
+        value: state
+      }, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewStateContainer, null, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
         rootProps: self.props.rootProps,
         onComponentLoaded: function onComponentLoaded(element) {
           self.currentElement = element;
@@ -625,40 +629,22 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
           });
         }
       })));
-      defineGetterProperty(providerProps.value, 'active', function () {
-        return self.currentView === view;
+      extend(self, {
+        currentPath: app_app.path,
+        currentView: view,
+        currentViewComponent: V,
+        setActive: defineObservableProperty(state, 'active', true, true)
       });
-      self.currentPath = app_app.path;
-      self.currentView = view;
-    } else {
-      if (self.isForceUpdate) {
-        self.isForceUpdate = false;
-        app_app.emit('pageenter', self.currentElement, {
-          pathname: app_app.path
-        }, true);
-      }
-
-      resolve();
+      notifyAsync(self.parentElement || view_root, promise);
     }
 
-    notifyAsync(self.parentElement || view_root, promise);
-    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
+    var child = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
+    self.lastChild = child;
+    return child;
   },
   getViewComponent: function getViewComponent() {
     var props = this.props;
-    var matched = any(props.views, isViewMatched) || props.defaultView;
-
-    if (history.state === stateId) {
-      // ensure the current path actually corresponds to the matched view
-      // when some views are not included in the list of allowed views
-      var targetPath = linkTo(matched, getCurrentParams(matched, true));
-
-      if (targetPath !== removeQueryAndHash(app_app.path)) {
-        app_app.navigate(targetPath, true);
-      }
-    }
-
-    return matched;
+    return any(props.views, isViewMatched) || props.defaultView;
   }
 });
 
@@ -846,9 +832,13 @@ function useRouteParam(name, defaultValue) {
     var setValue = function setValue() {
       var current = route[name] || '';
 
-      if (container.active && current !== ref.current) {
-        ref.current = current;
-        forceUpdate({});
+      if (current !== ref.current) {
+        if (container.active) {
+          ref.current = current;
+          forceUpdate({});
+        } else {
+          watch(container, 'active', setValue);
+        }
       }
     }; // route parameter might be changed after state initialization and before useEffect hook is called
 
