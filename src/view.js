@@ -27,7 +27,8 @@ definePrototype(ViewContainer, React.Component, {
             watch(app.route, function () {
                 self.setActive(self.getViewComponent() === self.currentViewComponent);
             }),
-            app.on('beforepageload', function () {
+            app.on('beforepageload', function (e) {
+                self.waitFor = e.waitFor;
                 self.stateId = history.state;
                 self.forceUpdate();
             })
@@ -88,6 +89,7 @@ definePrototype(ViewContainer, React.Component, {
                 currentViewComponent: V,
                 setActive: defineObservableProperty(state, 'active', true, true)
             });
+            (self.waitFor || noop)(promise);
             notifyAsync(self.parentElement || root, promise);
         }
         var child = React.createElement(React.Fragment, null, self.prevView, self.currentView);
