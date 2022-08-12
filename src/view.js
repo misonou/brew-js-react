@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single, watch } from "./include/zeta-dom/util.js";
+import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { removeQueryAndHash } from "./include/brew-js/util/path.js";
 import { app } from "./app.js";
@@ -72,7 +72,7 @@ definePrototype(ViewContainer, React.Component, {
                 React.createElement(ViewStateContainer, null,
                     React.createElement(V, {
                         rootProps: self.props.rootProps,
-                        onComponentLoaded: function (element) {
+                        onComponentLoaded: executeOnce(function (element) {
                             self.currentElement = element;
                             self.parentElement = element.parentElement;
                             setImmediate(function () {
@@ -80,7 +80,7 @@ definePrototype(ViewContainer, React.Component, {
                                 animateIn(element, 'show');
                                 app.emit('pageenter', element, { pathname: app.path }, true);
                             });
-                        }
+                        })
                     })));
             extend(self, {
                 currentPath: app.path,
