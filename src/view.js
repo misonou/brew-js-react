@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { useAsync } from "zeta-dom-react";
+import { combineRef, useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single, watch } from "./include/zeta-dom/util.js";
@@ -173,7 +173,7 @@ export function registerView(factory, routeParams) {
             (props.onComponentLoaded || noop)(ref.current);
         }
         return React.createElement('div', extend({}, props.rootProps, {
-            ref: ref,
+            ref: combineRef(ref, state[1].elementRef),
             children: state[0] && React.createElement(state[0].default)
         }));
     };
