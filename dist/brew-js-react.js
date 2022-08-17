@@ -210,7 +210,8 @@ var _defaultExport = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_roo
 /* harmony default export */ const app = (_defaultExport);
 var install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.install,
     addExtension = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addExtension,
-    addDetect = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addDetect;
+    addDetect = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addDetect,
+    isElementActive = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.isElementActive;
 
 ;// CONCATENATED MODULE: ./src/include/brew-js/app.js
 
@@ -296,8 +297,12 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     reject = _lib$util.reject,
     always = _lib$util.always,
     resolveAll = _lib$util.resolveAll,
+    retryable = _lib$util.retryable,
+    deferrable = _lib$util.deferrable,
     catchAsync = _lib$util.catchAsync,
-    setPromiseTimeout = _lib$util.setPromiseTimeout;
+    setPromiseTimeout = _lib$util.setPromiseTimeout,
+    delay = _lib$util.delay,
+    makeAsync = _lib$util.makeAsync;
 
 ;// CONCATENATED MODULE: ./src/include/zeta-dom/util.js
 
@@ -526,7 +531,8 @@ var setBaseUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_br
     withBaseUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.withBaseUrl,
     toAbsoluteUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toAbsoluteUrl,
     toRelativeUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toRelativeUrl,
-    isSubPathOf = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.isSubPathOf;
+    isSubPathOf = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.isSubPathOf,
+    toSegments = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toSegments;
 
 ;// CONCATENATED MODULE: ./src/include/brew-js/util/path.js
 
@@ -559,7 +565,8 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
     var self = this;
     self.componentWillUnmount = combineFn(watch(app_app.route, function () {
       self.setActive(self.getViewComponent() === self.currentViewComponent);
-    }), app_app.on('beforepageload', function () {
+    }), app_app.on('beforepageload', function (e) {
+      self.waitFor = e.waitFor;
       self.stateId = history.state;
       self.forceUpdate();
     }));
@@ -617,7 +624,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         value: state
       }, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewStateContainer, null, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
         rootProps: self.props.rootProps,
-        onComponentLoaded: function onComponentLoaded(element) {
+        onComponentLoaded: executeOnce(function (element) {
           self.currentElement = element;
           self.parentElement = element.parentElement;
           util_setImmediate(function () {
@@ -627,7 +634,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
               pathname: app_app.path
             }, true);
           });
-        }
+        })
       })));
       extend(self, {
         currentPath: app_app.path,
@@ -635,6 +642,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         currentViewComponent: V,
         setActive: defineObservableProperty(state, 'active', true, true)
       });
+      (self.waitFor || noop)(promise);
       notifyAsync(self.parentElement || view_root, promise);
     }
 
@@ -726,7 +734,7 @@ function registerView(factory, routeParams) {
     }
 
     return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, props.rootProps, {
-      ref: ref,
+      ref: (0,external_zeta_dom_react_.combineRef)(ref, state[1].elementRef),
       children: state[0] && /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(state[0]["default"])
     }));
   };
