@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { render } from "@testing-library/react";
-import { useMixinRef } from "src/mixin";
+import { renderHook } from "@testing-library/react-hooks";
+import { watch } from "zeta-dom/util";
+import { useMixin, useMixinRef } from "src/mixin";
 import Mixin from "src/mixins/Mixin";
 import StatefulMixin from "src/mixins/StatefulMixin";
 import StaticAttributeMixin from "src/mixins/StaticAttributeMixin";
@@ -75,6 +77,22 @@ describe('StaticAttributeMixin', () => {
 
         rerender(<Component value="2" />)
         expect(asFragment()).toMatchSnapshot();
+    });
+});
+
+describe('StatefulMixin', () => {
+    it('should flush changes on observable property synchronously when disposed', () => {
+        class TestMixin extends StatefulMixin {
+            prop = 1;
+        }
+        const cb = mockFn();
+        const { result, unmount } = renderHook(() => useMixin(TestMixin));
+
+        watch(result.current, 'prop', cb);
+        result.current.prop = 2;
+        expect(cb).not.toBeCalled();
+        unmount();
+        expect(cb).toBeCalledTimes(1);
     });
 });
 

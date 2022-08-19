@@ -16,6 +16,7 @@ export default abstract class StatefulMixin extends Mixin {
     next(): this;
     getRef(): React.RefCallback<HTMLElement>;
     elements(): HTMLElement[];
+    onDispose(callback: Zeta.UnregisterCallback): void;
 
     protected initState(): MixinState;
     protected initElement(element: HTMLElement, state: MixinState): void;

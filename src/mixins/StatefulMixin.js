@@ -1,4 +1,4 @@
-import { createPrivateStore, definePrototype, each, extend, inherit, randomId, setAdd, values } from "../include/zeta-dom/util.js";
+import { combineFn, createPrivateStore, definePrototype, each, extend, inherit, randomId, setAdd, values, watch } from "../include/zeta-dom/util.js";
 import Mixin from "./Mixin.js";
 
 const _ = createPrivateStore();
@@ -17,6 +17,8 @@ export default function StatefulMixin() {
     Mixin.call(this);
     _(this, {
         elements: new WeakSet(),
+        flush: watch(this, false),
+        dispose: [],
         states: {},
         prefix: '',
         counter: 0
@@ -60,6 +62,9 @@ definePrototype(StatefulMixin, Mixin, {
             return v;
         });
     },
+    onDispose: function (callback) {
+        _(this).dispose.push(callback);
+    },
     initState: function () {
         return { element: null };
     },
@@ -75,7 +80,10 @@ definePrototype(StatefulMixin, Mixin, {
         return clone;
     },
     dispose: function () {
-        var states = _(this).states;
+        var state = _(this);
+        var states = state.states;
+        combineFn(state.dispose.splice(0))();
+        state.flush();
         each(states, function (i, v) {
             delete states[i];
         });
