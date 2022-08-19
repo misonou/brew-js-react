@@ -17,6 +17,10 @@ export default function FlyoutMixin() {
     self.animating = false;
     self.visible = false;
     self.toggle = new FlyoutToggleMixin(self);
+    self.onDispose(function () {
+        self.isFlyoutOpened = false;
+        self.visible = false;
+    });
 }
 
 definePrototype(FlyoutMixin, ClassNameMixin, {
