@@ -1,6 +1,9 @@
 import dom from "../include/zeta-dom/dom";
 import StatefulMixin from "./StatefulMixin";
 
+/**
+ * @deprecated
+ */
 export default class ErrorHandlerMixin extends StatefulMixin {
     /**
      * Catches errors from promises registered to descandant elements by {@link dom.lock}.

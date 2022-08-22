@@ -50,6 +50,9 @@ export function useFocusStateMixin(): FocusStateMixin;
 
 export function useLoadingStateMixin(): LoadingStateMixin;
 
+/**
+ * @deprecated
+ */
 export function useErrorHandlerMixin(): ErrorHandlerMixin;
 
 export function useMixin<T extends typeof Mixin>(mixin: T): InstanceType<T>;
