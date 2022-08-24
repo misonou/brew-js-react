@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { always, catchAsync, either, extend, noop, pipe, resolve } from "./include/zeta-dom/util.js";
+import { always, catchAsync, either, extend, makeAsync, noop, pipe } from "./include/zeta-dom/util.js";
 import { containsOrEquals, removeNode } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
 import { lock } from "./include/zeta-dom/domLock.js";
@@ -45,9 +45,9 @@ export function createDialog(props) {
             if (props.onRender) {
                 var dialogProps = extend({}, props, {
                     closeDialog: function (value) {
-                        var promise = resolve((props.onCommit || pipe)(value));
+                        var promise = makeAsync(props.onCommit || pipe)(value);
                         catchAsync(lock(dom.activeElement, promise));
-                        promise.then(closeDialog);
+                        promise.then(closeDialog, noop);
                     }
                 });
                 ReactDOM.render(React.createElement(props.onRender, dialogProps), root);
