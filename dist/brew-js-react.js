@@ -444,9 +444,9 @@ function createDialog(props) {
       if (props.onRender) {
         var dialogProps = extend({}, props, {
           closeDialog: function closeDialog(value) {
-            var promise = resolve((props.onCommit || pipe)(value));
+            var promise = makeAsync(props.onCommit || pipe)(value);
             catchAsync(lock(zeta_dom_dom.activeElement, promise));
-            promise.then(_closeDialog);
+            promise.then(_closeDialog, noop);
           }
         });
         external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.render( /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.onRender, dialogProps), root);
@@ -466,7 +466,7 @@ function createDialog(props) {
  */
 
 function Dialog(props) {
-  var _props = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(props)[0];
+  var _props = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)({})[0];
   var dialog = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
     return createDialog(_props);
   })[0];
@@ -546,7 +546,7 @@ var setBaseUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_br
 
 
 
-var view_root = zeta_dom_dom.root;
+var root = zeta_dom_dom.root;
 var routeMap = new Map();
 var usedParams = {};
 var sortedViews = [];
@@ -572,7 +572,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
     }));
   },
   componentDidCatch: function componentDidCatch(error) {
-    zeta_dom_dom.emit('error', this.parentElement || view_root, {
+    zeta_dom_dom.emit('error', this.parentElement || root, {
       error: error
     }, true);
   },
@@ -643,7 +643,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         setActive: defineObservableProperty(state, 'active', true, true)
       });
       (self.waitFor || noop)(promise);
-      notifyAsync(self.parentElement || view_root, promise);
+      notifyAsync(self.parentElement || root, promise);
     }
 
     var child = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
@@ -1111,6 +1111,8 @@ function StatefulMixin() {
 
   _(this, {
     elements: new WeakSet(),
+    flush: watch(this, false),
+    dispose: [],
     states: {},
     prefix: '',
     counter: 0
@@ -1157,6 +1159,9 @@ definePrototype(StatefulMixin, Mixin, {
       return v;
     });
   },
+  onDispose: function onDispose(callback) {
+    _(this).dispose.push(callback);
+  },
   initState: function initState() {
     return {
       element: null
@@ -1175,8 +1180,11 @@ definePrototype(StatefulMixin, Mixin, {
     return clone;
   },
   dispose: function dispose() {
-    var states = _(this).states;
+    var state = _(this);
 
+    var states = state.states;
+    combineFn(state.dispose.splice(0))();
+    state.flush();
     each(states, function (i, v) {
       delete states[i];
     });
@@ -1200,7 +1208,7 @@ function checkState(self, element, state, isAsync) {
     var cb = self.onClassNameUpdated.bind(self, element, prev, extend({}, classNames));
 
     if (isAsync) {
-      setImmediate(cb);
+      util_setImmediate(cb);
     } else {
       cb();
     }
@@ -1219,7 +1227,7 @@ definePrototype(ClassNameMixin, StatefulMixin, {
     var self = this;
     var element = self.state.element;
 
-    if (element && containsOrEquals(root, element)) {
+    if (element && containsOrEquals(zeta_dom_dom.root, element)) {
       checkState(self, element, self.state, true);
     }
 
@@ -1397,6 +1405,10 @@ function FlyoutMixin() {
   self.animating = false;
   self.visible = false;
   self.toggle = new FlyoutToggleMixin(self);
+  self.onDispose(function () {
+    self.isFlyoutOpened = false;
+    self.visible = false;
+  });
 }
 definePrototype(FlyoutMixin, ClassNameMixin, {
   reset: function reset() {
