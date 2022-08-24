@@ -66,7 +66,7 @@ export function createDialog(props) {
  * @param {import("./dialog").DialogProps} props
  */
 export function Dialog(props) {
-    const _props = useState(props)[0];
+    const _props = useState({})[0];
     const dialog = useState(function () {
         return createDialog(_props);
     })[0];
