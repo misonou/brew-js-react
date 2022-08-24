@@ -1,4 +1,4 @@
-import { definePrototype, each, equal, extend } from "../include/zeta-dom/util.js";
+import { definePrototype, each, equal, extend, setImmediate } from "../include/zeta-dom/util.js";
 import { containsOrEquals } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
 import StatefulMixin from "./StatefulMixin.js";
@@ -33,7 +33,7 @@ definePrototype(ClassNameMixin, StatefulMixin, {
     getRef: function () {
         var self = this;
         var element = self.state.element;
-        if (element && containsOrEquals(root, element)) {
+        if (element && containsOrEquals(dom.root, element)) {
             checkState(self, element, self.state, true);
         }
         return ClassNameMixinSuper.getRef.call(this);
