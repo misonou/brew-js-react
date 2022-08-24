@@ -1,5 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ClassNameMixin should persist monitored class names in re-render 1`] = `
+<div
+  class="foo bar test"
+/>
+`;
+
 exports[`StatefulMixin#state should return the same state in canonical order 1`] = `
 <DocumentFragment>
   <div

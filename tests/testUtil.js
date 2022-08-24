@@ -62,6 +62,5 @@ afterAll(() => {
 });
 
 afterEach(() => {
-    jest.clearAllMocks();
     cleanup.splice(0).forEach(v => v());
 });

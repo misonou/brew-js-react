@@ -12,7 +12,10 @@
         "^zeta-dom-react$": "<rootDir>/../zeta-dom-react/src/index",
         "^zeta-dom-react/(.*)$": "<rootDir>/../zeta-dom-react/src/$1"
     },
-    "extensionsToTreatAsEsm": [".jsx"],
+    "clearMocks": true,
+    "extensionsToTreatAsEsm": [
+        ".jsx"
+    ],
     "collectCoverageFrom": [
         "src/**/*.js",
         "!src/index.js",

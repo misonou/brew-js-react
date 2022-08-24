@@ -1,12 +1,17 @@
 import React, { useState } from "react";
+import { jest } from "@jest/globals";
 import { render } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
-import { watch } from "zeta-dom/util";
-import { useMixin, useMixinRef } from "src/mixin";
+import { delay, watch } from "zeta-dom/util";
+import { ClassNameMixin, useMixin, useMixinRef } from "src/mixin";
 import Mixin from "src/mixins/Mixin";
 import StatefulMixin from "src/mixins/StatefulMixin";
 import StaticAttributeMixin from "src/mixins/StaticAttributeMixin";
-import { mockFn, verifyCalls, _ } from "./testUtil";
+import { initApp, mockFn, verifyCalls, _ } from "./testUtil";
+
+beforeAll(async () => {
+    await initApp();
+});
 
 describe('use', () => {
     it('should accept ref callback as first argument', () => {
@@ -209,5 +214,48 @@ describe('StatefulMixin#state', () => {
 
         rerender(<Component value="bar" />);
         expect(asFragment()).toMatchSnapshot();
+    });
+});
+
+describe('ClassNameMixin', () => {
+    it('should persist monitored class names in re-render', () => {
+        const mixin = new ClassNameMixin(['foo', 'bar']);
+        const getClassNames = jest.spyOn(mixin, 'getClassNames');
+        const Component = function () {
+            mixin.reset();
+            return (<div {...Mixin.use(mixin, 'test')}></div>);
+        };
+        const { container, rerender, unmount } = render(<Component />);
+        const div = container.firstChild;
+        div.classList.add('foo');
+        div.classList.add('bar');
+        getClassNames.mockClear();
+
+        rerender(<Component />);
+        expect(getClassNames).toBeCalledTimes(1);
+        expect(getClassNames.mock.results[0].value).toEqual([{ foo: true, bar: true }]);
+        expect(div.classList.contains('foo')).toBe(true);
+        expect(div.classList.contains('bar')).toBe(true);
+        expect(div).toMatchSnapshot();
+        unmount();
+    });
+
+    it('should invoke onClassNameUpdated', async () => {
+        const mixin = new ClassNameMixin(['foo', 'bar']);
+        const onClassNameUpdated = jest.spyOn(mixin, 'onClassNameUpdated');
+        const Component = function () {
+            mixin.reset();
+            return (<div {...Mixin.use(mixin, 'test')}></div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+        div.classList.add('foo');
+        div.classList.add('bar');
+
+        await delay(100);
+        verifyCalls(onClassNameUpdated, [
+            [div, {}, { foo: true, bar: true }]
+        ]);
+        unmount();
     });
 });

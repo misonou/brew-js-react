@@ -308,3 +308,21 @@ describe('useTranslation', () => {
         expect(typeof result.current.t.html).toBe('function');
     });
 });
+
+describe('keys', () => {
+    it('should return keys in default language', () => {
+        const { keys } = makeTranslation({
+            en: { prefix: { key: 'en_string' } },
+            de: { prefix: { key: 'de_string', key1: '' } },
+        }, 'en');
+        expect(keys('prefix')).toEqual(['key']);
+    });
+
+    it('should return empty array for inexist prefix', () => {
+        const { keys } = makeTranslation({
+            en: { prefix: { key: 'en_string' } },
+            de: { prefix: { key: 'de_string' } },
+        }, 'en');
+        expect(keys('prefix1')).toEqual([]);
+    });
+});
