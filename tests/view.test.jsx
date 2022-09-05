@@ -1,9 +1,10 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
-import { isViewMatched, linkTo, registerView, renderView } from "src/view";
-import { initApp, mockFn, verifyCalls } from "./testUtil";
+import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerView, renderView } from "src/view";
+import { delay, initApp, mockFn, verifyCalls } from "./testUtil";
 import { async } from "regenerator-runtime";
+import dom from "zeta-dom/dom";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
 let app;
@@ -110,6 +111,27 @@ beforeAll(async () => {
 
 beforeEach(async () => {
     await app.navigate('/dummy');
+});
+
+describe('matchView', () => {
+    it('should return view that best matches given path', () => {
+        expect(matchView('/dummy/foo', [Foo])).toBe(Foo);
+        expect(matchView('/dummy/foo/baz', [Foo])).toBe(Foo);
+        expect(matchView('/dummy/foo/baz', [Foo, Baz])).toBe(Baz);
+    });
+
+    it('should return undefined if no views are matched', () => {
+        expect(matchView('/dummy/bar', [Foo])).toBeUndefined();
+    });
+
+    it('should return view that best matches current path', async () => {
+        await app.navigate('/dummy/foo');
+        expect(matchView([Foo])).toBe(Foo);
+
+        await app.navigate('/dummy/foo/baz');
+        expect(matchView([Foo])).toBe(Foo);
+        expect(matchView([Foo, Baz])).toBe(Baz);
+    });
 });
 
 describe('isViewMatched', () => {
@@ -302,6 +324,31 @@ describe('renderView', () => {
         await screen.findByText('var1');
         unmount();
     });
+
+    it('should catch and emit rendering error', async () => {
+        const obj = { error: null };
+        const BarError = registerView(async () => {
+            return {
+                default: () => {
+                    const error = useObservableProperty(obj, 'error');
+                    if (error) {
+                        throw error;
+                    }
+                    return (<div>bar</div>);
+                }
+            }
+        }, { view: 'bar' });
+        const { container } = render(<div>{renderView(BarError)}</div>);
+        await screen.findByText('bar');
+
+        const error = new Error();
+        const cb = mockFn();
+        dom.on(container, 'error', cb);
+        obj.error = error;
+        await delay(10);
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0][0].error).toBe(error);
+    });
 });
 
 describe('linkTo', () => {
@@ -318,5 +365,34 @@ describe('linkTo', () => {
     it('should return minimum path matching the specified view', async () => {
         await app.navigate('/dummy/foo/baz');
         expect(linkTo(Foo)).toBe('/dummy/foo');
+    });
+
+    it('should return root path for views not being registered', () => {
+        function Component() {
+            return <></>;
+        }
+        expect(linkTo(Component)).toBe('/');
+    });
+});
+
+describe('navigateTo', () => {
+    it('should navigate to path that will render specified view with params', async () => {
+        await expect(navigateTo(Baz, { baz: 'baz' })).resolves.toEqual(expect.objectContaining({
+            navigated: true,
+            path: '/dummy/foo/baz'
+        }));
+    });
+});
+
+describe('redirectTo', () => {
+    it('should redirect to path that will render specified view with params', async () => {
+        await app.navigate('/dummy/foo');
+        const previousPath = app.previousPath;
+
+        await expect(redirectTo(Baz, { baz: 'baz' })).resolves.toEqual(expect.objectContaining({
+            navigated: true,
+            path: '/dummy/foo/baz'
+        }));
+        expect(app.previousPath).toBe(previousPath);
     });
 });

@@ -24,6 +24,11 @@ export function delay(milliseconds) {
     });
 }
 
+export async function after(callback) {
+    callback();
+    await delay();
+}
+
 export function initApp(callback) {
     brew.with(router, i18n)(callback || noop);
     return app.ready;

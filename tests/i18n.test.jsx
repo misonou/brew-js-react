@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react-hooks";
+import { jest } from "@jest/globals";
 import { makeTranslation, useLanguage } from "src/i18n";
 import { initApp } from "./testUtil";
 
@@ -324,5 +325,20 @@ describe('keys', () => {
             de: { prefix: { key: 'de_string' } },
         }, 'en');
         expect(keys('prefix1')).toEqual([]);
+    });
+});
+
+describe('Stringifiable', () => {
+    it('should call toString for all primitive conversions', () => {
+        const { translate } = makeTranslation({
+            en: { prefix: { key: '42' } }
+        }, 'en');
+        const t = translate.lazy('prefix.key');
+        jest.spyOn(t, 'toString');
+
+        expect(+t).toBe(42);
+        expect(`${t}`).toBe('42');
+        expect(t + '').toBe('42');
+        expect(t.toString).toBeCalledTimes(3);
     });
 });

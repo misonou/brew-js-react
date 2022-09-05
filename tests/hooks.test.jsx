@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { render, screen } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react-hooks";
-import { useRouteParam, useRouteState } from "src/hooks";
+import { useRouteParam, useRouteState, ViewStateContainer } from "src/hooks";
 import { registerView, renderView } from "src/view";
 import { defunctAfterTest, initApp, mockFn, verifyCalls } from "./testUtil";
+import { useViewState } from "zeta-dom-react";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
 let app;
@@ -25,6 +26,10 @@ beforeEach(async () => {
 });
 
 describe('useRouteParam', () => {
+    it('should not throw for inexist route parameter', () => {
+        expect(() => renderHook(() => useRouteParam('xxx'))).not.toThrow();
+    });
+
     it('should redirect to path with default route parameter value', async () => {
         const { result } = renderHook(() => useRouteParam('view', 'foo'));
         expect(result.current).toBe('');
@@ -163,5 +168,53 @@ describe('useRouteState', () => {
             ['foo1', stateId1]
         ]);
         unmount();
+    });
+});
+
+describe('ViewStateContainer', () => {
+    it('should invoke onPopState when traversing through history', async () => {
+        const cb = mockFn();
+        const Component = function () {
+            const state = useViewState('foo');
+            useEffect(() => {
+                state.set('foo')
+                state.onPopState(cb);
+            }, [state]);
+            return (<div>{state.get()}</div>);
+        };
+        const { rerender } = render(<Component />, { wrapper: ViewStateContainer });
+
+        await app.navigate('/foo');
+        rerender(<Component />);
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0]).toEqual([undefined]);
+
+        cb.mockClear();
+        await app.back();
+        rerender(<Component />);
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0]).toEqual(['foo']);
+    });
+
+    it('should invoke onPopState when key has changed', async () => {
+        const cb = mockFn();
+        const Component = function ({ stateKey }) {
+            const state = useViewState(stateKey);
+            useEffect(() => {
+                state.set('foo')
+                state.onPopState(cb);
+            }, [state]);
+            return (<div>{state.get()}</div>);
+        };
+        const { rerender } = render(<Component stateKey="foo" />, { wrapper: ViewStateContainer });
+
+        rerender(<Component stateKey="bar" />);
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0]).toEqual([undefined]);
+
+        cb.mockClear();
+        rerender(<Component stateKey="foo" />);
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0]).toEqual(['foo']);
     });
 });

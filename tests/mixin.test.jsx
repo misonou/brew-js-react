@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { jest } from "@jest/globals";
-import { render } from "@testing-library/react";
+import { render, fireEvent } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
+import { openFlyout } from "brew-js/domAction";
+import dom from "zeta-dom/dom";
 import { delay, watch } from "zeta-dom/util";
-import { ClassNameMixin, useMixin, useMixinRef } from "src/mixin";
+import { ClassNameMixin, useAnimateMixin, useAnimateSequenceMixin, useFlyoutMixin, useFocusStateMixin, useLoadingStateMixin, useMixin, useMixinRef, useScrollableMixin } from "src/mixin";
 import Mixin from "src/mixins/Mixin";
 import StatefulMixin from "src/mixins/StatefulMixin";
 import StaticAttributeMixin from "src/mixins/StaticAttributeMixin";
-import { initApp, mockFn, verifyCalls, _ } from "./testUtil";
+import { after, initApp, mockFn, verifyCalls, _ } from "./testUtil";
 
 beforeAll(async () => {
     await initApp();
@@ -22,6 +24,14 @@ describe('use', () => {
         const { asFragment, getByText } = render(<Component />);
         expect(asFragment()).toMatchSnapshot();
         verifyCalls(cb, [[getByText('foo')]]);
+    });
+
+    it('should accept undefined as first argument', () => {
+        const Component = function () {
+            return (<div {...Mixin.use(undefined, Mixin.scrollableTarget)}>foo</div>)
+        };
+        const { asFragment } = render(<Component />);
+        expect(asFragment()).toMatchSnapshot();
     });
 
     it('should accept mutable ref object as first argument', () => {
@@ -256,6 +266,232 @@ describe('ClassNameMixin', () => {
         verifyCalls(onClassNameUpdated, [
             [div, {}, { foo: true, bar: true }]
         ]);
+        unmount();
+    });
+});
+
+describe('AnimateMixin', () => {
+    it('should set animate-in attributes', async () => {
+        const Component = function () {
+            const mixin = useAnimateMixin();
+            return (<div {...Mixin.use(mixin.withEffects('fade-in'))}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        expect(div).toHaveAttribute('animate-in', 'fade-in');
+        unmount();
+    });
+});
+
+describe('AnimateSequenceMixin', () => {
+    it('should set animate-sequence attributes', async () => {
+        const Component = function () {
+            const mixin = useAnimateSequenceMixin();
+            return (<div {...Mixin.use(mixin.withEffects('fade-in'))}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        expect(div).toHaveAttribute('animate-sequence');
+        unmount();
+    });
+});
+
+describe('FlyoutMixin', () => {
+    it('should set is-flyout attributes', async () => {
+        const Component = function () {
+            const mixin = useFlyoutMixin();
+            return (<div {...Mixin.use(mixin)}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        expect(div).toHaveAttribute('is-flyout', '');
+        unmount();
+    });
+
+    it('should invoke onOpen handler when flyout is opened', async () => {
+        const cb = mockFn();
+        const Component = function () {
+            const mixin = useFlyoutMixin();
+            useEffect(() => mixin.onOpen(cb), [mixin]);
+            return (<div {...Mixin.use(mixin)}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        await after(() => openFlyout(div));
+        expect(div).toHaveClassName('open');
+        expect(cb).toBeCalledTimes(1);
+        unmount();
+    });
+
+    it('should open flyout and pass value to onOpen handler', async () => {
+        let mixin;
+        const cb = mockFn();
+        const Component = function () {
+            mixin = useFlyoutMixin();
+            useEffect(() => mixin.onOpen(cb), [mixin]);
+            return (<div {...Mixin.use(mixin)}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        await after(() => mixin.open('foo'));
+        expect(div).toHaveClassName('open');
+        verifyCalls(cb, [
+            ['foo']
+        ]);
+        unmount();
+    });
+
+    it('should close flyout and pass value to promise', async () => {
+        let mixin;
+        const Component = function () {
+            mixin = useFlyoutMixin();
+            return (<div {...Mixin.use(mixin)}>test</div>);
+        };
+        const { unmount } = render(<Component />);
+        const promise = mixin.open();
+
+        await delay(0);
+        mixin.close('foo');
+        await expect(promise).resolves.toBe('foo');
+        unmount();
+    });
+});
+
+describe('FlyoutToggleMixin', () => {
+    it('should toggle flyout by clicking element', async () => {
+        const Component = function () {
+            const mixin = useFlyoutMixin();
+            return (<div {...Mixin.use(mixin)}><button {...Mixin.use(mixin.toggle)}>test</button></div>);
+        };
+        const { container, unmount, getByRole } = render(<Component />);
+        const div = container.firstChild;
+
+        // toggle is ready in next event cycle
+        await delay(0);
+        fireEvent.click(getByRole('button'));
+        expect(div).toHaveClassName('open');
+        unmount();
+    });
+
+    it('should open flyout and pass value to onOpen handler', async () => {
+        let mixin;
+        const cb = mockFn();
+        const Component = function () {
+            mixin = useFlyoutMixin();
+            useEffect(() => mixin.onOpen(cb), [mixin]);
+            return (<div {...Mixin.use(mixin)}><button {...Mixin.use(mixin.toggle)}>test</button></div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        // toggle is ready in next event cycle
+        await delay(0);
+        await after(() => mixin.toggle.open('foo'));
+
+        expect(div).toHaveClassName('open');
+        verifyCalls(cb, [
+            ['foo']
+        ]);
+        unmount();
+    });
+
+    it('should close flyout and pass value to promise', async () => {
+        let mixin, promise;
+        const Component = function () {
+            mixin = useFlyoutMixin();
+            return (<div {...Mixin.use(mixin)}><button {...Mixin.use(mixin.toggle)}>test</button></div>);
+        };
+        const { unmount } = render(<Component />);
+
+        // toggle is ready in next event cycle
+        await delay(0);
+        promise = mixin.toggle.open();
+
+        await delay(0);
+        mixin.toggle.close('foo');
+        await expect(promise).resolves.toBe('foo');
+        unmount();
+    });
+});
+
+describe('FocusStateMixin', () => {
+    it('should toggle focused class', async () => {
+        const Component = function () {
+            return (<div {...Mixin.use(useFocusStateMixin())}>test</div>);
+        };
+        const { container, rerender, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        dom.focus(div);
+        expect(div).toHaveClassName('focused');
+
+        rerender(<Component />);
+        expect(div).toHaveClassName('focused');
+
+        dom.focus(dom.root);
+        expect(div).not.toHaveClassName('focused');
+
+        rerender(<Component />);
+        expect(div).not.toHaveClassName('focused');
+        unmount();
+    });
+});
+
+describe('LoadingStateMixin', () => {
+    it('should toggle loading class', async () => {
+        const Component = function () {
+            return (<div {...Mixin.use(useLoadingStateMixin())}>test</div>);
+        };
+        const { container, rerender, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        const promise = delay(100);
+        dom.notifyAsync(div, promise);
+        expect(div).toHaveClassName('loading');
+
+        rerender(<Component />);
+        expect(div).toHaveClassName('loading');
+
+        await promise;
+        expect(div).not.toHaveClassName('loading');
+
+        rerender(<Component />);
+        expect(div).not.toHaveClassName('loading');
+        unmount();
+    });
+
+    it('should remove loading class when operation is cancelled', async () => {
+        const Component = function () {
+            return (<div {...Mixin.use(useLoadingStateMixin())}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        const promise = delay(100);
+        dom.lock(div, promise, true);
+        expect(div).toHaveClassName('loading');
+
+        await dom.cancelLock(div);
+        expect(div).not.toHaveClassName('loading');
+        unmount();
+    });
+});
+
+describe('ScrollableMixin', () => {
+    it('should set scrollable attributes', async () => {
+        const Component = function () {
+            const mixin = useScrollableMixin();
+            return (<div {...Mixin.use(mixin)}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        expect(div).toHaveAttribute('scrollable');
         unmount();
     });
 });

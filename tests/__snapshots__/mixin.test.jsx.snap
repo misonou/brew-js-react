@@ -90,6 +90,17 @@ exports[`use should accept ref callback as first argument 1`] = `
 </DocumentFragment>
 `;
 
+exports[`use should accept undefined as first argument 1`] = `
+<DocumentFragment>
+  <div
+    class=""
+    scrollable-target=""
+  >
+    foo
+  </div>
+</DocumentFragment>
+`;
+
 exports[`use should apply all class names from mixins 1`] = `
 <DocumentFragment>
   <div
