@@ -1,8 +1,9 @@
 import React from "react";
 import { act, render, screen, waitForElementToBeRemoved } from "@testing-library/react";
+import { locked } from "zeta-dom/domLock";
 import { removeNode } from "zeta-dom/domUtil";
 import { createDialog, Dialog } from "src/dialog";
-import { delay, initApp, mockFn, verifyCalls } from "./testUtil";
+import { after, delay, initApp, mockFn, verifyCalls } from "./testUtil";
 import dom from "zeta-dom/dom";
 
 const createDialogMock = mockFn(createDialog);
@@ -97,6 +98,30 @@ describe('createDialog', () => {
         dialog.open();
         expect(dialog.root.attributes['is-modal']).toBeTruthy();
         expect(dom.modalElement).toBe(dialog.root);
+    });
+
+    it('should prevent leave when preventLeave is true', () => {
+        const dialog = createDialogMock({
+            preventLeave: true,
+            onRender: function Component() {
+                return <span>text</span>;
+            }
+        });
+        dialog.open();
+        expect(locked()).toBe(true);
+    });
+
+    it('should not prevent leave when dialog is closed', async () => {
+        const dialog = createDialogMock({
+            preventLeave: true,
+            onRender: function Component() {
+                return <span>text</span>;
+            }
+        });
+        dialog.open();
+        expect(locked()).toBe(true);
+        await after(() => dialog.close());
+        expect(locked()).toBe(false);
     });
 });
 

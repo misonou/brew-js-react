@@ -10,6 +10,7 @@ export interface DialogBaseProps<T> {
     title?: string;
     className?: string;
     showCloseButton?: boolean;
+    preventLeave?: boolean;
     modal?: boolean;
     onCommit?: (value: T | undefined) => void;
     onOpen?: (root: HTMLElement) => void;
