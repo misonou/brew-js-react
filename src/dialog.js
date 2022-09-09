@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { always, catchAsync, either, extend, makeAsync, noop, pipe } from "./include/zeta-dom/util.js";
 import { containsOrEquals, removeNode } from "./include/zeta-dom/domUtil.js";
@@ -6,11 +6,14 @@ import dom from "./include/zeta-dom/dom.js";
 import { lock } from "./include/zeta-dom/domLock.js";
 import { closeFlyout, openFlyout } from "./include/brew-js/domAction.js";
 
+const createRoot = ReactDOM.createRoot;
+
 /**
  * @param {Partial<import("./dialog").DialogOptions<any>>} props
  */
 export function createDialog(props) {
     var root = document.createElement('div');
+    var reactRoot = createRoot && createRoot(root);
     var closing = false;
     var promise;
 
@@ -22,7 +25,11 @@ export function createDialog(props) {
                 removeNode(root);
                 (props.onClose || noop)(root);
                 if (props.onRender) {
-                    ReactDOM.unmountComponentAtNode(root);
+                    if (reactRoot) {
+                        reactRoot.unmount();
+                    } else {
+                        ReactDOM.unmountComponentAtNode(root);
+                    }
                 }
             });
         }
@@ -50,7 +57,12 @@ export function createDialog(props) {
                         promise.then(closeDialog, noop);
                     }
                 });
-                ReactDOM.render(React.createElement(props.onRender, dialogProps), root);
+                var content = createElement(props.onRender, dialogProps);
+                if (reactRoot) {
+                    reactRoot.render(content);
+                } else {
+                    ReactDOM.render(content, root);
+                }
             }
             promise = openFlyout(root);
             always(promise, function () {
