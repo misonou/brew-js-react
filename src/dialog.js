@@ -58,6 +58,9 @@ export function createDialog(props) {
                     }
                 });
                 var content = createElement(props.onRender, dialogProps);
+                if (props.wrapper) {
+                    content = createElement(props.wrapper, dialogProps, content);
+                }
                 if (reactRoot) {
                     reactRoot.render(content);
                 } else {

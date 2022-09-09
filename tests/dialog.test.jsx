@@ -123,6 +123,19 @@ describe('createDialog', () => {
         await after(() => dialog.close());
         expect(locked()).toBe(false);
     });
+
+    it('should render content with wrapper', () => {
+        const dialog = createDialogMock({
+            wrapper: function Component(props) {
+                return <span data-testid="parent">{props.children}</span>;
+            },
+            onRender: function Component() {
+                return <span data-testid="child">text</span>;
+            }
+        });
+        dialog.open();
+        expect(screen.getByTestId('child').parentElement).toBe(screen.getByTestId('parent'));
+    });
 });
 
 describe('DialogState.open', () => {

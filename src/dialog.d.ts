@@ -17,18 +17,18 @@ export interface DialogBaseProps<T> {
     onClose?: (root: HTMLElement) => void;
 }
 
-export interface DialogRenderComponentProps<T> extends DialogBaseProps<T> {
+export interface DialogRenderComponentProps<T, P = {}> extends DialogBaseProps<T>, P {
     closeDialog: DialogCloseCallback<T>;
 }
 
-export interface DialogOptions<T> extends DialogBaseProps<T> {
-    onRender: React.FC<DialogRenderComponentProps<T>>;
+export interface DialogOptions<T, P = {}> extends DialogBaseProps<T> {
+    onRender: React.FC<DialogRenderComponentProps<T, P>>;
 }
 
 export interface DialogProps<T> extends React.PropsWithChildren<DialogBaseProps<T>> {
     isOpen: boolean;
 }
 
-export function createDialog<T = any>(props: DialogOptions<T>): DialogState<T>;
+export function createDialog<T = any, P = {}>(props: DialogOptions<T, P> & { wrapper?: React.FC<React.PropsWithChildren<DialogRenderComponentProps<T, P>>> }): DialogState<T>;
 
 export function Dialog<T>(props: DialogProps<T>): JSX.Element;
