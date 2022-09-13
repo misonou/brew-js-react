@@ -261,7 +261,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     setTimeoutOnce = _lib$util.setTimeoutOnce,
     util_setInterval = _lib$util.setInterval,
     setIntervalSafe = _lib$util.setIntervalSafe,
-    util_setImmediate = _lib$util.setImmediate,
+    setImmediate = _lib$util.setImmediate,
     setImmediateOnce = _lib$util.setImmediateOnce,
     throwNotFunction = _lib$util.throwNotFunction,
     errorWithCode = _lib$util.errorWithCode,
@@ -400,12 +400,14 @@ var addAsyncAction = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_roo
 
 
 
+var createRoot = external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createRoot;
 /**
  * @param {Partial<import("./dialog").DialogOptions<any>>} props
  */
 
 function createDialog(props) {
   var root = document.createElement('div');
+  var reactRoot = createRoot && createRoot(root);
   var closing = false;
   var promise;
 
@@ -418,7 +420,11 @@ function createDialog(props) {
         (props.onClose || noop)(root);
 
         if (props.onRender) {
-          external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.unmountComponentAtNode(root);
+          if (reactRoot) {
+            reactRoot.unmount();
+          } else {
+            external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.unmountComponentAtNode(root);
+          }
         }
       });
     }
@@ -449,10 +455,25 @@ function createDialog(props) {
             promise.then(_closeDialog, noop);
           }
         });
-        external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.render( /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.onRender, dialogProps), root);
+        var content = /*#__PURE__*/(0,external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement)(props.onRender, dialogProps);
+
+        if (props.wrapper) {
+          content = /*#__PURE__*/(0,external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement)(props.wrapper, dialogProps, content);
+        }
+
+        if (reactRoot) {
+          reactRoot.render(content);
+        } else {
+          external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.render(content, root);
+        }
       }
 
       promise = openFlyout(root);
+
+      if (props.preventLeave) {
+        preventLeave(root, promise);
+      }
+
       always(promise, function () {
         promise = null;
       });
@@ -627,7 +648,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         onComponentLoaded: executeOnce(function (element) {
           self.currentElement = element;
           self.parentElement = element.parentElement;
-          util_setImmediate(function () {
+          setImmediate(function () {
             resolve();
             animateIn(element, 'show');
             app_app.emit('pageenter', element, {
@@ -1208,7 +1229,7 @@ function checkState(self, element, state, isAsync) {
     var cb = self.onClassNameUpdated.bind(self, element, prev, extend({}, classNames));
 
     if (isAsync) {
-      util_setImmediate(cb);
+      setImmediate(cb);
     } else {
       cb();
     }
@@ -1683,6 +1704,8 @@ function useMixinRef(mixin) {
 ;// CONCATENATED MODULE: ./src/entry.js
 
 /* harmony default export */ const entry = (src_namespaceObject);
+
+brew_js_app.react = src_namespaceObject;
 })();
 
 __webpack_exports__ = __webpack_exports__["default"];
