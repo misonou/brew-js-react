@@ -14,26 +14,20 @@ const createRoot = ReactDOM.createRoot;
 export function createDialog(props) {
     var root = document.createElement('div');
     var reactRoot = createRoot && createRoot(root);
-    var closing = false;
+    var closeDialog = closeFlyout.bind(0, root);
     var promise;
 
-    function closeDialog(value) {
-        if (!closing) {
-            closing = true;
-            closeFlyout(root, value).then(function () {
-                closing = false;
-                removeNode(root);
-                (props.onClose || noop)(root);
-                if (props.onRender) {
-                    if (reactRoot) {
-                        reactRoot.unmount();
-                    } else {
-                        ReactDOM.unmountComponentAtNode(root);
-                    }
-                }
-            });
+    dom.on(root, 'flyouthide', function () {
+        removeNode(root);
+        (props.onClose || noop)(root);
+        if (props.onRender) {
+            if (reactRoot) {
+                reactRoot.unmount();
+            } else {
+                ReactDOM.unmountComponentAtNode(root);
+            }
         }
-    }
+    });
 
     return {
         root: root,
