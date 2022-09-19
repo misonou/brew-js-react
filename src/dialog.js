@@ -64,6 +64,8 @@ export function createDialog(props) {
             promise = openFlyout(root);
             if (props.preventLeave) {
                 preventLeave(root, promise);
+            } else if (props.preventNavigation) {
+                lock(root, promise);
             }
             always(promise, function () {
                 promise = null;
