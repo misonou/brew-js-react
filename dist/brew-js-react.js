@@ -379,6 +379,7 @@ var domLock_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
     lock = domLock_lib$dom.lock,
     locked = domLock_lib$dom.locked,
     cancelLock = domLock_lib$dom.cancelLock,
+    subscribeAsync = domLock_lib$dom.subscribeAsync,
     notifyAsync = domLock_lib$dom.notifyAsync,
     preventLeave = domLock_lib$dom.preventLeave;
 
@@ -408,28 +409,22 @@ var createRoot = external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_r
 function createDialog(props) {
   var root = document.createElement('div');
   var reactRoot = createRoot && createRoot(root);
-  var closing = false;
+
+  var _closeDialog = closeFlyout.bind(0, root);
+
   var promise;
+  zeta_dom_dom.on(root, 'flyouthide', function () {
+    removeNode(root);
+    (props.onClose || noop)(root);
 
-  function _closeDialog(value) {
-    if (!closing) {
-      closing = true;
-      closeFlyout(root, value).then(function () {
-        closing = false;
-        removeNode(root);
-        (props.onClose || noop)(root);
-
-        if (props.onRender) {
-          if (reactRoot) {
-            reactRoot.unmount();
-          } else {
-            external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.unmountComponentAtNode(root);
-          }
-        }
-      });
+    if (props.onRender) {
+      if (reactRoot) {
+        reactRoot.unmount();
+      } else {
+        external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.unmountComponentAtNode(root);
+      }
     }
-  }
-
+  });
   return {
     root: root,
     close: _closeDialog,
@@ -472,6 +467,8 @@ function createDialog(props) {
 
       if (props.preventLeave) {
         preventLeave(root, promise);
+      } else if (props.preventNavigation) {
+        lock(root, promise);
       }
 
       always(promise, function () {
@@ -1552,6 +1549,7 @@ definePrototype(FocusStateMixin, StatefulMixin, {
 
 
 
+
 var LoadingStateMixinSuper = StatefulMixin.prototype;
 function LoadingStateMixin() {
   StatefulMixin.call(this);
@@ -1559,6 +1557,7 @@ function LoadingStateMixin() {
 definePrototype(LoadingStateMixin, StatefulMixin, {
   initElement: function initElement(element, state) {
     LoadingStateMixinSuper.initElement.call(this, element, state);
+    lock(element);
     zeta_dom_dom.on(element, {
       asyncStart: function asyncStart() {
         state.loading = true;
