@@ -1,6 +1,7 @@
 import { definePrototype, each, equal, extend, setImmediate } from "../include/zeta-dom/util.js";
 import { containsOrEquals } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
+import { watchOwnAttributes } from "../include/zeta-dom/observe.js";
 import StatefulMixin from "./StatefulMixin.js";
 
 const ClassNameMixinSuper = StatefulMixin.prototype;
@@ -46,10 +47,8 @@ definePrototype(ClassNameMixin, StatefulMixin, {
     },
     initElement: function (element, state) {
         var self = this;
-        dom.watchAttributes(element, ['class'], function (nodes) {
-            if (nodes.includes(element)) {
-                checkState(self, element, state);
-            }
+        watchOwnAttributes(element, 'class', function () {
+            checkState(self, element, state);
         });
     },
     onClassNameUpdated: function (element, prevState, state) {
