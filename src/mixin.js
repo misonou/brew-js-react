@@ -5,7 +5,6 @@ import AnimateMixin from "./mixins/AnimateMixin.js";
 import AnimateSequenceItemMixin from "./mixins/AnimateSequenceItemMixin.js";
 import AnimateSequenceMixin from "./mixins/AnimateSequenceMixin.js";
 import ClassNameMixin from "./mixins/ClassNameMixin.js";
-import ErrorHandlerMixin from "./mixins/ErrorHandlerMixin.js";
 import FlyoutMixin from "./mixins/FlyoutMixin.js";
 import FlyoutToggleMixin from "./mixins/FlyoutToggleMixin.js";
 import FocusStateMixin from "./mixins/FocusStateMixin.js";
@@ -27,7 +26,6 @@ function createUseFunction(ctor) {
 
 export const useAnimateMixin = createUseFunction(AnimateMixin);
 export const useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
-export const useErrorHandlerMixin = createUseFunction(ErrorHandlerMixin);
 export const useFlyoutMixin = createUseFunction(FlyoutMixin);
 export const useFocusStateMixin = createUseFunction(FocusStateMixin);
 export const useLoadingStateMixin = createUseFunction(LoadingStateMixin);
@@ -53,7 +51,6 @@ export {
     AnimateSequenceItemMixin,
     AnimateSequenceMixin,
     ClassNameMixin,
-    ErrorHandlerMixin,
     FlyoutMixin,
     FlyoutToggleMixin,
     FocusStateMixin,

@@ -3,7 +3,6 @@ import AnimateMixin from "./mixins/AnimateMixin";
 import AnimateSequenceItemMixin from "./mixins/AnimateSequenceItemMixin";
 import AnimateSequenceMixin from "./mixins/AnimateSequenceMixin";
 import ClassNameMixin from "./mixins/ClassNameMixin";
-import ErrorHandlerMixin from "./mixins/ErrorHandlerMixin";
 import FlyoutMixin, { FlyoutMixinOptions } from "./mixins/FlyoutMixin";
 import FlyoutToggleMixin from "./mixins/FlyoutToggleMixin";
 import FocusStateMixin from "./mixins/FocusStateMixin";
@@ -29,7 +28,6 @@ export {
     AnimateSequenceItemMixin,
     AnimateSequenceItemMixin,
     ClassNameMixin,
-    ErrorHandlerMixin,
     FlyoutMixin,
     FlyoutToggleMixin,
     FocusStateMixin,
@@ -49,11 +47,6 @@ export function useAnimateSequenceMixin(): AnimateSequenceMixin;
 export function useFocusStateMixin(): FocusStateMixin;
 
 export function useLoadingStateMixin(): LoadingStateMixin;
-
-/**
- * @deprecated
- */
-export function useErrorHandlerMixin(): ErrorHandlerMixin;
 
 export function useMixin<T extends typeof Mixin>(mixin: T): InstanceType<T>;
 
