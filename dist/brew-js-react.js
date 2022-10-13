@@ -167,7 +167,6 @@ __webpack_require__.d(src_namespaceObject, {
   "AnimateSequenceMixin": () => (AnimateSequenceMixin),
   "ClassNameMixin": () => (ClassNameMixin),
   "Dialog": () => (Dialog),
-  "ErrorHandlerMixin": () => (ErrorHandlerMixin),
   "FlyoutMixin": () => (FlyoutMixin),
   "FlyoutToggleMixin": () => (FlyoutToggleMixin),
   "FocusStateMixin": () => (FocusStateMixin),
@@ -189,7 +188,6 @@ __webpack_require__.d(src_namespaceObject, {
   "useAnimateMixin": () => (useAnimateMixin),
   "useAnimateSequenceMixin": () => (useAnimateSequenceMixin),
   "useAppReady": () => (useAppReady),
-  "useErrorHandlerMixin": () => (useErrorHandlerMixin),
   "useFlyoutMixin": () => (useFlyoutMixin),
   "useFocusStateMixin": () => (useFocusStateMixin),
   "useLanguage": () => (useLanguage),
@@ -1109,6 +1107,19 @@ util_define(Mixin, {
     return props;
   }
 });
+;// CONCATENATED MODULE: ./tmp/zeta-dom/observe.js
+
+var observe_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    observe = observe_lib$dom.observe,
+    registerCleanup = observe_lib$dom.registerCleanup,
+    createAutoCleanupMap = observe_lib$dom.createAutoCleanupMap,
+    afterDetached = observe_lib$dom.afterDetached,
+    watchElements = observe_lib$dom.watchElements,
+    watchAttributes = observe_lib$dom.watchAttributes,
+    watchOwnAttributes = observe_lib$dom.watchOwnAttributes;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/observe.js
+
 ;// CONCATENATED MODULE: ./src/mixins/StatefulMixin.js
 
 
@@ -1213,6 +1224,7 @@ definePrototype(StatefulMixin, Mixin, {
 
 
 
+
 var ClassNameMixinSuper = StatefulMixin.prototype;
 
 function checkState(self, element, state, isAsync) {
@@ -1259,10 +1271,8 @@ definePrototype(ClassNameMixin, StatefulMixin, {
   },
   initElement: function initElement(element, state) {
     var self = this;
-    zeta_dom_dom.watchAttributes(element, ['class'], function (nodes) {
-      if (nodes.includes(element)) {
-        checkState(self, element, state);
-      }
+    watchOwnAttributes(element, 'class', function () {
+      checkState(self, element, state);
     });
   },
   onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {}
@@ -1337,49 +1347,6 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
   clone: function clone() {
     return extend(AnimateSequenceMixinSuper.clone.call(this), {
       item: this.item.ref.getMixin()
-    });
-  }
-});
-;// CONCATENATED MODULE: ./src/mixins/ErrorHandlerMixin.js
-
-
-
-
-var ErrorHandlerMixinSuper = StatefulMixin.prototype;
-var ErrorHandlerMixin_emitter = new ZetaEventContainer();
-
-function isErrorMatched(filter, error) {
-  if (isFunction(filter)) {
-    return is(error, filter);
-  }
-
-  return error && error.code === filter;
-}
-
-function ErrorHandlerMixin() {
-  StatefulMixin.call(this);
-}
-definePrototype(ErrorHandlerMixin, StatefulMixin, {
-  "catch": function _catch(filter, callback) {
-    if (!callback) {
-      callback = filter;
-      filter = null;
-    }
-
-    return ErrorHandlerMixin_emitter.add(this, filter ? 'error' : 'default', function (e) {
-      if (!filter || isErrorMatched(filter, e.error)) {
-        return callback(e.error);
-      }
-    });
-  },
-  initElement: function initElement(element, state) {
-    var self = this;
-    ErrorHandlerMixinSuper.initElement.call(self, element, state);
-    zeta_dom_dom.on(element, 'error', function (e) {
-      var data = {
-        error: e.error
-      };
-      return ErrorHandlerMixin_emitter.emit('error', self, data) || ErrorHandlerMixin_emitter.emit('default', self, data);
     });
   }
 });
@@ -1659,7 +1626,6 @@ each('destroy enable disable setOptions refresh scrollPadding stop scrollLeft sc
 
 
 
-
 function extendSelf(options) {
   extend(this, options);
 }
@@ -1674,7 +1640,6 @@ function createUseFunction(ctor) {
 
 var useAnimateMixin = createUseFunction(AnimateMixin);
 var useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
-var useErrorHandlerMixin = createUseFunction(ErrorHandlerMixin);
 var useFlyoutMixin = createUseFunction(FlyoutMixin);
 var useFocusStateMixin = createUseFunction(FocusStateMixin);
 var useLoadingStateMixin = createUseFunction(LoadingStateMixin);
