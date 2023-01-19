@@ -9,11 +9,10 @@ import { ClassNameMixin, useAnimateMixin, useAnimateSequenceMixin, useFlyoutMixi
 import Mixin from "src/mixins/Mixin";
 import StatefulMixin from "src/mixins/StatefulMixin";
 import StaticAttributeMixin from "src/mixins/StaticAttributeMixin";
-import { after, initApp, mockFn, verifyCalls, _ } from "./testUtil";
+import { after, mockFn, verifyCalls, _ } from "@misonou/test-utils";
+import initAppBeforeAll from "./harness/initAppBeforeAll";
 
-beforeAll(async () => {
-    await initApp();
-});
+initAppBeforeAll(() => { });
 
 describe('use', () => {
     it('should accept ref callback as first argument', () => {
@@ -321,7 +320,7 @@ describe('FlyoutMixin', () => {
         const { container, unmount } = render(<Component />);
         const div = container.firstChild;
 
-        await after(() => openFlyout(div));
+        await after(() => void openFlyout(div));
         expect(div).toHaveClassName('open');
         expect(cb).toBeCalledTimes(1);
         unmount();
@@ -338,7 +337,7 @@ describe('FlyoutMixin', () => {
         const { container, unmount } = render(<Component />);
         const div = container.firstChild;
 
-        await after(() => mixin.open('foo'));
+        await after(() => void mixin.open('foo'));
         expect(div).toHaveClassName('open');
         verifyCalls(cb, [
             ['foo']
@@ -391,7 +390,7 @@ describe('FlyoutToggleMixin', () => {
 
         // toggle is ready in next event cycle
         await delay(0);
-        await after(() => mixin.toggle.open('foo'));
+        await after(() => void mixin.toggle.open('foo'));
 
         expect(div).toHaveClassName('open');
         verifyCalls(cb, [
@@ -473,7 +472,7 @@ describe('LoadingStateMixin', () => {
         const div = container.firstChild;
 
         const promise = delay(100);
-        dom.lock(div, promise, true);
+        dom.notifyAsync(div, promise);
         expect(div).toHaveClassName('loading');
 
         await dom.cancelLock(div);

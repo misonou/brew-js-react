@@ -1,16 +1,15 @@
 import { act, renderHook } from "@testing-library/react-hooks";
-import { app } from "brew-js/app";
+import brew from "brew-js/core";
 import { useAppReady } from "src/hooks";
-import { initApp } from "./testUtil";
 
 describe('useAppReady', () => {
     it('should return value indicating whether ready event has been fired', async () => {
-        initApp(() => {});
+        const app = brew(() => { });
 
         const { result } = renderHook(() => useAppReady());
         expect(result.current).toBe(false);
 
-        await act(() => app.ready);
+        await act(async () => void await app.ready);
         expect(result.current).toBe(true);
     });
 });

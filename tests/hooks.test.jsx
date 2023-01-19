@@ -3,21 +3,17 @@ import { render, screen } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react-hooks";
 import { useRouteParam, useRouteState, ViewStateContainer } from "src/hooks";
 import { registerView, renderView } from "src/view";
-import { defunctAfterTest, initApp, mockFn, verifyCalls } from "./testUtil";
+import { cleanup, mockFn } from "@misonou/test-utils";
 import { useViewState } from "zeta-dom-react";
+import initAppBeforeAll from "./harness/initAppBeforeAll";
 
-/** @type {Brew.AppInstance<Brew.WithRouter>} */
-let app;
-
-beforeAll(async () => {
-    app = await initApp(app => {
-        app.useRouter({
-            baseUrl: '/',
-            routes: [
-                '/{view}/{sub?}/*',
-                '/*'
-            ]
-        });
+const app = initAppBeforeAll(app => {
+    app.useRouter({
+        baseUrl: '/',
+        routes: [
+            '/{view}/{sub?}/*',
+            '/*'
+        ]
     });
 });
 
@@ -42,7 +38,7 @@ describe('useRouteParam', () => {
     it('should cause component to re-render after navigate event', async () => {
         const { result, waitForNextUpdate } = renderHook(() => useRouteParam('view'));
         const cb = mockFn();
-        defunctAfterTest(app.on('navigate', cb));
+        cleanup(app.on('navigate', cb));
 
         app.route.view = 'foo';
         expect(result.all.length).toBe(1);
@@ -52,10 +48,11 @@ describe('useRouteParam', () => {
     });
 
     it('should cause component to re-render exactly once when multiple parameter changed', async () => {
-        const { result } = renderHook(() => [useRouteParam('view'), useRouteParam('sub')]);
+        const { result, waitForNextUpdate } = renderHook(() => [useRouteParam('view'), useRouteParam('sub')]);
         expect(result.all.length).toBe(1);
 
-        await app.navigate('/foo/bar');
+        app.navigate('/foo/bar');
+        await waitForNextUpdate();
         expect(result.all.length).toBe(2);
     });
 
@@ -93,7 +90,7 @@ describe('useRouteParam', () => {
 describe('useRouteState', () => {
     it('should retain previous state when navigated back', async () => {
         const { result, unmount } = renderHook(() => useRouteState('view', 'foo'));
-        result.current[1]('bar');
+        act(() => result.current[1]('bar'));
 
         await app.navigate('/foo');
         unmount();
@@ -106,7 +103,7 @@ describe('useRouteState', () => {
     it('should accept symbol as key', async () => {
         const sym = Symbol();
         const { result, unmount } = renderHook(() => useRouteState(sym, 'foo'));
-        result.current[1]('bar');
+        act(() => result.current[1]('bar'));
 
         await app.navigate('/foo');
         unmount();
@@ -154,19 +151,34 @@ describe('useRouteState', () => {
         cb.mockClear();
         const { id: stateId2 } = await app.navigate('/bar');
         await screen.findByText('bar1');
-        expect(cb.mock.calls).toEqual([
-            ['foo unmount', stateId2],
-            ['bar', stateId2],
-            ['bar1', stateId2]
-        ]);
+        if (process.env.REACT_VERSION === '18') {
+            expect(cb.mock.calls).toEqual([
+                ['bar', stateId2],
+                ['foo unmount', stateId2],
+                ['bar1', stateId2]
+            ]);
+        } else {
+            expect(cb.mock.calls).toEqual([
+                ['foo unmount', stateId2],
+                ['bar', stateId2],
+                ['bar1', stateId2]
+            ]);
+        }
 
         cb.mockClear();
         await app.back();
         await screen.findByText('foo1');
-        expect(cb.mock.calls).toEqual([
-            ['bar unmount', stateId1],
-            ['foo1', stateId1]
-        ]);
+        if (process.env.REACT_VERSION === '18') {
+            expect(cb.mock.calls).toEqual([
+                ['foo1', stateId1],
+                ['bar unmount', stateId1],
+            ]);
+        } else {
+            expect(cb.mock.calls).toEqual([
+                ['bar unmount', stateId1],
+                ['foo1', stateId1]
+            ]);
+        }
         unmount();
     });
 });

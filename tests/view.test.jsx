@@ -1,13 +1,30 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
 import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerView, renderView } from "src/view";
-import { delay, initApp, mockFn, verifyCalls } from "./testUtil";
-import { async } from "regenerator-runtime";
+import { mockFn, verifyCalls } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
+import initAppBeforeAll from "./harness/initAppBeforeAll";
+import composeAct from "./harness/composeAct";
 
-/** @type {Brew.AppInstance<Brew.WithRouter>} */
-let app;
+const { actAwaitSetImmediate } = composeAct(act);
+
+const app = initAppBeforeAll(app => {
+    app.useRouter({
+        baseUrl: '/',
+        routes: [
+            '/{dummy:dummy}/{view:test}/a/{params1?}/{params2?}',
+            '/{dummy:dummy}/{view:test}/b/{params3?}',
+            '/{dummy:dummy}/{view:foo}/{baz?}',
+            '/{dummy:dummy}/{view}/*',
+            '/{dummy:dummy}',
+            '/{var2}/a/{var1}',
+            '/{var1:var1}',
+            '/*'
+        ]
+    });
+});
+
 /** @type {import("src/view").ViewComponent<{}>} */
 let Foo;
 /** @type {import("src/view").ViewComponent<{}>} */
@@ -23,25 +40,7 @@ let Var1;
 /** @type {import("src/view").ViewComponent<{}>} */
 let Var2;
 
-let bazCallback = mockFn(v => v === 'baz');
-
 beforeAll(async () => {
-    app = await initApp(app => {
-        app.useRouter({
-            baseUrl: '/',
-            routes: [
-                '/{dummy:dummy}/{view:test}/a/{params1?}/{params2?}',
-                '/{dummy:dummy}/{view:test}/b/{params3?}',
-                '/{dummy:dummy}/{view:foo}/{baz?}',
-                '/{dummy:dummy}/{view}/*',
-                '/{dummy:dummy}',
-                '/{var2}/a/{var1}',
-                '/{var1:var1}',
-                '/*'
-            ]
-        });
-    });
-
     Foo = registerView(async () => {
         return {
             default: () => {
@@ -150,6 +149,7 @@ describe('isViewMatched', () => {
     });
 
     it('should match route params with callback', async () => {
+        const bazCallback = mockFn(v => v === 'baz');
         const BazCb = registerView(async () => {
             return {
                 default: () => {
@@ -309,9 +309,9 @@ describe('renderView', () => {
         };
         const promise = app.navigate('/dummy/bar');
         const { rerender } = render(<Component view={Foo} />);
-        rerender(<Component view={Bar} />);
+        await actAwaitSetImmediate(() => rerender(<Component view={Bar} />));
 
-        await expect(promise).resolves.toBeTruthy();
+        await expect(promise).resolves.toEqual(expect.objectContaining({ path: '/dummy/bar' }));
         expect(app.path).toBe('/dummy/bar');
     });
 
@@ -319,7 +319,7 @@ describe('renderView', () => {
         await app.navigate('/xxx/a/var1');
         var { unmount } = render(<div>{renderView(Var1, Var2)}</div>);
         await screen.findByText('var2');
-        await app.navigate('/var1/a/var1');
+        await actAwaitSetImmediate(() => app.navigate('/var1/a/var1'));
         expect(app.path).toBe('/var1');
         await screen.findByText('var1');
         unmount();
@@ -344,8 +344,7 @@ describe('renderView', () => {
         const error = new Error();
         const cb = mockFn();
         dom.on(container, 'error', cb);
-        obj.error = error;
-        await delay(10);
+        await actAwaitSetImmediate(() => obj.error = error);
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0][0].error).toBe(error);
     });

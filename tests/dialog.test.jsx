@@ -3,14 +3,15 @@ import { act, render, screen, waitForElementToBeRemoved } from "@testing-library
 import { locked } from "zeta-dom/domLock";
 import { removeNode } from "zeta-dom/domUtil";
 import { createDialog, Dialog } from "src/dialog";
-import { after, delay, initApp, mockFn, verifyCalls } from "./testUtil";
+import { after, delay, mockFn, verifyCalls } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
+import initAppBeforeAll from "./harness/initAppBeforeAll";
+import composeAct from "./harness/composeAct";
 
 const createDialogMock = mockFn(createDialog);
+const { actAndReturn } = composeAct(act);
 
-beforeAll(async () => {
-    await initApp();
-});
+initAppBeforeAll(() => { });
 
 afterEach(() => {
     createDialogMock.mock.results.forEach(v => {
@@ -27,7 +28,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        dialog.open();
+        actAndReturn(() => dialog.open());
         verifyCalls(cb, [
             [dialog.root]
         ]);
@@ -41,7 +42,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        act(() => void dialog.open());
+        actAndReturn(() => dialog.open());
 
         dialog.close();
         await waitForElementToBeRemoved(() => screen.getByText('text'));
@@ -60,7 +61,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        dialog.open();
+        actAndReturn(() => dialog.open());
         dismiss();
         expect(onCommit).toBeCalledTimes(1);
 
@@ -78,7 +79,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        dialog.open();
+        actAndReturn(() => dialog.open());
         dismiss();
         expect(onCommit).toBeCalledTimes(1);
 
@@ -95,7 +96,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        dialog.open();
+        actAndReturn(() => dialog.open());
         expect(dialog.root.attributes['is-modal']).toBeTruthy();
         expect(dom.modalElement).toBe(dialog.root);
     });
@@ -107,7 +108,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        dialog.open();
+        actAndReturn(() => dialog.open());
         expect(locked()).toBe(true);
     });
 
@@ -118,9 +119,9 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        dialog.open();
+        actAndReturn(() => dialog.open());
         expect(locked()).toBe(true);
-        await after(() => dialog.close());
+        await after(() => void dialog.close());
         expect(locked()).toBe(false);
     });
 
@@ -133,7 +134,7 @@ describe('createDialog', () => {
                 return <span data-testid="child">text</span>;
             }
         });
-        dialog.open();
+        actAndReturn(() => dialog.open());
         expect(screen.getByTestId('child').parentElement).toBe(screen.getByTestId('parent'));
     });
 });
@@ -145,8 +146,8 @@ describe('DialogState.open', () => {
                 return <span>text</span>;
             }
         });
-        const p1 = dialog.open();
-        const p2 = dialog.open();
+        const p1 = actAndReturn(() => dialog.open());
+        const p2 = actAndReturn(() => dialog.open());
         expect(p1).toBe(p2);
     });
 
@@ -157,7 +158,7 @@ describe('DialogState.open', () => {
             }
         });
         const obj = {};
-        const p1 = dialog.open();
+        const p1 = actAndReturn(() => dialog.open());
         dialog.close(obj);
         await expect(p1).resolves.toBe(obj);
     });
@@ -171,7 +172,7 @@ describe('DialogState.open', () => {
             }
         });
         const obj = {};
-        const p1 = dialog.open();
+        const p1 = actAndReturn(() => dialog.open());
         dismiss(obj);
         await expect(p1).resolves.toBe(obj);
     });
@@ -186,7 +187,7 @@ describe('DialogState.open', () => {
                 return <span>text</span>;
             }
         });
-        const p1 = dialog.open();
+        const p1 = actAndReturn(() => dialog.open());
         dismiss();
         await expect(p1).resolves.toBe(42);
     });

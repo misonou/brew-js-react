@@ -1,16 +1,11 @@
 import { act, renderHook } from "@testing-library/react-hooks";
 import { jest } from "@jest/globals";
 import { makeTranslation, useLanguage } from "src/i18n";
-import { initApp } from "./testUtil";
+import initAppBeforeAll from "./harness/initAppBeforeAll";
 
-/** @type {Brew.AppInstance<Brew.WithI18n>} */
-let app;
-
-beforeAll(async () => {
-    app = await initApp(app => {
-        app.useI18n({
-            languages: ['en', 'de']
-        });
+const app = initAppBeforeAll(app => {
+    app.useI18n({
+        languages: ['en', 'de']
     });
 });
 
