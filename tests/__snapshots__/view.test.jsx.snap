@@ -1,5 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`renderView should catch and emit rendering error thrown from error view 1`] = `
+<DocumentFragment>
+  <div>
+    <div />
+  </div>
+</DocumentFragment>
+`;
+
 exports[`renderView should cause redirection to the first match view if none was matched 1`] = `
 <DocumentFragment>
   <div>

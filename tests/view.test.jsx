@@ -1,7 +1,7 @@
 import React from "react";
 import { act, render, screen } from "@testing-library/react";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
-import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerView, renderView } from "src/view";
+import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView } from "src/view";
 import { delay, mockFn, verifyCalls } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
@@ -411,6 +411,67 @@ describe('renderView', () => {
         await actAwaitSetImmediate(() => obj.error = error);
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0][0].error).toBe(error);
+    });
+
+    it('should catch and render error view', async () => {
+        const reset = mockFn();
+        const receivedProps = {};
+        registerErrorView((props) => {
+            Object.assign(receivedProps, props);
+            reset.mockImplementationOnce(props.reset);
+            return <div>error</div>;
+        });
+
+        const obj = { error: null };
+        const BarError = registerView(() => {
+            const error = useObservableProperty(obj, 'error');
+            if (error) {
+                throw error;
+            }
+            return (<div>bar</div>);
+        }, { view: 'bar' });
+        const { container } = render(<div>{renderView(BarError)}</div>);
+        await screen.findByText('bar');
+
+        const error = new Error();
+        const cb = mockFn();
+        dom.on(container, 'error', cb);
+        await actAwaitSetImmediate(() => obj.error = error);
+        await screen.findByText('error');
+        expect(cb).not.toBeCalled();
+        expect(receivedProps).toMatchObject({
+            view: BarError,
+            error: error
+        });
+
+        obj.error = null;
+        act(() => reset());
+        await screen.findByText('bar');
+    });
+
+    it('should catch and emit rendering error thrown from error view', async () => {
+        const obj = { error: null };
+        registerErrorView(() => {
+            const error = useObservableProperty(obj, 'error');
+            if (error) {
+                throw error;
+            }
+            return (<div>error</div>);
+        });
+
+        const BarError = registerView(async () => {
+            throw new Error();
+        }, { view: 'bar' });
+        const { container, asFragment } = render(<div>{renderView(BarError)}</div>);
+        await screen.findByText('error');
+
+        const error = new Error();
+        const cb = mockFn();
+        dom.on(container, 'error', cb);
+        await actAwaitSetImmediate(() => obj.error = error);
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0][0].error).toBe(error);
+        expect(asFragment()).toMatchSnapshot();
     });
 });
 

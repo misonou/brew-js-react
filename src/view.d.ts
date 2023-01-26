@@ -2,8 +2,24 @@ export type ViewComponentRootProps = React.DetailedHTMLProps<React.HTMLAttribute
 export type ViewComponent<P> = React.FC<P>;
 
 export interface ViewContainerState {
+    readonly container: HTMLElement;
     readonly view: ViewComponent<any>;
     readonly active: boolean;
+}
+
+export interface ErrorViewProps {
+    /**
+     * Gets the original view component in which error has thrown.
+     */
+    view: ViewComponent<any>;
+    /**
+     * Gets the error thrown from the original view component.
+     */
+    error: any;
+    /**
+     * Re-renders the original view component with initial state.
+     */
+    reset(): void;
 }
 
 export function useViewContainerState(): ViewContainerState;
@@ -23,6 +39,13 @@ export function registerView<P>(factory: () => Promise<{ default: React.Componen
  * @param params A dictionary containing route parameters.
  */
 export function registerView<P>(component: React.ComponentType<P>, params: Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>): ViewComponent<P>;
+
+/**
+ * Registers a default error view to be displayed when view component failed to render.
+ * The previous registered error view, if any, will be overriden when called multiple times.
+ * @param component A react component.
+ */
+export function registerErrorView(component: React.ComponentType<ErrorViewProps>): void;
 
 /**
  * Determines whether a registered view component matches current route state.

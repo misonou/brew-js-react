@@ -12,7 +12,42 @@ const root = dom.root;
 const routeMap = new Map();
 const usedParams = {};
 const sortedViews = [];
-const StateContext = React.createContext(Object.freeze({ active: true }));
+const StateContext = React.createContext(Object.freeze({ container: root, active: true }));
+
+var errorView;
+
+function ErrorBoundary() {
+    React.Component.apply(this, arguments);
+    this.state = {};
+}
+ErrorBoundary.contextType = StateContext;
+
+definePrototype(ErrorBoundary, React.Component, {
+    componentDidCatch: function (error) {
+        var self = this;
+        if (errorView && !self.state.error) {
+            self.setState({ error });
+        } else {
+            dom.emit('error', self.context.container, { error }, true);
+        }
+    },
+    render: function () {
+        var self = this;
+        var props = {
+            view: self.context.view,
+            error: self.state.error,
+            reset: self.reset.bind(self)
+        };
+        var onComponentLoaded = self.props.onComponentLoaded;
+        if (props.error) {
+            return React.createElement(errorView, { onComponentLoaded, viewProps: props });
+        }
+        return React.createElement(props.view, { onComponentLoaded });
+    },
+    reset: function () {
+        this.setState({ error: null });
+    }
+});
 
 function ViewContainer() {
     React.Component.apply(this, arguments);
@@ -33,9 +68,6 @@ definePrototype(ViewContainer, React.Component, {
                 self.forceUpdate();
             })
         );
-    },
-    componentDidCatch: function (error) {
-        dom.emit('error', this.parentElement || root, { error }, true);
     },
     render: function () {
         /** @type {any} */
@@ -70,7 +102,7 @@ definePrototype(ViewContainer, React.Component, {
             });
             var initElement = executeOnce(function (element) {
                 self.currentElement = element;
-                self.parentElement = element.parentElement;
+                state.container = element;
                 promise.then(function () {
                     animateIn(element, 'show');
                     app.emit('pageenter', element, { pathname: app.path }, true);
@@ -81,7 +113,7 @@ definePrototype(ViewContainer, React.Component, {
             var view = React.createElement(StateContext.Provider, { key: routeMap.get(V).id, value: state },
                 React.createElement(ViewStateContainer, null,
                     React.createElement('div', extend({}, self.props.rootProps, { ref: initElement }),
-                        React.createElement(V, { onComponentLoaded }))));
+                        React.createElement(ErrorBoundary, { onComponentLoaded }))));
             extend(self, {
                 currentPath: app.path,
                 currentView: view,
@@ -151,14 +183,15 @@ function createViewComponent(factory) {
         factory = React.createElement.bind(null, factory);
     }
     return function (props) {
-        var children = !promise && factory();
+        var viewProps = Object.freeze(props.viewProps || {});
+        var children = !promise && factory(viewProps);
         if (isThenable(children)) {
             promise = children;
             children = null;
         }
         var state = useAsync(function () {
             return promise.then(function (s) {
-                return React.createElement(s.default);
+                return React.createElement(s.default, viewProps);
             });
         }, !!promise)[1];
         if (!promise || !state.loading) {
@@ -212,6 +245,10 @@ export function registerView(factory, routeParams) {
     sortedViews.push(Component);
     sortedViews.sort(sortViews);
     return Component;
+}
+
+export function registerErrorView(factory) {
+    errorView = createViewComponent(factory);
 }
 
 export function renderView() {
