@@ -17,6 +17,14 @@ export function useViewContainerState(): ViewContainerState;
 export function registerView<P>(factory: () => Promise<{ default: React.ComponentType<P> }>, params: Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>): ViewComponent<P>;
 
 /**
+ * Registers view component with specific route paramters.
+ * Route parameters will be matched against current route state by {@link renderView}.
+ * @param component A React component.
+ * @param params A dictionary containing route parameters.
+ */
+export function registerView<P>(component: React.ComponentType<P>, params: Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>): ViewComponent<P>;
+
+/**
  * Determines whether a registered view component matches current route state.
  * However it does not imply if the view is in fact being rendered.
  * @param view A view component returned from {@link registerView}.

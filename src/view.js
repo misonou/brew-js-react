@@ -1,8 +1,8 @@
-import React, { useRef } from "react";
-import { combineRef, useAsync } from "zeta-dom-react";
+import React from "react";
+import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, grep, isFunction, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, watch } from "./include/zeta-dom/util.js";
+import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { removeQueryAndHash } from "./include/brew-js/util/path.js";
 import { app } from "./app.js";
@@ -64,25 +64,24 @@ definePrototype(ViewContainer, React.Component, {
                     self.forceUpdate();
                 });
             }
-            var resolve;
-            var promise = new Promise(function (resolve_) {
-                resolve = resolve_;
+            var onComponentLoaded;
+            var promise = new Promise(function (resolve) {
+                onComponentLoaded = resolve;
+            });
+            var initElement = executeOnce(function (element) {
+                self.currentElement = element;
+                self.parentElement = element.parentElement;
+                promise.then(function () {
+                    animateIn(element, 'show');
+                    app.emit('pageenter', element, { pathname: app.path }, true);
+                });
+                notifyAsync(element, promise);
             });
             var state = { view: V };
             var view = React.createElement(StateContext.Provider, { key: routeMap.get(V).id, value: state },
                 React.createElement(ViewStateContainer, null,
-                    React.createElement(V, {
-                        rootProps: self.props.rootProps,
-                        onComponentLoaded: executeOnce(function (element) {
-                            self.currentElement = element;
-                            self.parentElement = element.parentElement;
-                            setImmediate(function () {
-                                resolve();
-                                animateIn(element, 'show');
-                                app.emit('pageenter', element, { pathname: app.path }, true);
-                            });
-                        })
-                    })));
+                    React.createElement('div', extend({}, self.props.rootProps, { ref: initElement }),
+                        React.createElement(V, { onComponentLoaded }))));
             extend(self, {
                 currentPath: app.path,
                 currentView: view,
@@ -90,7 +89,6 @@ definePrototype(ViewContainer, React.Component, {
                 setActive: defineObservableProperty(state, 'active', true, true)
             });
             (self.waitFor || noop)(promise);
-            notifyAsync(self.parentElement || root, promise);
         }
         var child = React.createElement(React.Fragment, null, self.prevView, self.currentView);
         self.lastChild = child;
@@ -146,6 +144,33 @@ function matchViewParams(view, route) {
     });
 }
 
+function createViewComponent(factory) {
+    var promise;
+    throwNotFunction(factory);
+    if (factory.prototype instanceof React.Component) {
+        factory = React.createElement.bind(null, factory);
+    }
+    return function (props) {
+        var children = !promise && factory();
+        if (isThenable(children)) {
+            promise = children;
+            children = null;
+        }
+        var state = useAsync(function () {
+            return promise.then(function (s) {
+                return React.createElement(s.default);
+            });
+        }, !!promise)[1];
+        if (!promise || !state.loading) {
+            props.onComponentLoaded();
+            if (state.error) {
+                throw state.error;
+            }
+        }
+        return children || state.value || React.createElement(React.Fragment);
+    };
+}
+
 export function useViewContainerState() {
     return React.useContext(StateContext);
 }
@@ -168,17 +193,7 @@ export function matchView(path, views) {
 }
 
 export function registerView(factory, routeParams) {
-    var Component = function (props) {
-        var state = useAsync(factory);
-        var ref = useRef();
-        if (state[0] || state[1].error) {
-            (props.onComponentLoaded || noop)(ref.current);
-        }
-        return React.createElement('div', extend({}, props.rootProps, {
-            ref: combineRef(ref, state[1].elementRef),
-            children: state[0] && React.createElement(state[0].default)
-        }));
-    };
+    var Component = createViewComponent(factory);
     routeParams = extend({}, routeParams);
     each(routeParams, function (i, v) {
         usedParams[i] = true;

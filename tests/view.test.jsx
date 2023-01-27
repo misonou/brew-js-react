@@ -2,7 +2,7 @@ import React from "react";
 import { act, render, screen } from "@testing-library/react";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
 import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerView, renderView } from "src/view";
-import { mockFn, verifyCalls } from "@misonou/test-utils";
+import { delay, mockFn, verifyCalls } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
@@ -250,6 +250,20 @@ describe('renderView', () => {
         expect(asFragment()).toMatchSnapshot();
     });
 
+    it('should render functional component registered without import', async () => {
+        const FooSync = registerView(() => <div>foo</div>, { view: 'foo' });
+        const { asFragment } = render(<div>{renderView(FooSync)}</div>);
+        await screen.findByText('foo');
+        expect(asFragment()).toMatchSnapshot();
+    });
+
+    it('should render class component registered without import', async () => {
+        const FooSync = registerView(class extends React.Component { render() { return <div>foo</div> } }, { view: 'foo' });
+        const { asFragment } = render(<div>{renderView(FooSync)}</div>);
+        await screen.findByText('foo');
+        expect(asFragment()).toMatchSnapshot();
+    });
+
     it('should cause redirection to the first match view if none was matched', async () => {
         const { asFragment } = render(<div>{renderView(Foo, Bar, Baz)}</div>)
         await screen.findByText('foo');
@@ -340,6 +354,21 @@ describe('renderView', () => {
         unmount();
     });
 
+    it('should catch and emit importing error', async () => {
+        const error = new Error();
+        const cb = mockFn();
+        const BarError = registerView(async () => {
+            throw error;
+        }, { view: 'bar' });
+        const { container, unmount } = render(<div>{renderView(BarError)}</div>);
+        dom.on(container, 'error', cb);
+
+        await delay();
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0][0].error).toBe(error);
+        unmount();
+    });
+
     it('should catch and emit rendering error', async () => {
         const obj = { error: null };
         const BarError = registerView(async () => {
@@ -352,6 +381,26 @@ describe('renderView', () => {
                     return (<div>bar</div>);
                 }
             }
+        }, { view: 'bar' });
+        const { container } = render(<div>{renderView(BarError)}</div>);
+        await screen.findByText('bar');
+
+        const error = new Error();
+        const cb = mockFn();
+        dom.on(container, 'error', cb);
+        await actAwaitSetImmediate(() => obj.error = error);
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0][0].error).toBe(error);
+    });
+
+    it('should catch and emit rendering error for view component registered without import', async () => {
+        const obj = { error: null };
+        const BarError = registerView(() => {
+            const error = useObservableProperty(obj, 'error');
+            if (error) {
+                throw error;
+            }
+            return (<div>bar</div>);
         }, { view: 'bar' });
         const { container } = render(<div>{renderView(BarError)}</div>);
         await screen.findByText('bar');

@@ -38,6 +38,30 @@ exports[`renderView should pass props to view container 1`] = `
 </DocumentFragment>
 `;
 
+exports[`renderView should render class component registered without import 1`] = `
+<DocumentFragment>
+  <div>
+    <div>
+      <div>
+        foo
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`renderView should render functional component registered without import 1`] = `
+<DocumentFragment>
+  <div>
+    <div>
+      <div>
+        foo
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`renderView should render matched view 1`] = `
 <DocumentFragment>
   <div>
