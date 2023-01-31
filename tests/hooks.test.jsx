@@ -35,6 +35,17 @@ describe('useRouteParam', () => {
         expect(app.path).toBe('/foo');
     });
 
+    it('should redirect to path with default remainingSegments parameter value', async () => {
+        await app.navigate('/view/sub');
+
+        const { result } = renderHook(() => useRouteParam('remainingSegments', '/foo'));
+        expect(result.current).toBe('/');
+
+        await act(async () => void await app.watchOnce('path'));
+        expect(result.current).toBe('/foo');
+        expect(app.path).toBe('/view/sub/foo');
+    });
+
     it('should cause component to re-render after navigate event', async () => {
         const { result, waitForNextUpdate } = renderHook(() => useRouteParam('view'));
         const cb = mockFn();

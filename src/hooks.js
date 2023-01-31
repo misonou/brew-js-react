@@ -71,7 +71,7 @@ export function useRouteParam(name, defaultValue) {
         console.error('Route parameter ' + name + ' does not exist');
     }, [name, defaultValue]);
     ref.current = value;
-    if (!value && defaultValue !== undefined) {
+    if (defaultValue !== undefined && (!value || (name === 'remainingSegments' && value === '/'))) {
         app.navigate(route.getPath(extend({}, route, kv(name, defaultValue))), true);
     }
     return value;
