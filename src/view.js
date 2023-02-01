@@ -123,7 +123,7 @@ function getCurrentParams(view, includeAll, params) {
         }
         if (matched[0]) {
             var last = matched.slice(-1)[0];
-            state.maxParams = keys(extend.apply(0, [{}].concat(matched.map(function (v) {
+            state.maxParams = keys(extend.apply(0, [{ remainingSegments: true }].concat(matched.map(function (v) {
                 return v.params;
             }))));
             state.minParams = map(last.params, function (v, i) {
@@ -212,7 +212,7 @@ export function linkTo(view, params) {
     if (!state) {
         return '/';
     }
-    var newParams = extend(getCurrentParams(view), getCurrentParams(view, true, params), state.params);
+    var newParams = extend(getCurrentParams(view), getCurrentParams(view, true, params || {}), state.params);
     return app.route.getPath(newParams);
 }
 

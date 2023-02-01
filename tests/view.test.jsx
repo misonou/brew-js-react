@@ -263,6 +263,13 @@ describe('renderView', () => {
         expect(app.path).toBe('/dummy/foo/baz');
     });
 
+    it('should keep extra segments after view being matched', async () => {
+        await app.navigate('/dummy/bar/baz');
+        render(<div>{renderView(Bar)}</div>);
+        await screen.findByText('bar');
+        expect(app.path).toBe('/dummy/bar/baz');
+    });
+
     it('should redirect to minimum path of matching view', async () => {
         const Baz2 = registerView(async () => {
             return {
