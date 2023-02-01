@@ -25,6 +25,14 @@ const app = initAppBeforeAll(app => {
     });
 });
 
+async function dummyImport() {
+    return {
+        default: () => {
+            return (<div></div>);
+        }
+    };
+}
+
 /** @type {import("src/view").ViewComponent<{}>} */
 let Foo;
 /** @type {import("src/view").ViewComponent<{}>} */
@@ -361,6 +369,7 @@ describe('linkTo', () => {
     it('should return path that will render specified view with params', () => {
         expect(linkTo(Foo, { baz: 'baz' })).toBe('/dummy/foo');
         expect(linkTo(Baz, { baz: 'baz' })).toBe('/dummy/foo/baz');
+        expect(linkTo(Bar, { remainingSegments: '/buzz' })).toBe('/dummy/bar/buzz');
         expect(linkTo(BarBaz)).toBe('/dummy/bar/baz');
         expect(linkTo(Test, { params1: 'baz' })).toBe('/dummy/test/a/baz');
         expect(linkTo(Test, { params1: 'baz', params2: 'bee' })).toBe('/dummy/test/a/baz/bee');
@@ -371,6 +380,26 @@ describe('linkTo', () => {
     it('should return minimum path matching the specified view', async () => {
         await app.navigate('/dummy/foo/baz');
         expect(linkTo(Foo)).toBe('/dummy/foo');
+        await app.navigate('/dummy/bar/baz');
+        expect(linkTo(Bar)).toBe('/dummy/bar');
+    });
+
+    it('should return path with remaining segments normalized', async () => {
+        expect(linkTo(Bar, { remainingSegments: 'buzz' })).toBe('/dummy/bar/buzz');
+    });
+
+    it('should return path without remaining segments if matched route does not allow', async () => {
+        expect(linkTo(Baz, { baz: 'baz', remainingSegments: '/buzz' })).toBe('/dummy/foo/baz');
+    });
+
+    it('should not override constant parameters passed to registerView', async () => {
+        const BazNull = registerView(dummyImport, { view: 'foo', baz: null });
+        const BarBazNull = registerView(dummyImport, { view: 'bar', remainingSegments: null });
+
+        expect(linkTo(Foo, { view: 'bar' })).toBe('/dummy/foo');
+        expect(linkTo(BazNull, { baz: 'baz' })).toBe('/dummy/foo');
+        expect(linkTo(BarBaz, { remainingSegments: '/buzz' })).toBe('/dummy/bar/baz');
+        expect(linkTo(BarBazNull, { remainingSegments: '/buzz' })).toBe('/dummy/bar');
     });
 
     it('should return root path for views not being registered', () => {

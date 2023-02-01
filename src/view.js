@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { combineRef, useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, grep, isFunction, keys, makeArray, map, noop, pick, randomId, setImmediate, single, watch } from "./include/zeta-dom/util.js";
+import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, grep, isFunction, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { removeQueryAndHash } from "./include/brew-js/util/path.js";
 import { app } from "./app.js";
@@ -191,7 +191,7 @@ export function registerView(factory, routeParams) {
         matchCount: keys(routeParams).length,
         matchers: routeParams,
         params: pick(routeParams, function (v) {
-            return typeof v === 'string';
+            return isUndefinedOrNull(v) || typeof v === 'string';
         })
     });
     sortedViews.push(Component);
