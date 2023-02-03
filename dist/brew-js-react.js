@@ -183,6 +183,7 @@ __webpack_require__.d(src_namespaceObject, {
   "matchView": () => (matchView),
   "navigateTo": () => (navigateTo),
   "redirectTo": () => (redirectTo),
+  "registerErrorView": () => (registerErrorView),
   "registerView": () => (registerView),
   "renderView": () => (renderView),
   "useAnimateMixin": () => (useAnimateMixin),
@@ -261,6 +262,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     setIntervalSafe = _lib$util.setIntervalSafe,
     setImmediate = _lib$util.setImmediate,
     setImmediateOnce = _lib$util.setImmediateOnce,
+    _throws = _lib$util["throws"],
     throwNotFunction = _lib$util.throwNotFunction,
     errorWithCode = _lib$util.errorWithCode,
     isErrorWithCode = _lib$util.isErrorWithCode,
@@ -567,8 +569,57 @@ var routeMap = new Map();
 var usedParams = {};
 var sortedViews = [];
 var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext(Object.freeze({
+  container: root,
   active: true
 }));
+var errorView;
+
+function ErrorBoundary() {
+  external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(this, arguments);
+  this.state = {};
+}
+
+ErrorBoundary.contextType = StateContext;
+definePrototype(ErrorBoundary, external_commonjs_react_commonjs2_react_amd_react_root_React_.Component, {
+  componentDidCatch: function componentDidCatch(error) {
+    var self = this;
+
+    if (errorView && !self.state.error) {
+      self.setState({
+        error: error
+      });
+    } else {
+      zeta_dom_dom.emit('error', self.context.container, {
+        error: error
+      }, true);
+    }
+  },
+  render: function render() {
+    var self = this;
+    var props = {
+      view: self.context.view,
+      error: self.state.error,
+      reset: self.reset.bind(self)
+    };
+    var onComponentLoaded = self.props.onComponentLoaded;
+
+    if (props.error) {
+      return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(errorView, {
+        onComponentLoaded: onComponentLoaded,
+        viewProps: props
+      });
+    }
+
+    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.view, {
+      onComponentLoaded: onComponentLoaded
+    });
+  },
+  reset: function reset() {
+    this.setState({
+      error: null
+    });
+  }
+});
 
 function ViewContainer() {
   external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(this, arguments);
@@ -586,11 +637,6 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       self.stateId = history.state;
       self.forceUpdate();
     }));
-  },
-  componentDidCatch: function componentDidCatch(error) {
-    zeta_dom_dom.emit('error', this.parentElement || root, {
-      error: error
-    }, true);
   },
   render: function render() {
     /** @type {any} */
@@ -628,9 +674,20 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         });
       }
 
-      var resolve;
-      var promise = new Promise(function (resolve_) {
-        resolve = resolve_;
+      var onComponentLoaded;
+      var promise = new Promise(function (resolve) {
+        onComponentLoaded = resolve;
+      });
+      var initElement = executeOnce(function (element) {
+        self.currentElement = element;
+        state.container = element;
+        promise.then(function () {
+          animateIn(element, 'show');
+          app_app.emit('pageenter', element, {
+            pathname: app_app.path
+          }, true);
+        });
+        notifyAsync(element, promise);
       });
       var state = {
         view: V
@@ -638,20 +695,11 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       var view = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(StateContext.Provider, {
         key: routeMap.get(V).id,
         value: state
-      }, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewStateContainer, null, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(V, {
-        rootProps: self.props.rootProps,
-        onComponentLoaded: executeOnce(function (element) {
-          self.currentElement = element;
-          self.parentElement = element.parentElement;
-          setImmediate(function () {
-            resolve();
-            animateIn(element, 'show');
-            app_app.emit('pageenter', element, {
-              pathname: app_app.path
-            }, true);
-          });
-        })
-      })));
+      }, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewStateContainer, null, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, self.props.rootProps, {
+        ref: initElement
+      }), /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ErrorBoundary, {
+        onComponentLoaded: onComponentLoaded
+      }))));
       extend(self, {
         currentPath: app_app.path,
         currentView: view,
@@ -659,7 +707,6 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         setActive: defineObservableProperty(state, 'active', true, true)
       });
       (self.waitFor || noop)(promise);
-      notifyAsync(self.parentElement || root, promise);
     }
 
     var child = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
@@ -696,7 +743,9 @@ function getCurrentParams(view, includeAll, params) {
 
     if (matched[0]) {
       var last = matched.slice(-1)[0];
-      state.maxParams = util_keys(extend.apply(0, [{}].concat(matched.map(function (v) {
+      state.maxParams = util_keys(extend.apply(0, [{
+        remainingSegments: true
+      }].concat(matched.map(function (v) {
         return v.params;
       }))));
       state.minParams = map(last.params, function (v, i) {
@@ -720,6 +769,41 @@ function matchViewParams(view, route) {
   });
 }
 
+function createViewComponent(factory) {
+  var promise;
+  throwNotFunction(factory);
+
+  if (factory.prototype instanceof external_commonjs_react_commonjs2_react_amd_react_root_React_.Component) {
+    factory = external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement.bind(null, factory);
+  }
+
+  return function (props) {
+    var viewProps = Object.freeze(props.viewProps || {});
+    var children = !promise && factory(viewProps);
+
+    if (isThenable(children)) {
+      promise = children;
+      children = null;
+    }
+
+    var state = (0,external_zeta_dom_react_.useAsync)(function () {
+      return promise.then(function (s) {
+        return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(s["default"], viewProps);
+      });
+    }, !!promise)[1];
+
+    if (!promise || !state.loading) {
+      props.onComponentLoaded();
+
+      if (state.error) {
+        throw state.error;
+      }
+    }
+
+    return children || state.value || /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment);
+  };
+}
+
 function useViewContainerState() {
   return external_commonjs_react_commonjs2_react_amd_react_root_React_.useContext(StateContext);
 }
@@ -741,20 +825,7 @@ function matchView(path, views) {
   }) || undefined;
 }
 function registerView(factory, routeParams) {
-  var Component = function Component(props) {
-    var state = (0,external_zeta_dom_react_.useAsync)(factory);
-    var ref = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useRef)();
-
-    if (state[0] || state[1].error) {
-      (props.onComponentLoaded || noop)(ref.current);
-    }
-
-    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, props.rootProps, {
-      ref: (0,external_zeta_dom_react_.combineRef)(ref, state[1].elementRef),
-      children: state[0] && /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(state[0]["default"])
-    }));
-  };
-
+  var Component = createViewComponent(factory);
   routeParams = extend({}, routeParams);
   each(routeParams, function (i, v) {
     usedParams[i] = true;
@@ -768,12 +839,15 @@ function registerView(factory, routeParams) {
     matchCount: util_keys(routeParams).length,
     matchers: routeParams,
     params: pick(routeParams, function (v) {
-      return typeof v === 'string';
+      return isUndefinedOrNull(v) || typeof v === 'string';
     })
   });
   sortedViews.push(Component);
   sortedViews.sort(sortViews);
   return Component;
+}
+function registerErrorView(factory) {
+  errorView = createViewComponent(factory);
 }
 function renderView() {
   var views = makeArray(arguments);
@@ -793,7 +867,7 @@ function linkTo(view, params) {
     return '/';
   }
 
-  var newParams = extend(getCurrentParams(view), getCurrentParams(view, true, params), state.params);
+  var newParams = extend(getCurrentParams(view), getCurrentParams(view, true, params || {}), state.params);
   return app_app.route.getPath(newParams);
 }
 function navigateTo(view, params) {
@@ -879,7 +953,7 @@ function useRouteParam(name, defaultValue) {
   }, [name, defaultValue]);
   ref.current = value;
 
-  if (!value && defaultValue !== undefined) {
+  if (defaultValue !== undefined && (!value || name === 'remainingSegments' && value === '/')) {
     app_app.navigate(route.getPath(extend({}, route, kv(name, defaultValue))), true);
   }
 
