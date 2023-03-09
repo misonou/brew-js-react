@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { act, render, screen } from "@testing-library/react";
+import { renderHook } from "@testing-library/react-hooks";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
-import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView } from "src/view";
-import { delay, mockFn, verifyCalls } from "@misonou/test-utils";
+import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState } from "src/view";
+import { body, delay, mockFn, verifyCalls, _ } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
+import { addAnimateIn, addAnimateOut } from "brew-js/anim";
+import { subscribeAsync } from "zeta-dom/domLock";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
 
@@ -370,11 +373,11 @@ describe('renderView', () => {
     });
 
     it('should catch and emit rendering error', async () => {
-        const obj = { error: null };
+        let error, setError;
         const BarError = registerView(async () => {
             return {
                 default: () => {
-                    const error = useObservableProperty(obj, 'error');
+                    [error, setError] = useState(null);
                     if (error) {
                         throw error;
                     }
@@ -385,18 +388,17 @@ describe('renderView', () => {
         const { container } = render(<div>{renderView(BarError)}</div>);
         await screen.findByText('bar');
 
-        const error = new Error();
         const cb = mockFn();
         dom.on(container, 'error', cb);
-        await actAwaitSetImmediate(() => obj.error = error);
+        act(() => setError(new Error()));
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0][0].error).toBe(error);
     });
 
     it('should catch and emit rendering error for view component registered without import', async () => {
-        const obj = { error: null };
+        let error, setError;
         const BarError = registerView(() => {
-            const error = useObservableProperty(obj, 'error');
+            [error, setError] = useState(null);
             if (error) {
                 throw error;
             }
@@ -405,10 +407,9 @@ describe('renderView', () => {
         const { container } = render(<div>{renderView(BarError)}</div>);
         await screen.findByText('bar');
 
-        const error = new Error();
         const cb = mockFn();
         dom.on(container, 'error', cb);
-        await actAwaitSetImmediate(() => obj.error = error);
+        act(() => setError(new Error()));
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0][0].error).toBe(error);
     });
@@ -472,6 +473,87 @@ describe('renderView', () => {
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0][0].error).toBe(error);
         expect(asFragment()).toMatchSnapshot();
+    });
+
+    it('should notify asynchronous operation on view container', async () => {
+        const cb = mockFn(() => screen.queryByText('foo'));
+        const container = document.createElement('div');
+        body.appendChild(container);
+        dom.on(container, 'asyncStart', cb);
+        dom.on(container, 'asyncEnd', cb);
+        subscribeAsync(container);
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>, { container });
+        const element = await screen.findByText('foo');
+        verifyCalls(cb, [
+            [expect.objectContaining({ type: 'asyncStart' }), _],
+            [expect.objectContaining({ type: 'asyncEnd' }), _],
+        ]);
+        expect(cb.mock.results[0].value).toBe(null);
+        expect(cb.mock.results[1].value).toBe(element);
+        unmount();
+    });
+
+    it('should emit pageenter event after view component is rendered', async () => {
+        const { container, unmount } = render(<div>{renderView(Foo)}</div>);
+        const pageenter = mockFn(() => screen.queryByText('foo'));
+        dom.on(container, 'pageenter', pageenter);
+
+        const element = await screen.findByText('foo');
+        expect(pageenter).toBeCalledTimes(1);
+        expect(pageenter.mock.results[0].value).toBe(element);
+        unmount();
+    });
+
+    it('should emit pageleave event before view component is unmounted', async () => {
+        const { container, unmount } = render(<div>{renderView(Foo, Bar)}</div>);
+        const pageleave = mockFn(() => screen.queryByText('foo'));
+        dom.on(container, 'pageleave', pageleave);
+
+        const element = await screen.findByText('foo');
+        await actAwaitSetImmediate(() => app.navigate('/dummy/bar'));
+        expect(pageleave).toBeCalledTimes(1);
+        expect(pageleave.mock.results[0].value).toBe(element);
+        unmount();
+    });
+
+    it('should trigger intro animation after view component is rendered', async () => {
+        const cb = mockFn(() => screen.queryByText('bar'));
+        addAnimateIn('animate-in-qpfsq', cb);
+
+        const BarAnim = registerView(async () => ({
+            default: function () {
+                return <div animate-in="" animate-in-qpfsq="">bar</div>;
+            }
+        }), { view: 'bar' });
+        const { unmount } = render(<div>{renderView(BarAnim)}</div>);
+        await screen.findByText('bar');
+        await delay();
+        expect(cb).toBeCalledTimes(1);
+        unmount();
+    });
+
+    it('should trigger outro animation before view component is unmounted', async () => {
+        let resolve;
+        const promise = new Promise(resolve_ => resolve = resolve_);
+        const cb = mockFn().mockReturnValue(promise);
+        addAnimateOut('animate-out-e3vpv', cb);
+
+        const BarAnim = registerView(async () => ({
+            default: function () {
+                return <div animate-out="" animate-out-e3vpv="">bar</div>;
+            }
+        }), { view: 'bar' });
+        const { unmount } = render(<div>{renderView(BarAnim, Foo)}</div>);
+        await screen.findByText('bar');
+
+        await actAwaitSetImmediate(() => app.navigate('/dummy/foo'));
+        expect(cb).toBeCalledTimes(1);
+        screen.getByText('bar');
+
+        await actAwaitSetImmediate(() => resolve());
+        expect(screen.queryByText('bar')).toBe(null);
+        unmount();
     });
 });
 
@@ -539,5 +621,37 @@ describe('redirectTo', () => {
             path: '/dummy/foo/baz'
         }));
         expect(app.previousPath).toBe(previousPath);
+    });
+});
+
+describe('useViewContainerState', () => {
+    it('should return active outside view container', () => {
+        const { result } = renderHook(() => useViewContainerState())
+        expect(result.current).toMatchObject({ active: true });
+    });
+
+    it('should return whether the component is inside the active view container', async () => {
+        let fooResult, barResultInFoo, barResult;
+        const Foo = registerView(async () => ({
+            default: function () {
+                fooResult = useViewContainerState();
+                barResultInFoo = barResult;
+                return <div>foo</div>;
+            }
+        }), { view: 'foo' });
+        const Bar = registerView(async () => ({
+            default: function () {
+                barResult = useViewContainerState();
+                return <div>bar</div>;
+            }
+        }), { view: 'bar' });
+
+        render(<div>{renderView(Foo, Bar)}</div>);
+        await screen.findByText('foo');
+        expect(fooResult).toMatchObject({ view: Foo, active: true });
+
+        await actAwaitSetImmediate(() => app.navigate('/dummy/bar'));
+        expect(fooResult.active).toBe(false);
+        expect(barResultInFoo).toBeUndefined();
     });
 });

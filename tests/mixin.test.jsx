@@ -5,7 +5,7 @@ import { renderHook } from "@testing-library/react-hooks";
 import { openFlyout } from "brew-js/domAction";
 import dom from "zeta-dom/dom";
 import { delay, watch } from "zeta-dom/util";
-import { ClassNameMixin, useAnimateMixin, useAnimateSequenceMixin, useFlyoutMixin, useFocusStateMixin, useLoadingStateMixin, useMixin, useMixinRef, useScrollableMixin } from "src/mixin";
+import { AnimateSequenceMixin, ClassNameMixin, FlyoutMixin, useAnimateMixin, useAnimateSequenceMixin, useFlyoutMixin, useFocusStateMixin, useLoadingStateMixin, useMixin, useMixinRef, useScrollableMixin } from "src/mixin";
 import Mixin from "src/mixins/Mixin";
 import StatefulMixin from "src/mixins/StatefulMixin";
 import StaticAttributeMixin from "src/mixins/StaticAttributeMixin";
@@ -295,6 +295,13 @@ describe('AnimateSequenceMixin', () => {
         expect(div).toHaveAttribute('animate-sequence');
         unmount();
     });
+
+    it('should clone item mixin', () => {
+        const mixin = new AnimateSequenceMixin();
+        const ref = jest.spyOn(mixin.item, 'ref', 'get');
+        expect(mixin.clone().item).not.toBe(mixin.item);
+        expect(ref).toBeCalledTimes(1);
+    });
 });
 
 describe('FlyoutMixin', () => {
@@ -358,6 +365,13 @@ describe('FlyoutMixin', () => {
         mixin.close('foo');
         await expect(promise).resolves.toBe('foo');
         unmount();
+    });
+
+    it('should clone toggle mixin', () => {
+        const mixin = new FlyoutMixin();
+        const ref = jest.spyOn(mixin.toggle, 'ref', 'get');
+        expect(mixin.clone().toggle).not.toBe(mixin.toggle);
+        expect(ref).toBeCalledTimes(1);
     });
 });
 
