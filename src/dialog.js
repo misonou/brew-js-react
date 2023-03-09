@@ -1,12 +1,13 @@
 import { createElement, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
+import ReactDOMClient from "./include/external/react-dom-client.js";
 import { always, catchAsync, either, extend, makeAsync, noop, pipe } from "./include/zeta-dom/util.js";
 import { containsOrEquals, removeNode } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
 import { lock, preventLeave } from "./include/zeta-dom/domLock.js";
 import { closeFlyout, openFlyout } from "./include/brew-js/domAction.js";
 
-const createRoot = ReactDOM.createRoot;
+const createRoot = ReactDOMClient.createRoot;
 
 /**
  * @param {Partial<import("./dialog").DialogOptions<any>>} props
