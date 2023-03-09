@@ -25,7 +25,7 @@ export * from "./mixins/ScrollableMixin";
 export {
     Mixin,
     AnimateMixin,
-    AnimateSequenceItemMixin,
+    AnimateSequenceMixin,
     AnimateSequenceItemMixin,
     ClassNameMixin,
     FlyoutMixin,
