@@ -6,6 +6,9 @@ import { registerView, renderView } from "src/view";
 import { cleanup, mockFn } from "@misonou/test-utils";
 import { useViewState } from "zeta-dom-react";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
+import composeAct from "./harness/composeAct";
+
+const { actAwaitSetImmediate } = composeAct(act);
 
 const app = initAppBeforeAll(app => {
     app.useRouter({
@@ -109,6 +112,30 @@ describe('useRouteState', () => {
         await app.back();
         const { result: result2 } = renderHook(() => useRouteState('view', 'foo'));
         expect(result2.current[0]).toEqual('bar');
+    });
+
+    it('should snapshot upon value changing if snapshotOnUpdate is true', async () => {
+        const sym = Symbol();
+        const stateId = history.state;
+        const { result, unmount } = renderHook(() => useRouteState(sym, 'foo', true));
+
+        await actAwaitSetImmediate(() => result.current[1]('bar'));
+        expect(history.state).not.toBe(stateId);
+        unmount();
+    });
+
+    it('should retain previous state when navigated back if snapshotOnUpdate is true', async () => {
+        const sym = Symbol();
+        const stateId = history.state;
+        const { result, unmount } = renderHook(() => useRouteState(sym, 'foo', true));
+
+        await actAwaitSetImmediate(() => result.current[1]('bar'));
+        expect(history.state).not.toBe(stateId);
+
+        await act(async () => void await app.back());
+        expect(history.state).toBe(stateId);
+        expect(result.current[0]).toBe('foo');
+        unmount();
     });
 
     it('should accept symbol as key', async () => {

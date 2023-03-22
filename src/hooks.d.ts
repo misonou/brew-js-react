@@ -19,7 +19,7 @@ export function useRouteParam(name: string, defaultValue?: string): string;
  * Returns a stateful value, and a function to update it.
  * Same as {@link React.useState}, but the state is persisted in route history.
  */
-export function useRouteState<T>(key: string | symbol, initialState: T | (() => T)): [T, React.Dispatch<React.SetStateAction<T>>];
+export function useRouteState<T>(key: string | symbol, initialState: T | (() => T), snapshotOnUpdate?: boolean): [T, React.Dispatch<React.SetStateAction<T>>];
 
 /**
  * Returns a stateful value, and a function to update it.
