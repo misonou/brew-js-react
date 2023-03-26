@@ -175,6 +175,7 @@ module.exports = {
             amd: 'react-dom',
             root: 'ReactDOM'
         },
+        'react-dom/client': 'react-dom/client',
         'jquery': 'jQuery',
         'waterpipe': 'waterpipe',
         'zeta-dom-react': 'zeta-dom-react',

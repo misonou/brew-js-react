@@ -7,14 +7,12 @@ import dom from "./include/zeta-dom/dom.js";
 import { lock, preventLeave } from "./include/zeta-dom/domLock.js";
 import { closeFlyout, openFlyout } from "./include/brew-js/domAction.js";
 
-const createRoot = ReactDOMClient.createRoot;
-
 /**
  * @param {Partial<import("./dialog").DialogOptions<any>>} props
  */
 export function createDialog(props) {
     var root = document.createElement('div');
-    var reactRoot = createRoot && createRoot(root);
+    var reactRoot = ReactDOMClient.createRoot(root);
     var closeDialog = closeFlyout.bind(0, root);
     var promise;
 
@@ -22,11 +20,7 @@ export function createDialog(props) {
         removeNode(root);
         (props.onClose || noop)(root);
         if (props.onRender) {
-            if (reactRoot) {
-                reactRoot.unmount();
-            } else {
-                ReactDOM.unmountComponentAtNode(root);
-            }
+            reactRoot.unmount();
         }
     });
 
@@ -56,11 +50,7 @@ export function createDialog(props) {
                 if (props.wrapper) {
                     content = createElement(props.wrapper, dialogProps, content);
                 }
-                if (reactRoot) {
-                    reactRoot.render(content);
-                } else {
-                    ReactDOM.render(content, root);
-                }
+                reactRoot.render(content);
             }
             promise = openFlyout(root);
             if (props.preventLeave) {
