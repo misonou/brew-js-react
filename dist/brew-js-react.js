@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
+		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew-js-react", ["brew-js", "react", "react-dom", "zeta-dom", "zeta-dom-react", "waterpipe", "jQuery"], factory);
+		define("brew-js-react", ["brew-js", "react", "react-dom", "react-dom/client", "zeta-dom", "zeta-dom-react", "waterpipe", "jQuery"], factory);
 	else if(typeof exports === 'object')
-		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
+		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
 	else
-		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["zeta"], root["zeta-dom-react"], root["waterpipe"], root["jQuery"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__, __WEBPACK_EXTERNAL_MODULE__145__) {
+		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["react-dom/client"], root["zeta"], root["zeta-dom-react"], root["waterpipe"], root["jQuery"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__715__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__, __WEBPACK_EXTERNAL_MODULE__145__) {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -16,6 +16,16 @@ return /******/ (() => { // webpackBootstrap
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__145__;
+
+/***/ }),
+
+/***/ 715:
+/***/ ((module) => {
+
+"use strict";
+if(typeof __WEBPACK_EXTERNAL_MODULE__715__ === 'undefined') { var e = new Error("Cannot find module 'react-dom/client'"); e.code = 'MODULE_NOT_FOUND'; throw e; }
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__715__;
 
 /***/ }),
 
@@ -67,28 +77,41 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__654__;
 
 /***/ }),
 
-/***/ 346:
+/***/ 662:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-/// <reference types="jq-scrollable" />
-// @ts-nocheck
+var React = __webpack_require__(318);
+var ReactDOMClient;
+try {
+    ReactDOMClient = __webpack_require__(715);
+} catch (e) {
+    ReactDOMClient = {
+        createRoot(container, options) {
+            return {
+                render(children) {
+                    React.render(children, container);
+                },
+                unmount() {
+                    React.unmountComponentAtNode(container);
+                }
+            };
+        },
+        hydrateRoot(container, initialChildren, options) {
+            React.hydrate(initialChildren, container);
+            return {
+                render(children) {
+                    React.render(children, container);
+                },
+                unmount() {
+                    React.unmountComponentAtNode(container);
+                }
+            };
+        },
+    };
+}
+/** @type {import("react-dom/client")} */
+module.exports = ReactDOMClient;
 
-/** @type {JQueryStatic} */
-var jQuery = window.jQuery || __webpack_require__(145);
-
-module.exports = jQuery;
-
-/***/ }),
-
-/***/ 43:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-// @ts-nocheck
-
-/** @type {Waterpipe} */
-var waterpipe = window.waterpipe || __webpack_require__(28);
-
-module.exports = waterpipe;
 
 /***/ })
 
@@ -220,6 +243,14 @@ var install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_
 var external_commonjs_react_commonjs2_react_amd_react_root_React_ = __webpack_require__(359);
 // EXTERNAL MODULE: external {"commonjs":"react-dom","commonjs2":"react-dom","amd":"react-dom","root":"ReactDOM"}
 var external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_ = __webpack_require__(318);
+// EXTERNAL MODULE: ./node_modules/@misonou/react-dom-client/index.js
+var react_dom_client = __webpack_require__(662);
+;// CONCATENATED MODULE: ./src/include/external/react-dom-client.js
+// @ts-nocheck
+
+/** @type {import("react-dom/client")} */
+
+/* harmony default export */ const external_react_dom_client = (react_dom_client);
 // EXTERNAL MODULE: external {"commonjs":"zeta-dom","commonjs2":"zeta-dom","amd":"zeta-dom","root":"zeta"}
 var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(654);
 ;// CONCATENATED MODULE: ./tmp/zeta-dom/util.js
@@ -401,14 +432,14 @@ var addAsyncAction = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_roo
 
 
 
-var createRoot = external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createRoot;
+
 /**
  * @param {Partial<import("./dialog").DialogOptions<any>>} props
  */
 
 function createDialog(props) {
   var root = document.createElement('div');
-  var reactRoot = createRoot && createRoot(root);
+  var reactRoot = external_react_dom_client.createRoot(root);
 
   var _closeDialog = closeFlyout.bind(0, root);
 
@@ -418,11 +449,7 @@ function createDialog(props) {
     (props.onClose || noop)(root);
 
     if (props.onRender) {
-      if (reactRoot) {
-        reactRoot.unmount();
-      } else {
-        external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.unmountComponentAtNode(root);
-      }
+      reactRoot.unmount();
     }
   });
   return {
@@ -456,11 +483,7 @@ function createDialog(props) {
           content = /*#__PURE__*/(0,external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement)(props.wrapper, dialogProps, content);
         }
 
-        if (reactRoot) {
-          reactRoot.render(content);
-        } else {
-          external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.render(content, root);
-        }
+        reactRoot.render(content);
       }
 
       promise = openFlyout(root);
@@ -1006,8 +1029,12 @@ function ViewStateContainer(props) {
     value: provider
   }, props.children);
 }
-// EXTERNAL MODULE: ./src/include/external/waterpipe.js
-var waterpipe = __webpack_require__(43);
+// EXTERNAL MODULE: external "waterpipe"
+var external_waterpipe_ = __webpack_require__(28);
+;// CONCATENATED MODULE: ./src/include/external/waterpipe.js
+// @ts-nocheck
+
+/* harmony default export */ const waterpipe = (external_waterpipe_);
 ;// CONCATENATED MODULE: ./src/i18n.js
 
 
@@ -1620,8 +1647,12 @@ definePrototype(LoadingStateMixin, StatefulMixin, {
     }];
   }
 });
-// EXTERNAL MODULE: ./src/include/external/jquery.js
-var jquery = __webpack_require__(346);
+// EXTERNAL MODULE: external "jQuery"
+var external_jQuery_ = __webpack_require__(145);
+;// CONCATENATED MODULE: ./src/include/external/jquery.js
+// @ts-nocheck
+
+/* harmony default export */ const jquery = (external_jQuery_);
 ;// CONCATENATED MODULE: ./src/mixins/ScrollableMixin.js
 
 
