@@ -16,7 +16,7 @@ definePrototype(MixinRefImpl, {
 export default function StatefulMixin() {
     Mixin.call(this);
     _(this, {
-        elements: new WeakSet(),
+        elements: new Set(),
         flush: watch(this, false),
         dispose: [],
         states: {},
@@ -84,6 +84,7 @@ definePrototype(StatefulMixin, Mixin, {
         var states = state.states;
         combineFn(state.dispose.splice(0))();
         state.flush();
+        state.elements.clear();
         each(states, function (i, v) {
             delete states[i];
         });
