@@ -373,24 +373,19 @@ describe('renderView', () => {
     });
 
     it('should catch and emit rendering error', async () => {
-        let error, setError;
+        const error = new Error();
         const BarError = registerView(async () => {
             return {
                 default: () => {
-                    [error, setError] = useState(null);
-                    if (error) {
-                        throw error;
-                    }
-                    return (<div>bar</div>);
+                    throw error;
                 }
             }
         }, { view: 'bar' });
         const { container } = render(<div>{renderView(BarError)}</div>);
-        await screen.findByText('bar');
 
         const cb = mockFn();
         dom.on(container, 'error', cb);
-        act(() => setError(new Error()));
+        await delay();
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0][0].error).toBe(error);
     });
@@ -409,7 +404,7 @@ describe('renderView', () => {
 
         const cb = mockFn();
         dom.on(container, 'error', cb);
-        act(() => setError(new Error()));
+        await actAwaitSetImmediate(() => setError(new Error()));
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0][0].error).toBe(error);
     });

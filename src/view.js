@@ -2,7 +2,7 @@ import React from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
+import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { removeQueryAndHash } from "./include/brew-js/util/path.js";
 import { app } from "./app.js";
@@ -28,7 +28,11 @@ definePrototype(ErrorBoundary, React.Component, {
         if (errorView && !self.state.error) {
             self.setState({ error });
         } else {
-            dom.emit('error', self.context.container, { error }, true);
+            // emit error in next tick as ref callback may yet to be invoked
+            // if error is thrown synchronously in first render
+            setImmediate(function () {
+                dom.emit('error', self.context.container, { error }, true);
+            });
         }
     },
     render: function () {
