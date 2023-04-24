@@ -335,8 +335,6 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     delay = _lib$util.delay,
     makeAsync = _lib$util.makeAsync;
 
-;// CONCATENATED MODULE: ./src/include/zeta-dom/util.js
-
 ;// CONCATENATED MODULE: ./tmp/zeta-dom/domUtil.js
 
 var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
@@ -379,8 +377,6 @@ var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
     mergeRect = domUtil_lib$util.mergeRect,
     elementFromPoint = domUtil_lib$util.elementFromPoint;
 
-;// CONCATENATED MODULE: ./src/include/zeta-dom/domUtil.js
-
 ;// CONCATENATED MODULE: ./tmp/zeta-dom/dom.js
 
 var dom_defaultExport = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
@@ -414,15 +410,11 @@ var domLock_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
     notifyAsync = domLock_lib$dom.notifyAsync,
     preventLeave = domLock_lib$dom.preventLeave;
 
-;// CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
-
 ;// CONCATENATED MODULE: ./tmp/brew-js/domAction.js
 
 var addAsyncAction = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAsyncAction,
     closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.closeFlyout,
     openFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.openFlyout;
-
-;// CONCATENATED MODULE: ./src/include/brew-js/domAction.js
 
 ;// CONCATENATED MODULE: ./src/dialog.js
 
@@ -534,8 +526,6 @@ var external_zeta_dom_react_ = __webpack_require__(103);
 
 var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
 
-;// CONCATENATED MODULE: ./src/include/zeta-dom/events.js
-
 ;// CONCATENATED MODULE: ./tmp/brew-js/defaults.js
 
 var defaults_defaultExport = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.defaults;
@@ -561,12 +551,11 @@ var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_bre
     addAnimateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAnimateIn,
     addAnimateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAnimateOut;
 
-;// CONCATENATED MODULE: ./src/include/brew-js/anim.js
-
 ;// CONCATENATED MODULE: ./tmp/brew-js/util/path.js
 
 var setBaseUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.setBaseUrl,
     combinePath = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.combinePath,
+    parsePath = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.parsePath,
     normalizePath = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.normalizePath,
     removeQueryAndHash = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.removeQueryAndHash,
     withBaseUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.withBaseUrl,
@@ -574,8 +563,6 @@ var setBaseUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_br
     toRelativeUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toRelativeUrl,
     isSubPathOf = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.isSubPathOf,
     toSegments = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toSegments;
-
-;// CONCATENATED MODULE: ./src/include/brew-js/util/path.js
 
 ;// CONCATENATED MODULE: ./src/view.js
 
@@ -612,9 +599,13 @@ definePrototype(ErrorBoundary, external_commonjs_react_commonjs2_react_amd_react
         error: error
       });
     } else {
-      zeta_dom_dom.emit('error', self.context.container, {
-        error: error
-      }, true);
+      // emit error in next tick as ref callback may yet to be invoked
+      // if error is thrown synchronously in first render
+      setImmediate(function () {
+        zeta_dom_dom.emit('error', self.context.container, {
+          error: error
+        }, true);
+      });
     }
   },
   render: function render() {
@@ -906,6 +897,7 @@ function redirectTo(view, params) {
 
 
 
+
 var emitter = new ZetaEventContainer();
 var states = {};
 
@@ -982,15 +974,28 @@ function useRouteParam(name, defaultValue) {
 
   return value;
 }
-function useRouteState(key, defaultValue) {
+function useRouteState(key, defaultValue, snapshotOnUpdate) {
   var container = useViewContainerState();
   var cur = getCurrentStates();
   var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(key in cur ? cur[key] : defaultValue);
 
-  if (container.active) {
+  if (container.active && cur[key] !== state[0]) {
+    if (snapshotOnUpdate && key in cur) {
+      app_app.snapshot();
+      cur = getCurrentStates();
+    }
+
     cur[key] = state[0];
   }
 
+  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
+    return bind(window, 'popstate', function () {
+      if (snapshotOnUpdate && container.active) {
+        var cur = getCurrentStates();
+        state[1](key in cur ? cur[key] : defaultValue);
+      }
+    });
+  }, [container, snapshotOnUpdate]);
   return state;
 }
 function ViewStateContainer(props) {
@@ -1219,8 +1224,6 @@ var observe_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
     watchAttributes = observe_lib$dom.watchAttributes,
     watchOwnAttributes = observe_lib$dom.watchOwnAttributes;
 
-;// CONCATENATED MODULE: ./src/include/zeta-dom/observe.js
-
 ;// CONCATENATED MODULE: ./src/mixins/StatefulMixin.js
 
 
@@ -1240,7 +1243,7 @@ function StatefulMixin() {
   Mixin.call(this);
 
   _(this, {
-    elements: new WeakSet(),
+    elements: new Set(),
     flush: watch(this, false),
     dispose: [],
     states: {},
@@ -1315,6 +1318,7 @@ definePrototype(StatefulMixin, Mixin, {
     var states = state.states;
     combineFn(state.dispose.splice(0))();
     state.flush();
+    state.elements.clear();
     each(states, function (i, v) {
       delete states[i];
     });
@@ -1554,14 +1558,14 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
       element.id = 'flyout-' + ++flyoutMixinCounter;
     }
 
-    app_app.on(element, {
+    self.onDispose(app_app.on(element, {
       animationstart: function animationstart() {
         self.animating = true;
       },
       animationcomplete: function animationcomplete() {
         self.animating = false;
       }
-    }, true);
+    }, true));
     setImmediate(function () {
       each(self.toggle.elements(), function (i, v) {
         v.setAttribute('toggle', '#' + element.id);
@@ -1595,7 +1599,7 @@ function FocusStateMixin() {
 definePrototype(FocusStateMixin, StatefulMixin, {
   initElement: function initElement(element, state) {
     FocusStateMixinSuper.initElement.call(this, element, state);
-    zeta_dom_dom.on(element, {
+    this.onDispose(zeta_dom_dom.on(element, {
       focusin: function focusin(e) {
         state.focused = true;
         setClass(element, 'focused', e.source);
@@ -1604,7 +1608,7 @@ definePrototype(FocusStateMixin, StatefulMixin, {
         state.focused = false;
         setClass(element, 'focused', false);
       }
-    });
+    }));
   },
   getClassNames: function getClassNames() {
     return [{
@@ -1626,7 +1630,7 @@ definePrototype(LoadingStateMixin, StatefulMixin, {
   initElement: function initElement(element, state) {
     LoadingStateMixinSuper.initElement.call(this, element, state);
     lock(element);
-    zeta_dom_dom.on(element, {
+    this.onDispose(zeta_dom_dom.on(element, {
       asyncStart: function asyncStart() {
         state.loading = true;
         setClass(element, 'loading', true);
@@ -1639,7 +1643,7 @@ definePrototype(LoadingStateMixin, StatefulMixin, {
         state.loading = false;
         setClass(element, 'loading', false);
       }
-    });
+    }));
   },
   getClassNames: function getClassNames() {
     return [{
@@ -1688,7 +1692,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
   },
   initElement: function initElement(element, state) {
     var self = this;
-    app_app.on(element, {
+    self.onDispose(app_app.on(element, {
       statechange: function statechange(e) {
         if ('pageIndex' in e.newValues) {
           extend(self, {
@@ -1702,7 +1706,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
       scrollStop: function scrollStop() {
         self.scrolling = false;
       }
-    }, true);
+    }, true));
   },
   clone: function clone() {
     var mixin = ScrollableMixinSuper.clone.call(this);
