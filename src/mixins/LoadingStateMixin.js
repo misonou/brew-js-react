@@ -14,7 +14,7 @@ definePrototype(LoadingStateMixin, StatefulMixin, {
     initElement: function (element, state) {
         LoadingStateMixinSuper.initElement.call(this, element, state);
         lock(element);
-        dom.on(element, {
+        this.onDispose(dom.on(element, {
             asyncStart: function () {
                 state.loading = true;
                 setClass(element, 'loading', true);
@@ -27,7 +27,7 @@ definePrototype(LoadingStateMixin, StatefulMixin, {
                 state.loading = false;
                 setClass(element, 'loading', false);
             }
-        });
+        }));
     },
     getClassNames: function () {
         return [{ loading: !!this.state.loading }];

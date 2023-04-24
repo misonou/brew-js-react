@@ -12,7 +12,7 @@ export default function FocusStateMixin() {
 definePrototype(FocusStateMixin, StatefulMixin, {
     initElement: function (element, state) {
         FocusStateMixinSuper.initElement.call(this, element, state);
-        dom.on(element, {
+        this.onDispose(dom.on(element, {
             focusin: function (e) {
                 state.focused = true;
                 setClass(element, 'focused', e.source);
@@ -21,7 +21,7 @@ definePrototype(FocusStateMixin, StatefulMixin, {
                 state.focused = false;
                 setClass(element, 'focused', false);
             }
-        });
+        }));
     },
     getClassNames: function () {
         return [{ focused: !!this.state.focused }];

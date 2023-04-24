@@ -79,14 +79,14 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         if (!element.id) {
             element.id = 'flyout-' + (++flyoutMixinCounter);
         }
-        app.on(element, {
+        self.onDispose(app.on(element, {
             animationstart: function () {
                 self.animating = true;
             },
             animationcomplete: function () {
                 self.animating = false;
             },
-        }, true);
+        }, true));
         setImmediate(function () {
             each(self.toggle.elements(), function (i, v) {
                 v.setAttribute('toggle', '#' + element.id);

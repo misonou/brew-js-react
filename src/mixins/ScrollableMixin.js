@@ -35,7 +35,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
     },
     initElement: function (element, state) {
         var self = this;
-        app.on(element, {
+        self.onDispose(app.on(element, {
             statechange: function (e) {
                 if ('pageIndex' in e.newValues) {
                     extend(self, { pageIndex: e.newValues.pageIndex });
@@ -47,7 +47,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
             scrollStop: function() {
                 self.scrolling = false;
             }
-        }, true);
+        }, true));
     },
     clone: function () {
         var mixin = ScrollableMixinSuper.clone.call(this);
