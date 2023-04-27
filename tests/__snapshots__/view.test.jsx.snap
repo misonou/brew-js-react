@@ -1,5 +1,33 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`navigateTo should pass data to view component 1`] = `
+<DocumentFragment>
+  <div>
+    <div>
+      <div
+        data-testid="test"
+      >
+        BarTest
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`redirectTo should pass data to view component 1`] = `
+<DocumentFragment>
+  <div>
+    <div>
+      <div
+        data-testid="test"
+      >
+        BarTest
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`renderView should catch and emit rendering error thrown from error view 1`] = `
 <DocumentFragment>
   <div>
@@ -14,6 +42,30 @@ exports[`renderView should cause redirection to the first match view if none was
     <div>
       <div>
         foo
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`renderView should clear view data when navigation is aborted 1`] = `
+<DocumentFragment>
+  <div>
+    <div>
+      <div>
+        bar
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`renderView should clear view data when navigation is redirected 1`] = `
+<DocumentFragment>
+  <div>
+    <div>
+      <div>
+        bar
       </div>
     </div>
   </div>
@@ -40,6 +92,18 @@ exports[`renderView should pass props to view container 1`] = `
     >
       <div>
         foo
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`renderView should persist view data in history 1`] = `
+<DocumentFragment>
+  <div>
+    <div>
+      <div>
+        BarTest
       </div>
     </div>
   </div>

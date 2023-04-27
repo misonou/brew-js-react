@@ -2,11 +2,11 @@ import React from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
+import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { removeQueryAndHash } from "./include/brew-js/util/path.js";
 import { app } from "./app.js";
-import { ViewStateContainer } from "./hooks.js";
+import { ViewStateContainer, useRouteState } from "./hooks.js";
 
 const root = dom.root;
 const routeMap = new Map();
@@ -46,7 +46,7 @@ definePrototype(ErrorBoundary, React.Component, {
         if (props.error) {
             return React.createElement(errorView, { onComponentLoaded, viewProps: props });
         }
-        return React.createElement(props.view, { onComponentLoaded });
+        return React.createElement(props.view, { onComponentLoaded, viewData: self.props.viewData });
     },
     reset: function () {
         this.setState({ error: null });
@@ -69,7 +69,7 @@ definePrototype(ViewContainer, React.Component, {
             app.on('beforepageload', function (e) {
                 self.waitFor = e.waitFor;
                 self.stateId = history.state;
-                self.updateView();
+                self.updateView(e.data);
                 self.forceUpdate();
             })
         );
@@ -82,7 +82,7 @@ definePrototype(ViewContainer, React.Component, {
         }
         return React.createElement(React.Fragment, null, self.prevView, self.currentView);
     },
-    updateView: function () {
+    updateView: function (viewData) {
         var self = this;
         var V = self.getViewComponent();
         if (V) {
@@ -122,7 +122,7 @@ definePrototype(ViewContainer, React.Component, {
             var view = React.createElement(StateContext.Provider, { key: routeMap.get(V).id, value: state },
                 React.createElement(ViewStateContainer, null,
                     React.createElement('div', extend({}, self.props.rootProps, { ref: initElement }),
-                        React.createElement(ErrorBoundary, { onComponentLoaded }))));
+                        React.createElement(ErrorBoundary, { onComponentLoaded, viewData }))));
             extend(self, {
                 currentPath: app.path,
                 currentView: view,
@@ -188,8 +188,10 @@ function createViewComponent(factory) {
     if (factory.prototype instanceof React.Component) {
         factory = React.createElement.bind(null, factory);
     }
-    return function (props) {
-        var viewProps = Object.freeze(props.viewProps || {});
+    return function fn(props) {
+        var viewProps = props.viewProps || {
+            viewData: useRouteState('_d_' + routeMap.get(fn).id, props.viewData || {})[0]
+        };
         var children = !promise && factory(viewProps);
         if (isThenable(children)) {
             promise = children;
@@ -278,10 +280,10 @@ export function linkTo(view, params) {
     return app.toHref(resolvePath(view, params));
 }
 
-export function navigateTo(view, params) {
-    return app.navigate(resolvePath(view, params));
+export function navigateTo(view, params, data, replace) {
+    return app.navigate(resolvePath(view, params), replace, data && freeze(extend({}, data)));
 }
 
-export function redirectTo(view, params) {
-    return app.navigate(resolvePath(view, params), true);
+export function redirectTo(view, params, data) {
+    return navigateTo(view, params, data, true);
 }

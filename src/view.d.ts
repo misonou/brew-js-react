@@ -1,10 +1,22 @@
+import { useRouteState } from "./hooks";
+
 export type ViewComponentRootProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-export type ViewComponent<P> = React.FC<P>;
+export type ViewComponent<P> = React.FC<ViewProps<P>>;
 
 export interface ViewContainerState {
     readonly container: HTMLElement;
     readonly view: ViewComponent<any>;
     readonly active: boolean;
+}
+
+export interface ViewProps<S = {}> {
+    /**
+     * Gets the additional data passed from {@link navigateTo} or {@link redirectTo}.
+     *
+     * The data object is read-only, to use incoming data as mutable view states,
+     * pass individual data to {@link React.useState} or {@link useRouteState}.
+     */
+    viewData: { readonly [P in keyof S]?: S[P] };
 }
 
 export interface ErrorViewProps {
@@ -30,7 +42,7 @@ export function useViewContainerState(): ViewContainerState;
  * @param factory A callback that returns a promise resolving a React component, typically using async `import`.
  * @param params A dictionary containing route parameters.
  */
-export function registerView<P>(factory: () => Promise<{ default: React.ComponentType<P> }>, params: Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>): ViewComponent<P>;
+export function registerView<P>(factory: () => Promise<{ default: React.ComponentType<P> }>, params: Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>): ViewComponent<P extends ViewProps<infer S> ? S : {}>;
 
 /**
  * Registers view component with specific route paramters.
@@ -38,7 +50,7 @@ export function registerView<P>(factory: () => Promise<{ default: React.Componen
  * @param component A React component.
  * @param params A dictionary containing route parameters.
  */
-export function registerView<P>(component: React.ComponentType<P>, params: Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>): ViewComponent<P>;
+export function registerView<P>(component: React.ComponentType<P>, params: Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>): ViewComponent<P extends ViewProps<infer S> ? S : {}>;
 
 /**
  * Registers a default error view to be displayed when view component failed to render.
@@ -126,14 +138,16 @@ export function linkTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string
  * Navigates to path that will render the specified view.
  * @param view A view component created by {@link registerView}.
  * @param params Extra route parameters that supplements or overrides current route parameters.
+ * @param data Additional data to be passed to view component, analogous to making form post to server rendering page.
  * @see {@link resolvePath}.
  */
-export function navigateTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): Promise<Brew.NavigateResult>;
+export function navigateTo<T>(view: ViewComponent<T>, params?: Zeta.Dictionary<string> | null, data?: T): Promise<Brew.NavigateResult>;
 
 /**
  * Navigates to path that will render the specified view, replacing current state in browser history.
  * @param view A view component created by {@link registerView}.
  * @param params Extra route parameters that supplements or overrides current route parameters.
+ * @param data Additional data to be passed to view component, analogous to making form post to server rendering page.
  * @see {@link resolvePath}.
  */
-export function redirectTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): Promise<Brew.NavigateResult>;
+export function redirectTo<T>(view: ViewComponent<T>, params?: Zeta.Dictionary<string> | null, data?: T): Promise<Brew.NavigateResult>;

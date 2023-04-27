@@ -550,6 +550,57 @@ describe('renderView', () => {
         expect(screen.queryByText('bar')).toBe(null);
         unmount();
     });
+
+    it('should persist view data in history', async () => {
+        const BarTest = registerView(function Component({ viewData }) {
+            return <div>{viewData.text}</div>;
+        }, { view: 'bar' });
+        const { asFragment, unmount } = render(<div>{renderView(Foo, BarTest)}</div>);
+        await screen.findByText('foo');
+
+        await navigateTo(BarTest, null, { text: 'BarTest' });
+        await screen.findByText('BarTest');
+        expect(asFragment()).toMatchSnapshot();
+
+        history.back();
+        await screen.findByText('foo');
+
+        history.forward();
+        await screen.findByText('BarTest');
+        unmount();
+    });
+
+    it('should clear view data when navigation is redirected', async () => {
+        const BarTest = registerView(function Component({ viewData }) {
+            return <div>{viewData.text || 'bar'}</div>;
+        }, { view: 'bar' });
+        const { asFragment, unmount } = render(<div>{renderView(Foo, BarTest)}</div>);
+        await screen.findByText('foo');
+
+        const promise = navigateTo(BarTest, null, { text: 'baz' });
+        await app.navigate('/dummy/foo', true);
+        await expect(promise).resolves.toMatchObject({ path: '/dummy/foo' });
+
+        await app.navigate('/dummy/bar');
+        expect(asFragment()).toMatchSnapshot();
+        unmount();
+    });
+
+    it('should clear view data when navigation is aborted', async () => {
+        const BarTest = registerView(function Component({ viewData }) {
+            return <div>{viewData.text || 'bar'}</div>;
+        }, { view: 'bar' });
+        const { asFragment, unmount } = render(<div>{renderView(Foo, BarTest)}</div>);
+        await screen.findByText('foo');
+
+        const promise = navigateTo(BarTest, null, { text: 'baz' });
+        await app.navigate('/dummy/foo');
+        await expect(promise).rejects.toBeTruthy();
+
+        await app.navigate('/dummy/bar');
+        expect(asFragment()).toMatchSnapshot();
+        unmount();
+    });
 });
 
 describe('linkTo', () => {
@@ -604,6 +655,19 @@ describe('navigateTo', () => {
             path: '/dummy/foo/baz'
         }));
     });
+
+    it('should pass data to view component', async () => {
+        const BarTest = registerView(function Component({ viewData }) {
+            return <div data-testid="test">{viewData.text}</div>;
+        }, { view: 'bar' });
+        const { asFragment, unmount } = render(<div>{renderView(Foo, BarTest)}</div>);
+        await screen.findByText('foo');
+
+        await navigateTo(BarTest, null, { text: 'BarTest' });
+        await screen.findByTestId('test');
+        expect(asFragment()).toMatchSnapshot();
+        unmount();
+    });
 });
 
 describe('redirectTo', () => {
@@ -616,6 +680,19 @@ describe('redirectTo', () => {
             path: '/dummy/foo/baz'
         }));
         expect(app.previousPath).toBe(previousPath);
+    });
+
+    it('should pass data to view component', async () => {
+        const BarTest = registerView(function Component({ viewData }) {
+            return <div data-testid="test">{viewData.text}</div>;
+        }, { view: 'bar' });
+        const { asFragment, unmount } = render(<div>{renderView(Foo, BarTest)}</div>);
+        await screen.findByText('foo');
+
+        await redirectTo(BarTest, null, { text: 'BarTest' });
+        await screen.findByTestId('test');
+        expect(asFragment()).toMatchSnapshot();
+        unmount();
     });
 });
 
