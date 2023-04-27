@@ -90,12 +90,14 @@ export function useRouteState(key, defaultValue, snapshotOnUpdate) {
         cur[key] = state[0];
     }
     useEffect(function () {
-        return bind(window, 'popstate', function () {
-            if (snapshotOnUpdate && container.active) {
-                var cur = getCurrentStates();
-                state[1](key in cur ? cur[key] : defaultValue);
-            }
-        });
+        if (snapshotOnUpdate) {
+            return bind(window, 'popstate', function () {
+                if (container.active) {
+                    var cur = getCurrentStates();
+                    state[1](key in cur ? cur[key] : defaultValue);
+                }
+            });
+        }
     }, [container, snapshotOnUpdate]);
     return state;
 }
