@@ -95,7 +95,7 @@ describe('StaticAttributeMixin', () => {
 });
 
 describe('StatefulMixin', () => {
-    it('should flush changes on observable property synchronously when disposed', () => {
+    it('should flush changes on observable property synchronously when disposed', async () => {
         class TestMixin extends StatefulMixin {
             prop = 1;
         }
@@ -106,6 +106,7 @@ describe('StatefulMixin', () => {
         result.current.prop = 2;
         expect(cb).not.toBeCalled();
         unmount();
+        await delay(0);
         expect(cb).toBeCalledTimes(1);
     });
 });

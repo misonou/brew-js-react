@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { extend } from "./include/zeta-dom/util.js";
+import { extend, setImmediate } from "./include/zeta-dom/util.js";
 import Mixin from "./mixins/Mixin.js";
 import AnimateMixin from "./mixins/AnimateMixin.js";
 import AnimateSequenceItemMixin from "./mixins/AnimateSequenceItemMixin.js";
@@ -24,6 +24,15 @@ function createUseFunction(ctor) {
     };
 }
 
+function disposeMixin(mixin) {
+    mixin.disposed = true;
+    setImmediate(function () {
+        if (mixin.disposed) {
+            mixin.dispose();
+        }
+    });
+}
+
 export const useAnimateMixin = createUseFunction(AnimateMixin);
 export const useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
 export const useFlyoutMixin = createUseFunction(FlyoutMixin);
@@ -36,7 +45,8 @@ export function useMixin(ctor) {
         return new ctor();
     })[0].reset();
     useEffect(function () {
-        return mixin.dispose.bind(mixin);
+        mixin.disposed = false;
+        return disposeMixin.bind(0, mixin);
     }, []);
     return mixin;
 }
