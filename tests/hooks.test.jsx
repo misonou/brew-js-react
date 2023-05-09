@@ -189,13 +189,13 @@ describe('useRouteState', () => {
         cb.mockClear();
         const { id: stateId2 } = await app.navigate('/bar');
         await screen.findByText('bar1');
-        if (process.env.REACT_VERSION === '18') {
+        try {
             expect(cb.mock.calls).toEqual([
                 ['bar', stateId2],
                 ['foo unmount', stateId2],
                 ['bar1', stateId2]
             ]);
-        } else {
+        } catch {
             expect(cb.mock.calls).toEqual([
                 ['foo unmount', stateId2],
                 ['bar', stateId2],
@@ -206,12 +206,12 @@ describe('useRouteState', () => {
         cb.mockClear();
         await app.back();
         await screen.findByText('foo1');
-        if (process.env.REACT_VERSION === '18') {
+        try {
             expect(cb.mock.calls).toEqual([
                 ['foo1', stateId1],
                 ['bar unmount', stateId1],
             ]);
-        } else {
+        } catch {
             expect(cb.mock.calls).toEqual([
                 ['bar unmount', stateId1],
                 ['foo1', stateId1]
