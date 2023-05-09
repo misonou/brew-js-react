@@ -69,6 +69,7 @@ definePrototype(ViewContainer, React.Component, {
             app.on('beforepageload', function (e) {
                 self.waitFor = e.waitFor;
                 self.stateId = history.state;
+                self.updateView();
                 self.forceUpdate();
             })
         );
@@ -76,9 +77,13 @@ definePrototype(ViewContainer, React.Component, {
     render: function () {
         /** @type {any} */
         var self = this;
-        if (history.state !== self.stateId) {
-            return self.lastChild || null;
+        if (history.state === self.stateId) {
+            self.updateView();
         }
+        return React.createElement(React.Fragment, null, self.prevView, self.currentView);
+    },
+    updateView: function () {
+        var self = this;
         var V = self.getViewComponent();
         if (V) {
             // ensure the current path actually corresponds to the matched view
@@ -126,9 +131,6 @@ definePrototype(ViewContainer, React.Component, {
             });
             (self.waitFor || noop)(promise);
         }
-        var child = React.createElement(React.Fragment, null, self.prevView, self.currentView);
-        self.lastChild = child;
-        return child;
     },
     getViewComponent: function () {
         var props = this.props;
