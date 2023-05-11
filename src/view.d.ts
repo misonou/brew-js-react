@@ -94,12 +94,31 @@ export function renderView(...args: ViewComponent<any>[]): JSX.Element;
 export function renderView(props: ViewComponentRootProps, ...args: ViewComponent<any>[]): JSX.Element;
 
 /**
- * Returns pathname that will render the specified view.
+ * Returns the app path that will render the specified view.
+ *
  * The pathname is resolved using route parameters given to {@link registerView},
  * current route parameters, as well as any supplemeneted route parameters
  * against registered routes in {@link Brew.RouterOptions.routes}.
+ *
+ * This is used by methods such as {@link linkTo} and {@link navigateTo}.
+ *
  * @param view A view component created by {@link registerView}.
  * @param params Extra route parameters that supplements or overrides current route parameters.
+ */
+export function resolvePath(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): string;
+
+/**
+ * Returns a link usable in `href` attribute or method such as `window.open`
+ * that when visiting the link through browser the specifed view will be rendered.
+ *
+ * This function wraps {@link resolvePath} with {@link Brew.WithRouter.toHref}.
+ * The returned link will depend on `urlMode` and related options initializing the router.
+ * When `urlMode` is set to `none`, {@link navigateTo} should always be used instead as
+ * navigation through link is disabled in such case.
+ *
+ * @param view A view component created by {@link registerView}.
+ * @param params Extra route parameters that supplements or overrides current route parameters.
+ * @see {@link resolvePath}.
  */
 export function linkTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): string;
 
@@ -107,7 +126,7 @@ export function linkTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string
  * Navigates to path that will render the specified view.
  * @param view A view component created by {@link registerView}.
  * @param params Extra route parameters that supplements or overrides current route parameters.
- * @see {@link linkTo}.
+ * @see {@link resolvePath}.
  */
 export function navigateTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): Promise<Brew.NavigateResult>;
 
@@ -115,6 +134,6 @@ export function navigateTo(view: ViewComponent<any>, params?: Zeta.Dictionary<st
  * Navigates to path that will render the specified view, replacing current state in browser history.
  * @param view A view component created by {@link registerView}.
  * @param params Extra route parameters that supplements or overrides current route parameters.
- * @see {@link linkTo}.
+ * @see {@link resolvePath}.
  */
 export function redirectTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): Promise<Brew.NavigateResult>;

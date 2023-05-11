@@ -88,7 +88,7 @@ definePrototype(ViewContainer, React.Component, {
         if (V) {
             // ensure the current path actually corresponds to the matched view
             // when some views are not included in the list of allowed views
-            var targetPath = linkTo(V, getCurrentParams(V, true));
+            var targetPath = resolvePath(V, getCurrentParams(V, true));
             if (targetPath !== removeQueryAndHash(app.path)) {
                 app.navigate(targetPath, true);
             }
@@ -265,7 +265,7 @@ export function renderView() {
     return React.createElement(ViewContainer, { rootProps, views, defaultView });
 }
 
-export function linkTo(view, params) {
+export function resolvePath(view, params) {
     var state = routeMap.get(view);
     if (!state) {
         return '/';
@@ -274,10 +274,14 @@ export function linkTo(view, params) {
     return app.route.getPath(newParams);
 }
 
+export function linkTo(view, params) {
+    return app.toHref(resolvePath(view, params));
+}
+
 export function navigateTo(view, params) {
-    return app.navigate(linkTo(view, params));
+    return app.navigate(resolvePath(view, params));
 }
 
 export function redirectTo(view, params) {
-    return app.navigate(linkTo(view, params), true);
+    return app.navigate(resolvePath(view, params), true);
 }
