@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
+const webpack = require('webpack');
 const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 const TerserPlugin = require('terser-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
+const packageJSON = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const srcPath = path.join(process.cwd(), 'src');
 const outputPath = path.join(process.cwd(), 'dist');
 const tmpPath = path.join(process.cwd(), 'tmp');
@@ -144,6 +146,9 @@ module.exports = {
         ]
     },
     plugins: [
+        new webpack.BannerPlugin({
+            banner: `${packageJSON.name} v${packageJSON.version} | (c) ${packageJSON.author} | ${packageJSON.homepage}`
+        }),
         new CleanWebpackPlugin({
             cleanAfterEveryBuildPatterns: [tmpPath]
         })
@@ -152,7 +157,13 @@ module.exports = {
         minimize: true,
         minimizer: [
             new TerserPlugin({
-                test: /\.min\.js$/i
+                test: /\.min\.js$/i,
+                extractComments: false,
+                terserOptions: {
+                    format: {
+                        comments: 'some'
+                    }
+                }
             })
         ]
     },
