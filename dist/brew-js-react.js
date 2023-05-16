@@ -1,3 +1,4 @@
+/*! brew-js-react v0.3.4 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
@@ -209,6 +210,7 @@ __webpack_require__.d(src_namespaceObject, {
   "registerErrorView": () => (registerErrorView),
   "registerView": () => (registerView),
   "renderView": () => (renderView),
+  "resolvePath": () => (resolvePath),
   "useAnimateMixin": () => (useAnimateMixin),
   "useAnimateSequenceMixin": () => (useAnimateSequenceMixin),
   "useAppReady": () => (useAppReady),
@@ -625,7 +627,8 @@ definePrototype(ErrorBoundary, external_commonjs_react_commonjs2_react_amd_react
     }
 
     return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.view, {
-      onComponentLoaded: onComponentLoaded
+      onComponentLoaded: onComponentLoaded,
+      viewData: self.props.viewData
     });
   },
   reset: function reset() {
@@ -649,6 +652,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
     }), app_app.on('beforepageload', function (e) {
       self.waitFor = e.waitFor;
       self.stateId = history.state;
+      self.updateView(e.data);
       self.forceUpdate();
     }));
   },
@@ -656,16 +660,20 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
     /** @type {any} */
     var self = this;
 
-    if (history.state !== self.stateId) {
-      return self.lastChild || null;
+    if (history.state === self.stateId) {
+      self.updateView();
     }
 
+    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
+  },
+  updateView: function updateView(viewData) {
+    var self = this;
     var V = self.getViewComponent();
 
     if (V) {
       // ensure the current path actually corresponds to the matched view
       // when some views are not included in the list of allowed views
-      var targetPath = linkTo(V, getCurrentParams(V, true));
+      var targetPath = resolvePath(V, getCurrentParams(V, true));
 
       if (targetPath !== removeQueryAndHash(app_app.path)) {
         app_app.navigate(targetPath, true);
@@ -712,7 +720,8 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       }, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewStateContainer, null, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, self.props.rootProps, {
         ref: initElement
       }), /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ErrorBoundary, {
-        onComponentLoaded: onComponentLoaded
+        onComponentLoaded: onComponentLoaded,
+        viewData: viewData
       }))));
       extend(self, {
         currentPath: app_app.path,
@@ -722,10 +731,6 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       });
       (self.waitFor || noop)(promise);
     }
-
-    var child = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
-    self.lastChild = child;
-    return child;
   },
   getViewComponent: function getViewComponent() {
     var props = this.props;
@@ -791,8 +796,10 @@ function createViewComponent(factory) {
     factory = external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement.bind(null, factory);
   }
 
-  return function (props) {
-    var viewProps = Object.freeze(props.viewProps || {});
+  return function fn(props) {
+    var viewProps = props.viewProps || {
+      viewData: useRouteState('_d_' + routeMap.get(fn).id, props.viewData || {})[0]
+    };
     var children = !promise && factory(viewProps);
 
     if (isThenable(children)) {
@@ -874,7 +881,7 @@ function renderView() {
     defaultView: defaultView
   });
 }
-function linkTo(view, params) {
+function resolvePath(view, params) {
   var state = routeMap.get(view);
 
   if (!state) {
@@ -884,11 +891,14 @@ function linkTo(view, params) {
   var newParams = extend(getCurrentParams(view), getCurrentParams(view, true, params || {}), state.params);
   return app_app.route.getPath(newParams);
 }
-function navigateTo(view, params) {
-  return app_app.navigate(linkTo(view, params));
+function linkTo(view, params) {
+  return app_app.toHref(resolvePath(view, params));
 }
-function redirectTo(view, params) {
-  return app_app.navigate(linkTo(view, params), true);
+function navigateTo(view, params, data, replace) {
+  return app_app.navigate(resolvePath(view, params), replace, data && freeze(extend({}, data)));
+}
+function redirectTo(view, params, data) {
+  return navigateTo(view, params, data, true);
 }
 ;// CONCATENATED MODULE: ./src/hooks.js
 
@@ -989,12 +999,14 @@ function useRouteState(key, defaultValue, snapshotOnUpdate) {
   }
 
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
-    return bind(window, 'popstate', function () {
-      if (snapshotOnUpdate && container.active) {
-        var cur = getCurrentStates();
-        state[1](key in cur ? cur[key] : defaultValue);
-      }
-    });
+    if (snapshotOnUpdate) {
+      return bind(window, 'popstate', function () {
+        if (container.active) {
+          var cur = getCurrentStates();
+          state[1](key in cur ? cur[key] : defaultValue);
+        }
+      });
+    }
   }, [container, snapshotOnUpdate]);
   return state;
 }
@@ -1747,6 +1759,15 @@ function createUseFunction(ctor) {
   };
 }
 
+function disposeMixin(mixin) {
+  mixin.disposed = true;
+  setImmediate(function () {
+    if (mixin.disposed) {
+      mixin.dispose();
+    }
+  });
+}
+
 var useAnimateMixin = createUseFunction(AnimateMixin);
 var useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
 var useFlyoutMixin = createUseFunction(FlyoutMixin);
@@ -1758,7 +1779,8 @@ function useMixin(ctor) {
     return new ctor();
   })[0].reset();
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
-    return mixin.dispose.bind(mixin);
+    mixin.disposed = false;
+    return disposeMixin.bind(0, mixin);
   }, []);
   return mixin;
 }
