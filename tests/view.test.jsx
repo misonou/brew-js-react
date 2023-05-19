@@ -601,6 +601,19 @@ describe('renderView', () => {
         expect(asFragment()).toMatchSnapshot();
         unmount();
     });
+
+    it('should retrieve view data when view container is mounted after navigation', async () => {
+        const BarTest = registerView(function Component({ viewData }) {
+            return <div>{viewData.text || 'bar'}</div>;
+        }, { view: 'bar' });
+
+        await app.navigate('/dummy/foo', false, { text: 'baz' });
+        const { asFragment, unmount } = render(<div>{renderView(BarTest)}</div>);
+
+        await screen.findByText('baz');
+        expect(asFragment()).toMatchSnapshot();
+        unmount();
+    });
 });
 
 describe('linkTo', () => {

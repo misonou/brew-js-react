@@ -5,8 +5,8 @@ import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { any, combineFn, defineObservableProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { removeQueryAndHash } from "./include/brew-js/util/path.js";
-import { app } from "./app.js";
-import { ViewStateContainer, useRouteState } from "./hooks.js";
+import { app, onAppInit } from "./app.js";
+import { ViewStateContainer } from "./hooks.js";
 
 const root = dom.root;
 const routeMap = new Map();
@@ -15,6 +15,14 @@ const sortedViews = [];
 const StateContext = React.createContext(Object.freeze({ container: root, active: true }));
 
 var errorView;
+/** @type {Partial<Zeta.ZetaEventType<"beforepageload", Brew.RouterEventMap, Element>>} */
+var event = {};
+
+onAppInit(function () {
+    app.on('beforepageload', function (e) {
+        event = e;
+    });
+});
 
 function ErrorBoundary() {
     React.Component.apply(this, arguments);
@@ -46,7 +54,7 @@ definePrototype(ErrorBoundary, React.Component, {
         if (props.error) {
             return React.createElement(errorView, { onComponentLoaded, viewProps: props });
         }
-        return React.createElement(props.view, { onComponentLoaded, viewData: self.props.viewData });
+        return React.createElement(props.view, { onComponentLoaded, viewProps: self.props.viewProps });
     },
     reset: function () {
         this.setState({ error: null });
@@ -66,10 +74,9 @@ definePrototype(ViewContainer, React.Component, {
             watch(app.route, function () {
                 self.setActive(self.getViewComponent() === self.currentViewComponent);
             }),
-            app.on('beforepageload', function (e) {
-                self.waitFor = e.waitFor;
+            app.on('beforepageload', function () {
                 self.stateId = history.state;
-                self.updateView(e.data);
+                self.updateView();
                 self.forceUpdate();
             })
         );
@@ -82,7 +89,7 @@ definePrototype(ViewContainer, React.Component, {
         }
         return React.createElement(React.Fragment, null, self.prevView, self.currentView);
     },
-    updateView: function (viewData) {
+    updateView: function () {
         var self = this;
         var V = self.getViewComponent();
         if (V) {
@@ -118,18 +125,21 @@ definePrototype(ViewContainer, React.Component, {
                 });
                 notifyAsync(element, promise);
             });
+            var viewProps = freeze({
+                viewData: event.data || {}
+            });
             var state = { view: V };
             var view = React.createElement(StateContext.Provider, { key: routeMap.get(V).id, value: state },
                 React.createElement(ViewStateContainer, null,
                     React.createElement('div', extend({}, self.props.rootProps, { ref: initElement }),
-                        React.createElement(ErrorBoundary, { onComponentLoaded, viewData }))));
+                        React.createElement(ErrorBoundary, { onComponentLoaded, viewProps }))));
             extend(self, {
                 currentPath: app.path,
                 currentView: view,
                 currentViewComponent: V,
                 setActive: defineObservableProperty(state, 'active', true, true)
             });
-            (self.waitFor || noop)(promise);
+            (event.waitFor || noop)(promise);
         }
     },
     getViewComponent: function () {
@@ -189,9 +199,7 @@ function createViewComponent(factory) {
         factory = React.createElement.bind(null, factory);
     }
     return function fn(props) {
-        var viewProps = props.viewProps || {
-            viewData: useRouteState('_d_' + routeMap.get(fn).id, props.viewData || {})[0]
-        };
+        var viewProps = props.viewProps;
         var children = !promise && factory(viewProps);
         if (isThenable(children)) {
             promise = children;
