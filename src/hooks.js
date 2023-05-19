@@ -7,10 +7,9 @@ import { app } from "./app.js";
 import { useViewContainerState } from "./view.js";
 
 const emitter = new ZetaEventContainer();
-const states = {};
 
 function getCurrentStates() {
-    return states[history.state] || (states[history.state] = {});
+    return app.historyStorage.current;
 }
 
 function ViewState(key, value) {
@@ -23,7 +22,9 @@ definePrototype(ViewState, {
         return this.value;
     },
     set: function (value) {
-        this.value = value;
+        var self = this;
+        self.value = value;
+        self.store.set(self.key, value);
     },
     onPopState: function (callback) {
         throwNotFunction(callback);
@@ -81,20 +82,20 @@ export function useRouteParam(name, defaultValue) {
 export function useRouteState(key, defaultValue, snapshotOnUpdate) {
     var container = useViewContainerState();
     var cur = getCurrentStates();
-    var state = useState(key in cur ? cur[key] : defaultValue);
-    if (container.active && cur[key] !== state[0]) {
-        if (snapshotOnUpdate && key in cur) {
+    var state = useState(cur.has(key) ? cur.get(key) : defaultValue);
+    if (container.active && cur.get(key) !== state[0]) {
+        if (snapshotOnUpdate && cur.has(key)) {
             app.snapshot();
             cur = getCurrentStates();
         }
-        cur[key] = state[0];
+        cur.set(key, state[0]);
     }
     useEffect(function () {
         if (snapshotOnUpdate) {
             return bind(window, 'popstate', function () {
                 if (container.active) {
                     var cur = getCurrentStates();
-                    state[1](key in cur ? cur[key] : defaultValue);
+                    state[1](cur.has(key) ? cur.get(key) : defaultValue);
                 }
             });
         }
@@ -109,22 +110,19 @@ export function ViewStateContainer(props) {
         return {
             getState: function (uniqueId, key) {
                 var cur = getCurrentStates();
-                var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(key, cur[key] && cur[key].value));
+                var value = cur.get(key);
+                var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(key, value));
                 if (container.active) {
-                    var stateId = state.stateId;
-                    if (stateId && ((stateId !== history.state && key in cur) || key !== state.key)) {
-                        var newValue = cur[key] && cur[key].value;
+                    var store = state.store;
+                    if (store && ((store !== cur && cur.has(key)) || key !== state.key)) {
                         emitter.emit('popstate', state, {
-                            newValue: newValue
+                            newValue: value
                         });
-                        // detach value in previous history state from current one
-                        var previous = new ViewState(state.key, state.value);
-                        states[stateId][previous.key] = previous;
-                        state.value = newValue;
+                        state.value = value;
                         state.key = key;
                     }
-                    state.stateId = history.state;
-                    cur[key] = state;
+                    state.store = cur;
+                    cur.set(key, state.value);
                 }
                 return state;
             }
