@@ -222,6 +222,24 @@ describe('useRouteState', () => {
 });
 
 describe('ViewStateContainer', () => {
+    it('should bring current value to new state', async () => {
+        const cb = mockFn();
+        const Component = function () {
+            const state = useViewState('foo');
+            useEffect(() => {
+                state.set('foo');
+            }, [state]);
+            cb(state.get());
+            return (<div>{state.get()}</div>);
+        };
+        const { rerender } = render(<Component />, { wrapper: ViewStateContainer });
+
+        cb.mockClear();
+        await app.navigate('/foo');
+        rerender(<Component />);
+        expect(cb).toBeCalledWith('foo');
+    });
+
     it('should invoke onPopState when traversing through history', async () => {
         const cb = mockFn();
         const Component = function () {
@@ -236,8 +254,7 @@ describe('ViewStateContainer', () => {
 
         await app.navigate('/foo');
         rerender(<Component />);
-        expect(cb).toBeCalledTimes(1);
-        expect(cb.mock.calls[0]).toEqual([undefined]);
+        expect(cb).not.toBeCalled();
 
         cb.mockClear();
         await app.back();

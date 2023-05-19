@@ -112,7 +112,7 @@ export function ViewStateContainer(props) {
                 var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(key, cur[key] && cur[key].value));
                 if (container.active) {
                     var stateId = state.stateId;
-                    if (stateId && (stateId !== history.state || key !== state.key)) {
+                    if (stateId && ((stateId !== history.state && key in cur) || key !== state.key)) {
                         var newValue = cur[key] && cur[key].value;
                         emitter.emit('popstate', state, {
                             newValue: newValue
