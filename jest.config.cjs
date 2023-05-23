@@ -1,7 +1,8 @@
 const config = {
     "testEnvironment": "jsdom",
     "setupFilesAfterEnv": [
-        "@misonou/test-utils/mock/console"
+        "@misonou/test-utils/mock/console",
+        "@misonou/test-utils/mock/performance"
     ],
     "modulePathIgnorePatterns": [
         "<rootDir>/build/"
