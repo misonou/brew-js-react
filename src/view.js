@@ -126,6 +126,7 @@ definePrototype(ViewContainer, React.Component, {
                 notifyAsync(element, promise);
             });
             var viewProps = freeze({
+                navigationType: event.navigationType,
                 viewData: event.data || {}
             });
             var state = { view: V };

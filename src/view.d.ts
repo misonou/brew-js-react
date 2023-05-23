@@ -16,7 +16,12 @@ export interface ViewProps<S = {}> {
      * The data object is read-only, to use incoming data as mutable view states,
      * pass individual data to {@link React.useState} or {@link useRouteState}.
      */
-    viewData: { readonly [P in keyof S]?: S[P] };
+    readonly viewData: { readonly [P in keyof S]?: S[P] };
+    /**
+     * Gets how user landed on this view component.
+     * @see {@link Brew.RouterEvent.navigationType}
+     */
+    readonly navigationType: Brew.NavigationType;
 }
 
 export interface ErrorViewProps {
