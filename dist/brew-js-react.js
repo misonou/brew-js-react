@@ -1,4 +1,4 @@
-/*! brew-js-react v0.3.4 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
+/*! brew-js-react v0.4.0 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
@@ -387,6 +387,7 @@ var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
     textInputAllowed = _lib$dom.textInputAllowed,
     beginDrag = _lib$dom.beginDrag,
     beginPinchZoom = _lib$dom.beginPinchZoom,
+    insertText = _lib$dom.insertText,
     getShortcut = _lib$dom.getShortcut,
     setShortcut = _lib$dom.setShortcut,
     focusable = _lib$dom.focusable,
@@ -538,12 +539,18 @@ var defaults_defaultExport = external_commonjs_brew_js_commonjs2_brew_js_amd_bre
 ;// CONCATENATED MODULE: ./src/app.js
 
 
+
 /** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
 
 var app_app;
+var appInitCallabcks = [];
+function onAppInit(callback) {
+  appInitCallabcks.push(throwNotFunction(callback));
+}
 install('react', function (app_) {
   // @ts-ignore: type inference issue
   app_app = app_;
+  combineFn(appInitCallabcks)(app_app);
 });
 brew_js_defaults.react = true;
 ;// CONCATENATED MODULE: ./tmp/brew-js/anim.js
@@ -585,6 +592,14 @@ var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_reac
   active: true
 }));
 var errorView;
+/** @type {Partial<Zeta.ZetaEventType<"beforepageload", Brew.RouterEventMap, Element>>} */
+
+var view_event = {};
+onAppInit(function () {
+  app_app.on('beforepageload', function (e) {
+    view_event = e;
+  });
+});
 
 function ErrorBoundary() {
   external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(this, arguments);
@@ -628,7 +643,7 @@ definePrototype(ErrorBoundary, external_commonjs_react_commonjs2_react_amd_react
 
     return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.view, {
       onComponentLoaded: onComponentLoaded,
-      viewData: self.props.viewData
+      viewProps: self.props.viewProps
     });
   },
   reset: function reset() {
@@ -649,10 +664,9 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
     var self = this;
     self.componentWillUnmount = combineFn(watch(app_app.route, function () {
       self.setActive(self.getViewComponent() === self.currentViewComponent);
-    }), app_app.on('beforepageload', function (e) {
-      self.waitFor = e.waitFor;
+    }), app_app.on('beforepageload', function () {
       self.stateId = history.state;
-      self.updateView(e.data);
+      self.updateView();
       self.forceUpdate();
     }));
   },
@@ -666,7 +680,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
 
     return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
   },
-  updateView: function updateView(viewData) {
+  updateView: function updateView() {
     var self = this;
     var V = self.getViewComponent();
 
@@ -711,6 +725,10 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         });
         notifyAsync(element, promise);
       });
+      var viewProps = freeze({
+        navigationType: view_event.navigationType,
+        viewData: view_event.data || {}
+      });
       var state = {
         view: V
       };
@@ -721,7 +739,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         ref: initElement
       }), /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ErrorBoundary, {
         onComponentLoaded: onComponentLoaded,
-        viewData: viewData
+        viewProps: viewProps
       }))));
       extend(self, {
         currentPath: app_app.path,
@@ -729,7 +747,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         currentViewComponent: V,
         setActive: defineObservableProperty(state, 'active', true, true)
       });
-      (self.waitFor || noop)(promise);
+      (view_event.waitFor || noop)(promise);
     }
   },
   getViewComponent: function getViewComponent() {
@@ -797,9 +815,7 @@ function createViewComponent(factory) {
   }
 
   return function fn(props) {
-    var viewProps = props.viewProps || {
-      viewData: useRouteState('_d_' + routeMap.get(fn).id, props.viewData || {})[0]
-    };
+    var viewProps = props.viewProps;
     var children = !promise && factory(viewProps);
 
     if (isThenable(children)) {
@@ -909,10 +925,9 @@ function redirectTo(view, params, data) {
 
 
 var emitter = new ZetaEventContainer();
-var states = {};
 
 function getCurrentStates() {
-  return states[history.state] || (states[history.state] = {});
+  return app_app.historyStorage.current;
 }
 
 function ViewState(key, value) {
@@ -925,7 +940,9 @@ definePrototype(ViewState, {
     return this.value;
   },
   set: function set(value) {
-    this.value = value;
+    var self = this;
+    self.value = value;
+    self.store.set(self.key, value);
   },
   onPopState: function onPopState(callback) {
     throwNotFunction(callback);
@@ -987,15 +1004,15 @@ function useRouteParam(name, defaultValue) {
 function useRouteState(key, defaultValue, snapshotOnUpdate) {
   var container = useViewContainerState();
   var cur = getCurrentStates();
-  var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(key in cur ? cur[key] : defaultValue);
+  var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(cur.has(key) ? cur.get(key) : defaultValue);
 
-  if (container.active && cur[key] !== state[0]) {
-    if (snapshotOnUpdate && key in cur) {
+  if (container.active && cur.get(key) !== state[0]) {
+    if (snapshotOnUpdate && cur.has(key)) {
       app_app.snapshot();
       cur = getCurrentStates();
     }
 
-    cur[key] = state[0];
+    cur.set(key, state[0]);
   }
 
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
@@ -1003,7 +1020,7 @@ function useRouteState(key, defaultValue, snapshotOnUpdate) {
       return bind(window, 'popstate', function () {
         if (container.active) {
           var cur = getCurrentStates();
-          state[1](key in cur ? cur[key] : defaultValue);
+          state[1](cur.has(key) ? cur.get(key) : defaultValue);
         }
       });
     }
@@ -1017,25 +1034,22 @@ function ViewStateContainer(props) {
     return {
       getState: function getState(uniqueId, key) {
         var cur = getCurrentStates();
-        var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(key, cur[key] && cur[key].value));
+        var value = cur.get(key);
+        var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(key, value));
 
         if (container.active) {
-          var stateId = state.stateId;
+          var store = state.store;
 
-          if (stateId && (stateId !== history.state || key !== state.key)) {
-            var newValue = cur[key] && cur[key].value;
+          if (store && (store !== cur && cur.has(key) || key !== state.key)) {
             emitter.emit('popstate', state, {
-              newValue: newValue
-            }); // detach value in previous history state from current one
-
-            var previous = new ViewState(state.key, state.value);
-            states[stateId][previous.key] = previous;
-            state.value = newValue;
+              newValue: value
+            });
+            state.value = value;
             state.key = key;
           }
 
-          state.stateId = history.state;
-          cur[key] = state;
+          state.store = cur;
+          cur.set(key, state.value);
         }
 
         return state;
