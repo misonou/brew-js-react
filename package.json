@@ -24,10 +24,10 @@
   "repository": "github:misonou/brew-js-react",
   "dependencies": {
     "@misonou/react-dom-client": "^1.0.3",
-    "brew-js": ">=0.5.0",
+    "brew-js": ">=0.5.2",
     "waterpipe": "^2.5.0",
     "zeta-dom": ">=0.3.1",
-    "zeta-dom-react": ">=0.2.1"
+    "zeta-dom-react": ">=0.4.6"
   },
   "peerDependencies": {
     "react": ">=16.8.0",

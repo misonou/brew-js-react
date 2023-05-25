@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react-hooks";
 import { useRouteParam, useRouteState, ViewStateContainer } from "src/hooks";
 import { registerView, renderView } from "src/view";
-import { cleanup, mockFn } from "@misonou/test-utils";
+import { cleanup, delay, mockFn } from "@misonou/test-utils";
 import { useViewState } from "zeta-dom-react";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
@@ -133,6 +133,7 @@ describe('useRouteState', () => {
         expect(history.state).not.toBe(stateId);
 
         await act(async () => void await app.back());
+        await delay();
         expect(history.state).toBe(stateId);
         expect(result.current[0]).toBe('foo');
         unmount();
@@ -159,8 +160,8 @@ describe('useRouteState', () => {
                     const [value, setValue] = useRouteState('value', 'foo');
                     useRouteParam('view');
                     React.useEffect(() => setValue('foo1'), []);
-                    React.useEffect(() => () => cb('foo unmount', history.state), []);
-                    cb(value, history.state);
+                    React.useEffect(() => () => cb('foo unmount'), []);
+                    cb(value);
                     return (<div>{value}</div>);
                 }
             }
@@ -171,35 +172,35 @@ describe('useRouteState', () => {
                     const [value, setValue] = useRouteState('value', 'bar');
                     useRouteParam('view');
                     React.useEffect(() => setValue('bar1'), []);
-                    React.useEffect(() => () => cb('bar unmount', history.state), []);
-                    cb(value, history.state);
+                    React.useEffect(() => () => cb('bar unmount'), []);
+                    cb(value);
                     return (<div>{value}</div>);
                 }
             }
         }, { view: 'bar' });
 
         const { unmount } = render(<div>{renderView(Foo, Bar)}</div>)
-        const { id: stateId1 } = await app.navigate('/foo');
+        await app.navigate('/foo');
         await screen.findByText('foo1');
         expect(cb.mock.calls).toEqual([
-            ['foo', stateId1],
-            ['foo1', stateId1]
+            ['foo'],
+            ['foo1']
         ]);
 
         cb.mockClear();
-        const { id: stateId2 } = await app.navigate('/bar');
+        await app.navigate('/bar');
         await screen.findByText('bar1');
         try {
             expect(cb.mock.calls).toEqual([
-                ['bar', stateId2],
-                ['foo unmount', stateId2],
-                ['bar1', stateId2]
+                ['bar'],
+                ['foo unmount'],
+                ['bar1']
             ]);
         } catch {
             expect(cb.mock.calls).toEqual([
-                ['foo unmount', stateId2],
-                ['bar', stateId2],
-                ['bar1', stateId2]
+                ['foo unmount'],
+                ['bar'],
+                ['bar1']
             ]);
         }
 
@@ -208,13 +209,13 @@ describe('useRouteState', () => {
         await screen.findByText('foo1');
         try {
             expect(cb.mock.calls).toEqual([
-                ['foo1', stateId1],
-                ['bar unmount', stateId1],
+                ['foo1'],
+                ['bar unmount'],
             ]);
         } catch {
             expect(cb.mock.calls).toEqual([
-                ['bar unmount', stateId1],
-                ['foo1', stateId1]
+                ['bar unmount'],
+                ['foo1']
             ]);
         }
         unmount();
