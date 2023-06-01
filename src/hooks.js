@@ -1,5 +1,5 @@
 import { createElement, useEffect, useRef, useState } from "react";
-import { ViewStateProvider } from "zeta-dom-react";
+import { ViewStateProvider, useObservableProperty } from "zeta-dom-react";
 import { definePrototype, extend, kv, setImmediateOnce, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { bind } from "./include/zeta-dom/domUtil.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
@@ -35,14 +35,15 @@ definePrototype(ViewState, {
 });
 
 export function useAppReady() {
-    const sReady = useState(false);
-    const ready = sReady[0], setReady = sReady[1];
-    useEffect(function () {
-        app.ready.then(function () {
-            setReady(true);
-        });
-    }, []);
-    return ready;
+    return useAppReadyState().ready;
+}
+
+export function useAppReadyState() {
+    const readyState = useObservableProperty(app, 'readyState');
+    return {
+        ready: readyState === 'ready',
+        error: readyState === 'error'
+    };
 }
 
 export function useRouteParam(name, defaultValue) {

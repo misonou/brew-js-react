@@ -4,8 +4,18 @@ export const ViewStateContainer: React.FC;
  * Returns if the app has completed initialization, and
  * refresh the component when the app has changed its ready state.
  * @see {@link Brew.AppInstance.ready}
+ * @deprecated Use {@link useAppReadyState} instead.
  */
 export function useAppReady(): boolean;
+
+/**
+ * Returns if the app has completed initialization, or has halted due to error.
+ * Component is refreshed when the app has changed its ready state.
+ */
+export function useAppReadyState(): {
+    readonly ready: boolean;
+    readonly error: boolean;
+};
 
 /**
  * Returns the value of specified route parameter, and
