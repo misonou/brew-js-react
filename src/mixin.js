@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { extend, setImmediate } from "./include/zeta-dom/util.js";
+import { useSingleton } from "zeta-dom-react";
+import { extend } from "./include/zeta-dom/util.js";
 import Mixin from "./mixins/Mixin.js";
 import AnimateMixin from "./mixins/AnimateMixin.js";
 import AnimateSequenceItemMixin from "./mixins/AnimateSequenceItemMixin.js";
@@ -24,15 +24,6 @@ function createUseFunction(ctor) {
     };
 }
 
-function disposeMixin(mixin) {
-    mixin.disposed = true;
-    setImmediate(function () {
-        if (mixin.disposed) {
-            mixin.dispose();
-        }
-    });
-}
-
 export const useAnimateMixin = createUseFunction(AnimateMixin);
 export const useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
 export const useFlyoutMixin = createUseFunction(FlyoutMixin);
@@ -41,14 +32,9 @@ export const useLoadingStateMixin = createUseFunction(LoadingStateMixin);
 export const useScrollableMixin = createUseFunction(ScrollableMixin);
 
 export function useMixin(ctor) {
-    var mixin = useState(function () {
+    return useSingleton(function () {
         return new ctor();
-    })[0].reset();
-    useEffect(function () {
-        mixin.disposed = false;
-        return disposeMixin.bind(0, mixin);
-    }, []);
-    return mixin;
+    }).reset();
 }
 
 export function useMixinRef(mixin) {
