@@ -267,6 +267,10 @@ describe('renderView', () => {
         expect(asFragment()).toMatchSnapshot();
     });
 
+    it('should throw if component is not registered', () => {
+        expect(() => renderView(function () { })).toThrow();
+    });
+
     it('should cause redirection to the first match view if none was matched', async () => {
         const { asFragment } = render(<div>{renderView(Foo, Bar, Baz)}</div>)
         await screen.findByText('foo');

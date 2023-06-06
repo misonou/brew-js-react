@@ -272,6 +272,11 @@ export function renderView() {
     var views = makeArray(arguments);
     var rootProps = isFunction(views[0]) ? {} : views.shift();
     var defaultView = views[0];
+    each(views, function (i, v) {
+        if (!routeMap.has(v)) {
+            throw new Error('Invalid argument to renderView: ' + (isFunction(v) ? v.name : v));
+        }
+    });
     views.sort(sortViews);
     return React.createElement(ViewContainer, { rootProps, views, defaultView });
 }
