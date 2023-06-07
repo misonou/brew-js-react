@@ -1,4 +1,4 @@
-/*! brew-js-react v0.4.0 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
+/*! brew-js-react v0.4.1 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
@@ -214,6 +214,7 @@ __webpack_require__.d(src_namespaceObject, {
   "useAnimateMixin": () => (useAnimateMixin),
   "useAnimateSequenceMixin": () => (useAnimateSequenceMixin),
   "useAppReady": () => (useAppReady),
+  "useAppReadyState": () => (useAppReadyState),
   "useFlyoutMixin": () => (useFlyoutMixin),
   "useFocusStateMixin": () => (useFocusStateMixin),
   "useLanguage": () => (useLanguage),
@@ -890,6 +891,11 @@ function renderView() {
   var views = makeArray(arguments);
   var rootProps = isFunction(views[0]) ? {} : views.shift();
   var defaultView = views[0];
+  each(views, function (i, v) {
+    if (!routeMap.has(v)) {
+      throw new Error('Invalid argument to renderView: ' + (isFunction(v) ? v.name : v));
+    }
+  });
   views.sort(sortViews);
   return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewContainer, {
     rootProps: rootProps,
@@ -952,15 +958,14 @@ definePrototype(ViewState, {
   }
 });
 function useAppReady() {
-  var sReady = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(false);
-  var ready = sReady[0],
-      setReady = sReady[1];
-  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
-    app_app.ready.then(function () {
-      setReady(true);
-    });
-  }, []);
-  return ready;
+  return useAppReadyState().ready;
+}
+function useAppReadyState() {
+  var readyState = (0,external_zeta_dom_react_.useObservableProperty)(app_app, 'readyState');
+  return {
+    ready: readyState === 'ready',
+    error: readyState === 'error'
+  };
 }
 function useRouteParam(name, defaultValue) {
   var container = useViewContainerState();
@@ -1773,15 +1778,6 @@ function createUseFunction(ctor) {
   };
 }
 
-function disposeMixin(mixin) {
-  mixin.disposed = true;
-  setImmediate(function () {
-    if (mixin.disposed) {
-      mixin.dispose();
-    }
-  });
-}
-
 var useAnimateMixin = createUseFunction(AnimateMixin);
 var useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
 var useFlyoutMixin = createUseFunction(FlyoutMixin);
@@ -1789,14 +1785,9 @@ var useFocusStateMixin = createUseFunction(FocusStateMixin);
 var useLoadingStateMixin = createUseFunction(LoadingStateMixin);
 var useScrollableMixin = createUseFunction(ScrollableMixin);
 function useMixin(ctor) {
-  var mixin = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
+  return (0,external_zeta_dom_react_.useSingleton)(function () {
     return new ctor();
-  })[0].reset();
-  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
-    mixin.disposed = false;
-    return disposeMixin.bind(0, mixin);
-  }, []);
-  return mixin;
+  }).reset();
 }
 function useMixinRef(mixin) {
   return mixin && mixin.getMixin().reset();
