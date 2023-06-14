@@ -9,6 +9,7 @@ import FocusStateMixin from "./mixins/FocusStateMixin";
 import LoadingStateMixin from "./mixins/LoadingStateMixin";
 import StatefulMixin, { MixinRef } from "./mixins/StatefulMixin";
 import ScrollableMixin, { ScrollableMixinOptions } from "./mixins/ScrollableMixin";
+import ScrollIntoViewMixin from "./mixins/ScrollIntoViewMixin";
 
 export * from "./mixins/Mixin";
 export * from "./mixins/AnimateMixin";
@@ -33,10 +34,13 @@ export {
     FocusStateMixin,
     LoadingStateMixin,
     StatefulMixin,
-    ScrollableMixin
+    ScrollableMixin,
+    ScrollIntoViewMixin
 }
 
 export function useScrollableMixin(options?: ScrollableMixinOptions): ScrollableMixin;
+
+export function useScrollIntoViewMixin(): ScrollIntoViewMixin;
 
 export function useFlyoutMixin(options?: FlyoutMixinOptions): FlyoutMixin;
 

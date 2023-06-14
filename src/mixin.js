@@ -11,6 +11,7 @@ import FocusStateMixin from "./mixins/FocusStateMixin.js";
 import LoadingStateMixin from "./mixins/LoadingStateMixin.js";
 import StatefulMixin from "./mixins/StatefulMixin.js";
 import ScrollableMixin from "./mixins/ScrollableMixin.js";
+import ScrollIntoViewMixin from "./mixins/ScrollIntoViewMixin.js";
 
 function extendSelf(options) {
     extend(this, options);
@@ -30,6 +31,7 @@ export const useFlyoutMixin = createUseFunction(FlyoutMixin);
 export const useFocusStateMixin = createUseFunction(FocusStateMixin);
 export const useLoadingStateMixin = createUseFunction(LoadingStateMixin);
 export const useScrollableMixin = createUseFunction(ScrollableMixin);
+export const useScrollIntoViewMixin = createUseFunction(ScrollIntoViewMixin);
 
 export function useMixin(ctor) {
     return useSingleton(function () {
@@ -52,5 +54,6 @@ export {
     FocusStateMixin,
     LoadingStateMixin,
     StatefulMixin,
-    ScrollableMixin
+    ScrollableMixin,
+    ScrollIntoViewMixin
 }
