@@ -2,11 +2,28 @@ import { useRouteState } from "./hooks";
 
 export type ViewComponentRootProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 export type ViewComponent<P> = React.FC<ViewProps<P>>;
+/**
+ * @deprecated Alias of {@link ViewContext}
+ */
+export type ViewContainerState = ViewContext;
 
-export interface ViewContainerState {
+export interface PageChangeEvent extends Zeta.ZetaEventBase {
+    readonly previousPage: Brew.PageInfo;
+}
+
+export interface ViewContextEventMap {
+    pagechange: PageChangeEvent;
+}
+
+export interface ViewContext extends Zeta.ZetaEventDispatcher<ViewContextEventMap, ViewContext> {
     readonly container: HTMLElement;
     readonly view: ViewComponent<any>;
     readonly active: boolean;
+    /**
+     * Gets information of current page that rendered the view.
+     * Unlike {@link Brew.WithRouter.page}, it will not change when user has navigated away and the current view is going to unmount.
+     */
+    readonly page: Brew.PageInfo;
 }
 
 export interface ViewProps<S = {}> {
@@ -17,6 +34,10 @@ export interface ViewProps<S = {}> {
      * pass individual data to {@link React.useState} or {@link useRouteState}.
      */
     readonly viewData: { readonly [P in keyof S]?: S[P] };
+    /**
+     * Gets information scoped to the rendered view.
+     */
+    readonly viewContext: ViewContext;
     /**
      * Gets how user landed on this view component.
      * @see {@link Brew.RouterEvent.navigationType}
@@ -39,6 +60,11 @@ export interface ErrorViewProps {
     reset(): void;
 }
 
+export function useViewContext(): ViewContext;
+
+/**
+ * @deprecated Alias of {@link useViewContext}
+ */
 export function useViewContainerState(): ViewContainerState;
 
 /**

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { act, render, screen } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
-import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState } from "src/view";
+import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext } from "src/view";
 import { body, delay, mockFn, verifyCalls, _ } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
 import { addAnimateIn, addAnimateOut } from "brew-js/anim";
@@ -742,5 +742,88 @@ describe('useViewContainerState', () => {
         await actAwaitSetImmediate(() => app.navigate('/dummy/bar'));
         expect(fooResult.active).toBe(false);
         expect(barResultInFoo).toBeUndefined();
+    });
+});
+
+describe('ViewContext', () => {
+    it('should return current page info', async () => {
+        const cb = mockFn();
+        const Foo = registerView(function ({ viewContext }) {
+            cb(viewContext.page);
+            return (<></>);
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>)
+        await app.navigate('/dummy/foo');
+        expect(cb).toBeCalledWith(app.page);
+        unmount();
+    });
+
+    it('should return last page info when the view is going to be unmounted', async () => {
+        const cb = mockFn();
+        const Foo = registerView(function ({ viewContext }) {
+            useEffect(() => {
+                return () => cb(viewContext.page, app.page);
+            }, []);
+            return (<></>);
+        }, { view: 'foo' });
+        const Bar = registerView(function () {
+            return (<></>);
+        }, { view: 'bar' })
+
+        const { unmount } = render(<div>{renderView(Foo, Bar)}</div>)
+        await app.navigate('/dummy/foo');
+
+        const previousPage = app.page;
+        await app.navigate('/dummy/bar');
+        await delay();
+
+        expect(app.page).not.toBe(previousPage);
+        expect(cb).toBeCalledWith(previousPage, app.page);
+        unmount();
+    });
+
+    it('should fire pagechange event when the same view is rendered for a newly navigated path', async () => {
+        const cb = mockFn();
+        const Foo = registerView(function ({ viewContext }) {
+            useEffect(() => {
+                return viewContext.on('pagechange', cb);
+            }, []);
+            return (<></>);
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>)
+        await app.navigate('/dummy/foo');
+
+        const previousPage = app.page;
+        await app.navigate('/dummy/foo/sub');
+        expect(cb).toBeCalledWith(expect.objectContaining({
+            type: 'pagechange',
+            previousPage
+        }), _);
+        unmount();
+    });
+
+    it('should not fire pagechange event when the view is going to be unmounted', async () => {
+        const cb = mockFn();
+        const Foo = registerView(function ({ viewContext }) {
+            useEffect(() => {
+                return viewContext.on('pagechange', cb);
+            }, []);
+            return (<></>);
+        }, { view: 'foo' });
+        const Bar = registerView(function () {
+            return (<></>);
+        }, { view: 'bar' })
+
+        const { unmount } = render(<div>{renderView(Foo, Bar)}</div>)
+        await app.navigate('/dummy/foo');
+
+        const previousPage = app.page;
+        await app.navigate('/dummy/bar');
+
+        expect(app.page).not.toBe(previousPage);
+        expect(cb).not.toBeCalled();
+        unmount();
     });
 });
