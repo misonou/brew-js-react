@@ -1,4 +1,4 @@
-/*! brew-js-react v0.4.1 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
+/*! brew-js-react v0.4.2 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
@@ -196,6 +196,7 @@ __webpack_require__.d(src_namespaceObject, {
   "FocusStateMixin": () => (FocusStateMixin),
   "LoadingStateMixin": () => (LoadingStateMixin),
   "Mixin": () => (Mixin),
+  "ScrollIntoViewMixin": () => (ScrollIntoViewMixin),
   "ScrollableMixin": () => (ScrollableMixin),
   "StatefulMixin": () => (StatefulMixin),
   "ViewStateContainer": () => (ViewStateContainer),
@@ -223,8 +224,10 @@ __webpack_require__.d(src_namespaceObject, {
   "useMixinRef": () => (useMixinRef),
   "useRouteParam": () => (useRouteParam),
   "useRouteState": () => (useRouteState),
+  "useScrollIntoViewMixin": () => (useScrollIntoViewMixin),
   "useScrollableMixin": () => (useScrollableMixin),
-  "useViewContainerState": () => (useViewContainerState)
+  "useViewContainerState": () => (useViewContext),
+  "useViewContext": () => (useViewContext)
 });
 
 // EXTERNAL MODULE: external {"commonjs":"brew-js","commonjs2":"brew-js","amd":"brew-js","root":"brew"}
@@ -364,6 +367,7 @@ var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
     removeNode = domUtil_lib$util.removeNode,
     getClass = domUtil_lib$util.getClass,
     setClass = domUtil_lib$util.setClass,
+    getSafeAreaInset = domUtil_lib$util.getSafeAreaInset,
     getScrollOffset = domUtil_lib$util.getScrollOffset,
     getScrollParent = domUtil_lib$util.getScrollParent,
     getContentRect = domUtil_lib$util.getContentRect,
@@ -584,10 +588,13 @@ var setBaseUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_br
 
 
 
+
+
 var root = zeta_dom_dom.root;
 var routeMap = new Map();
 var usedParams = {};
 var sortedViews = [];
+var emitter = new ZetaEventContainer();
 var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext(Object.freeze({
   container: root,
   active: true
@@ -600,6 +607,16 @@ onAppInit(function () {
   app_app.on('beforepageload', function (e) {
     view_event = e;
   });
+});
+
+function ViewContext(view) {
+  defineOwnProperty(this, 'view', view, true);
+}
+
+definePrototype(ViewContext, {
+  on: function on(event, handler) {
+    return emitter.add(this, event, handler);
+  }
 });
 
 function ErrorBoundary() {
@@ -726,13 +743,12 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         });
         notifyAsync(element, promise);
       });
+      var state = new ViewContext(V);
       var viewProps = freeze({
         navigationType: view_event.navigationType,
+        viewContext: state,
         viewData: view_event.data || {}
       });
-      var state = {
-        view: V
-      };
       var view = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(StateContext.Provider, {
         key: routeMap.get(V).id,
         value: state
@@ -746,10 +762,18 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         currentPath: app_app.path,
         currentView: view,
         currentViewComponent: V,
+        setPage: defineObservableProperty(state, 'page', app_app.page, true),
         setActive: defineObservableProperty(state, 'active', true, true)
+      });
+      watch(state, 'page', function (page, previousPage) {
+        emitter.emit('pagechange', state, {
+          previousPage: previousPage
+        });
       });
       (view_event.waitFor || noop)(promise);
     }
+
+    (self.setPage || noop)(app_app.page);
   },
   getViewComponent: function getViewComponent() {
     var props = this.props;
@@ -842,7 +866,7 @@ function createViewComponent(factory) {
   };
 }
 
-function useViewContainerState() {
+function useViewContext() {
   return external_commonjs_react_commonjs2_react_amd_react_root_React_.useContext(StateContext);
 }
 function isViewMatched(view) {
@@ -922,6 +946,7 @@ function navigateTo(view, params, data, replace) {
 function redirectTo(view, params, data) {
   return navigateTo(view, params, data, true);
 }
+
 ;// CONCATENATED MODULE: ./src/hooks.js
 
 
@@ -930,7 +955,7 @@ function redirectTo(view, params, data) {
 
 
 
-var emitter = new ZetaEventContainer();
+var hooks_emitter = new ZetaEventContainer();
 
 function getCurrentStates() {
   return app_app.historyStorage.current;
@@ -952,7 +977,7 @@ definePrototype(ViewState, {
   },
   onPopState: function onPopState(callback) {
     throwNotFunction(callback);
-    return emitter.add(this, 'popstate', function (e) {
+    return hooks_emitter.add(this, 'popstate', function (e) {
       callback.call(this, e.newValue);
     });
   }
@@ -968,7 +993,7 @@ function useAppReadyState() {
   };
 }
 function useRouteParam(name, defaultValue) {
-  var container = useViewContainerState();
+  var container = useViewContext();
   var route = app_app.route;
   var value = route[name] || '';
   var ref = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useRef)(value);
@@ -1007,7 +1032,7 @@ function useRouteParam(name, defaultValue) {
   return value;
 }
 function useRouteState(key, defaultValue, snapshotOnUpdate) {
-  var container = useViewContainerState();
+  var container = useViewContext();
   var cur = getCurrentStates();
   var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(cur.has(key) ? cur.get(key) : defaultValue);
 
@@ -1033,7 +1058,7 @@ function useRouteState(key, defaultValue, snapshotOnUpdate) {
   return state;
 }
 function ViewStateContainer(props) {
-  var container = useViewContainerState();
+  var container = useViewContext();
   var provider = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
     var cache = {};
     return {
@@ -1046,7 +1071,7 @@ function ViewStateContainer(props) {
           var store = state.store;
 
           if (store && (store !== cur && cur.has(key) || key !== state.key)) {
-            emitter.emit('popstate', state, {
+            hooks_emitter.emit('popstate', state, {
               newValue: value
             });
             state.value = value;
@@ -1751,7 +1776,31 @@ each('destroy enable disable setOptions refresh scrollPadding stop scrollLeft sc
     return obj.scrollable.apply(obj, [v].concat(makeArray(arguments)));
   });
 });
+;// CONCATENATED MODULE: ./src/mixins/ScrollIntoViewMixin.js
+
+
+
+function ScrollIntoViewMixin() {
+  StatefulMixin.call(this);
+}
+definePrototype(ScrollIntoViewMixin, StatefulMixin, {
+  when: function when(deps) {
+    var state = this.state;
+
+    var callback = state.callback || (state.callback = function () {
+      scrollIntoView(state.element);
+    });
+
+    if (state.deps && !equal(deps, state.deps)) {
+      setImmediateOnce(callback);
+    }
+
+    state.deps = makeArray(deps);
+    return this;
+  }
+});
 ;// CONCATENATED MODULE: ./src/mixin.js
+
 
 
 
@@ -1784,6 +1833,7 @@ var useFlyoutMixin = createUseFunction(FlyoutMixin);
 var useFocusStateMixin = createUseFunction(FocusStateMixin);
 var useLoadingStateMixin = createUseFunction(LoadingStateMixin);
 var useScrollableMixin = createUseFunction(ScrollableMixin);
+var useScrollIntoViewMixin = createUseFunction(ScrollIntoViewMixin);
 function useMixin(ctor) {
   return (0,external_zeta_dom_react_.useSingleton)(function () {
     return new ctor();
