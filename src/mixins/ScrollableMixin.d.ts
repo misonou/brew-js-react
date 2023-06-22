@@ -8,6 +8,7 @@ export interface ScrollableMixinOptions {
     handle?: 'auto' | 'scrollbar' | 'content';
     paged?: 'always' | 'landscape' | 'portrait';
     pagedItemSelector?: string;
+    persistScroll?: boolean;
 }
 
 export default class ScrollableMixin extends ClassNameMixin implements JQueryScrollable {

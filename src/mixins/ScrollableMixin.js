@@ -28,6 +28,8 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
             'scroller-snap-page': options.paged,
             'scroller-page': options.pagedItemSelector,
             'scroller-state': 'pageIndex'
+        }, options.persistScroll && {
+            'persist-scroll': ''
         });
     },
     onPageIndexChanged: function (callback) {
