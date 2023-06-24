@@ -125,6 +125,8 @@ definePrototype(ViewContainer, React.Component, {
                     self.forceUpdate();
                 });
             }
+            (self.cancelPrevious || noop)();
+
             var onComponentLoaded;
             var promise = new Promise(function (resolve) {
                 onComponentLoaded = resolve;
@@ -149,6 +151,7 @@ definePrototype(ViewContainer, React.Component, {
                     React.createElement('div', extend({}, self.props.rootProps, { ref: initElement }),
                         React.createElement(ErrorBoundary, { onComponentLoaded, viewProps }))));
             extend(self, {
+                cancelPrevious: onComponentLoaded,
                 currentPath: app.path,
                 currentView: view,
                 currentViewComponent: V,

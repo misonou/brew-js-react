@@ -3,7 +3,7 @@ import { act, render, screen } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
 import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext } from "src/view";
-import { body, delay, mockFn, verifyCalls, _ } from "@misonou/test-utils";
+import { body, delay, mockFn, verifyCalls, _, cleanup } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
 import { addAnimateIn, addAnimateOut } from "brew-js/anim";
 import { subscribeAsync } from "zeta-dom/domLock";
@@ -36,6 +36,8 @@ async function dummyImport() {
     };
 }
 
+const viewCallback = mockFn();
+
 /** @type {import("src/view").ViewComponent<{}>} */
 let Foo;
 /** @type {import("src/view").ViewComponent<{}>} */
@@ -55,6 +57,7 @@ beforeAll(async () => {
     Foo = registerView(async () => {
         return {
             default: () => {
+                viewCallback(Foo);
                 return (<div>foo</div>)
             }
         }
@@ -63,6 +66,7 @@ beforeAll(async () => {
     Bar = registerView(async () => {
         return {
             default: () => {
+                viewCallback(Bar);
                 return (<div>bar</div>)
             }
         }
@@ -71,6 +75,7 @@ beforeAll(async () => {
     Baz = registerView(async () => {
         return {
             default: () => {
+                viewCallback(Baz);
                 return (<div>baz</div>)
             }
         }
@@ -79,6 +84,7 @@ beforeAll(async () => {
     BarBaz = registerView(async () => {
         return {
             default: () => {
+                viewCallback(BarBaz);
                 return (<div>b_a_r_b_a_z</div>)
             }
         }
@@ -87,6 +93,7 @@ beforeAll(async () => {
     Test = registerView(async () => {
         return {
             default: () => {
+                viewCallback(Test);
                 return (<div>test</div>)
             }
         }
@@ -100,6 +107,7 @@ beforeAll(async () => {
                 if (!state.get()) {
                     state.set('var1');
                 }
+                viewCallback(Var1);
                 return (<div>{state.get() || 'var1'}</div>);
             }
         }
@@ -113,6 +121,7 @@ beforeAll(async () => {
                 if (!state.get()) {
                     state.set('var2');
                 }
+                viewCallback(Var2);
                 return (<div>{state.get() || 'var2'}</div>);
             }
         }
@@ -336,6 +345,23 @@ describe('renderView', () => {
         var { unmount } = render(<div>{renderView(Var1, Var2)}</div>);
         await screen.findByText('var1');
         expect(app.path).toBe('/var1');
+        unmount();
+    });
+
+    it('should not halt navigation when matched view is updated twice', async () => {
+        const { rerender, unmount } = render(<div>{renderView(Foo, Bar)}</div>);
+        await screen.findByText('foo');
+        viewCallback.mockClear();
+
+        const promise = app.navigate('/dummy/bar/baz');
+        await new Promise((resolve) => {
+            cleanup(app.on('beforepageload', resolve));
+        });
+        expect(viewCallback).not.toBeCalled();
+
+        rerender(<div>{renderView(BarBaz)}</div>);
+        await promise;
+        verifyCalls(viewCallback, [[BarBaz]]);
         unmount();
     });
 
