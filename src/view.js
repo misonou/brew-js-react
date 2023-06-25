@@ -2,7 +2,6 @@ import React from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { bind } from "./include/zeta-dom/domUtil.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
 import { any, combineFn, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
@@ -15,7 +14,8 @@ const routeMap = new Map();
 const usedParams = {};
 const sortedViews = [];
 const emitter = new ZetaEventContainer();
-const StateContext = React.createContext(Object.freeze({ container: root, active: true }));
+const rootContext = Object.freeze({ container: root, active: true });
+const StateContext = React.createContext(rootContext);
 
 var errorView;
 /** @type {Partial<Zeta.ZetaEventType<"beforepageload", Brew.RouterEventMap, Element>>} */
@@ -78,6 +78,7 @@ function ViewContainer() {
     React.Component.apply(this, arguments);
     this.stateId = history.state;
 }
+ViewContainer.contextType = StateContext;
 
 definePrototype(ViewContainer, React.Component, {
     componentDidMount: function () {
@@ -89,15 +90,17 @@ definePrototype(ViewContainer, React.Component, {
             }),
             app.on('beforepageload', function () {
                 self.stateId = history.state;
-                self.updateView();
-                self.forceUpdate();
+                if (self.context === rootContext) {
+                    self.updateView();
+                    self.forceUpdate();
+                }
             })
         );
     },
     render: function () {
         /** @type {any} */
         var self = this;
-        if (history.state === self.stateId) {
+        if (history.state === self.stateId && self.context.active) {
             self.updateView();
         }
         return React.createElement(React.Fragment, null, self.prevView, self.currentView);

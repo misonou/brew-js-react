@@ -644,6 +644,48 @@ describe('renderView', () => {
         expect(asFragment()).toMatchSnapshot();
         unmount();
     });
+
+    it('should update after parent view component', async () => {
+        let view = Foo;
+        const Parent = registerView(() => {
+            return (<div>{renderView(view)}</div>);
+        }, { view: /./ });
+
+        const { unmount } = render(<div>{renderView(Parent)}</div>);
+        await screen.findByText('foo');
+
+        view = Bar;
+        await expect(app.navigate('/dummy/bar')).resolves.toMatchObject({
+            path: '/dummy/bar',
+            redirected: false
+        });
+        unmount();
+    });
+
+    it('should not update when parent view component has become inactive', async () => {
+        const FooParent = registerView(() => {
+            const [, setState] = useState(0);
+            useEffect(() => {
+                return app.on('pageleave', function () {
+                    // force ViewContainer.render to be called again before unmount
+                    setState(1);
+                })
+            }, []);
+            return (<div>{renderView(Foo)}</div>);
+        }, { view: 'foo' });
+        const BarParent = registerView(() => {
+            return (<div>{renderView(Bar)}</div>);
+        }, { view: 'bar' });
+
+        const { unmount } = render(<div>{renderView(FooParent, BarParent)}</div>);
+        await screen.findByText('foo');
+
+        await expect(app.navigate('/dummy/bar')).resolves.toMatchObject({
+            path: '/dummy/bar',
+            redirected: false
+        });
+        unmount();
+    });
 });
 
 describe('linkTo', () => {
