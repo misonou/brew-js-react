@@ -3,7 +3,7 @@ import { act, render, screen } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
 import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext } from "src/view";
-import { body, delay, mockFn, verifyCalls, _, cleanup } from "@misonou/test-utils";
+import { body, delay, mockFn, verifyCalls, _, cleanup, root } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
 import { addAnimateIn, addAnimateOut } from "brew-js/anim";
 import { subscribeAsync } from "zeta-dom/domLock";
@@ -782,9 +782,15 @@ describe('redirectTo', () => {
 });
 
 describe('useViewContainerState', () => {
-    it('should return active outside view container', () => {
+    it('should return correct state outside view container', () => {
         const { result } = renderHook(() => useViewContainerState())
-        expect(result.current).toMatchObject({ active: true });
+        expect(result.current).toMatchObject({
+            container: root,
+            active: true,
+            view: null,
+            page: app.page
+        });
+        expect(result.current.on).toBeInstanceOf(Function);
     });
 
     it('should return whether the component is inside the active view container', async () => {
@@ -865,6 +871,20 @@ describe('ViewContext', () => {
 
         const previousPage = app.page;
         await app.navigate('/dummy/foo/sub');
+        expect(cb).toBeCalledWith(expect.objectContaining({
+            type: 'pagechange',
+            previousPage
+        }), _);
+        unmount();
+    });
+
+    it('should fire pagechange event for root context', async () => {
+        const cb = mockFn();
+        const { result, unmount } = renderHook(() => useViewContext());
+        cleanup(result.current.on('pagechange', cb));
+
+        const previousPage = app.page;
+        await app.navigate('/dummy/foo');
         expect(cb).toBeCalledWith(expect.objectContaining({
             type: 'pagechange',
             previousPage

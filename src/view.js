@@ -3,18 +3,19 @@ import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
-import { any, combineFn, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
+import { any, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { removeQueryAndHash } from "./include/brew-js/util/path.js";
 import { app, onAppInit } from "./app.js";
 import { ViewStateContainer } from "./hooks.js";
 
+const _ = createPrivateStore();
 const root = dom.root;
 const routeMap = new Map();
 const usedParams = {};
 const sortedViews = [];
 const emitter = new ZetaEventContainer();
-const rootContext = Object.freeze({ container: root, active: true });
+const rootContext = freeze(extend(new ViewContext(null, null), { container: root }));
 const StateContext = React.createContext(rootContext);
 
 var errorView;
@@ -24,11 +25,20 @@ var event = {};
 onAppInit(function () {
     app.on('beforepageload', function (e) {
         event = e;
+        _(rootContext).setPage(app.page);
     });
 });
 
-function ViewContext(view) {
-    defineOwnProperty(this, 'view', view, true);
+function ViewContext(view, page) {
+    var self = this;
+    defineOwnProperty(self, 'view', view, true);
+    _(self, {
+        setPage: defineObservableProperty(self, 'page', page, true),
+        setActive: defineObservableProperty(self, 'active', true, true)
+    });
+    watch(self, 'page', function (page, previousPage) {
+        emitter.emit('pagechange', self, { previousPage });
+    });
 }
 
 definePrototype(ViewContext, {
@@ -143,7 +153,7 @@ definePrototype(ViewContainer, React.Component, {
                 });
                 notifyAsync(element, promise);
             });
-            var state = new ViewContext(V);
+            var state = new ViewContext(V, app.page);
             var viewProps = freeze({
                 navigationType: event.navigationType,
                 viewContext: state,
@@ -153,16 +163,11 @@ definePrototype(ViewContainer, React.Component, {
                 React.createElement(ViewStateContainer, null,
                     React.createElement('div', extend({}, self.props.rootProps, { ref: initElement }),
                         React.createElement(ErrorBoundary, { onComponentLoaded, viewProps }))));
-            extend(self, {
+            extend(self, _(state), {
                 cancelPrevious: onComponentLoaded,
                 currentPath: app.path,
                 currentView: view,
-                currentViewComponent: V,
-                setPage: defineObservableProperty(state, 'page', app.page, true),
-                setActive: defineObservableProperty(state, 'active', true, true)
-            });
-            watch(state, 'page', function (page, previousPage) {
-                emitter.emit('pagechange', state, { previousPage });
+                currentViewComponent: V
             });
             (event.waitFor || noop)(promise);
         }
