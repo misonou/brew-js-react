@@ -349,6 +349,23 @@ describe('renderView', () => {
         unmount();
     });
 
+    it('should delay navigation completion until view component is rendered', async () => {
+        await app.navigate('/dummy/foo');
+
+        const BarParent = registerView(() => {
+            return (<div>{renderView(BarBaz)}</div>);
+        }, { view: 'bar' });
+        const { unmount } = render(<div>{renderView(BarParent, Foo)}</div>);
+        await waitForPageLoad();
+
+        await expect(app.navigate('/dummy')).resolves.toMatchObject({
+            path: '/dummy/bar/baz',
+            redirected: true,
+            originalPath: '/dummy'
+        });
+        unmount();
+    });
+
     it('should not halt navigation when matched view is updated twice', async () => {
         const { rerender, unmount } = render(<div>{renderView(Foo, Bar)}</div>);
         await screen.findByText('foo');

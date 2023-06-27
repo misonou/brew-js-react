@@ -101,6 +101,9 @@ definePrototype(ViewContainer, React.Component, {
             app.on('beforepageload', function () {
                 self.stateId = history.state;
                 if (self.context === rootContext || self.updateOnNext) {
+                    event.waitFor(new Promise(function (resolve) {
+                        self.onRender = resolve;
+                    }));
                     self.updateView();
                     self.forceUpdate();
                 }
@@ -113,6 +116,7 @@ definePrototype(ViewContainer, React.Component, {
         if (history.state === self.stateId && self.context.active) {
             self.updateView();
         }
+        (self.onRender || noop)();
         return React.createElement(React.Fragment, null, self.prevView, self.currentView);
     },
     updateView: function () {
