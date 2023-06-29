@@ -161,7 +161,7 @@ describe('useRouteState', () => {
                     useRouteParam('view');
                     React.useEffect(() => setValue('foo1'), []);
                     React.useEffect(() => () => cb('foo unmount'), []);
-                    cb(value);
+                    React.useEffect(() => cb(value), [value]);
                     return (<div>{value}</div>);
                 }
             }
@@ -173,14 +173,14 @@ describe('useRouteState', () => {
                     useRouteParam('view');
                     React.useEffect(() => setValue('bar1'), []);
                     React.useEffect(() => () => cb('bar unmount'), []);
-                    cb(value);
+                    React.useEffect(() => cb(value), [value]);
                     return (<div>{value}</div>);
                 }
             }
         }, { view: 'bar' });
+        await app.navigate('/foo');
 
         const { unmount } = render(<div>{renderView(Foo, Bar)}</div>)
-        await app.navigate('/foo');
         await screen.findByText('foo1');
         expect(cb.mock.calls).toEqual([
             ['foo'],

@@ -3,7 +3,7 @@ import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
-import { any, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
+import { any, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { removeQueryAndHash } from "./include/brew-js/util/path.js";
 import { app, onAppInit } from "./app.js";
@@ -96,11 +96,11 @@ definePrototype(ViewContainer, React.Component, {
         var self = this;
         self.componentWillUnmount = combineFn(
             watch(app.route, function () {
-                self.setActive(self.getViewComponent() === self.currentViewComponent);
+                (self.setActive || noop)(self.getViewComponent() === self.currentViewComponent);
             }),
             app.on('beforepageload', function () {
                 self.stateId = history.state;
-                if (self.context === rootContext) {
+                if (self.context === rootContext || self.updateOnNext) {
                     self.updateView();
                     self.forceUpdate();
                 }
@@ -118,12 +118,15 @@ definePrototype(ViewContainer, React.Component, {
     updateView: function () {
         var self = this;
         var V = self.getViewComponent();
+        self.updateOnNext = false;
         if (V) {
             // ensure the current path actually corresponds to the matched view
             // when some views are not included in the list of allowed views
             var targetPath = resolvePath(V, getCurrentParams(V, true));
             if (targetPath !== removeQueryAndHash(app.path)) {
                 app.navigate(targetPath, true);
+                self.updateOnNext = true;
+                return;
             }
         }
         if (V && V !== self.currentViewComponent) {
@@ -235,6 +238,7 @@ function createViewComponent(factory) {
         if (isThenable(children)) {
             promise = children;
             children = null;
+            catchAsync(promise);
         }
         var state = useAsync(function () {
             return promise.then(function (s) {

@@ -7,7 +7,7 @@ import { body, delay, mockFn, verifyCalls, _, cleanup, root } from "@misonou/tes
 import dom from "zeta-dom/dom";
 import { addAnimateIn, addAnimateOut } from "brew-js/anim";
 import { subscribeAsync } from "zeta-dom/domLock";
-import initAppBeforeAll from "./harness/initAppBeforeAll";
+import initAppBeforeAll, { waitForPageLoad } from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
 
 const { actAwaitSetImmediate } = composeAct(act);
@@ -320,6 +320,7 @@ describe('renderView', () => {
         await app.navigate('/dummy/foo/baz');
         var { unmount } = render(<div>{renderView(Foo, Baz2)}</div>);
         await screen.findByText('foo');
+        await waitForPageLoad();
         expect(app.path).toBe('/dummy/foo');
         unmount();
 
@@ -351,6 +352,7 @@ describe('renderView', () => {
     it('should not halt navigation when matched view is updated twice', async () => {
         const { rerender, unmount } = render(<div>{renderView(Foo, Bar)}</div>);
         await screen.findByText('foo');
+        await waitForPageLoad();
         viewCallback.mockClear();
 
         const promise = app.navigate('/dummy/bar/baz');
@@ -396,7 +398,7 @@ describe('renderView', () => {
         const { container, unmount } = render(<div>{renderView(BarError)}</div>);
         dom.on(container, 'error', cb);
 
-        await delay();
+        await waitForPageLoad();
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0][0].error).toBe(error);
         unmount();
@@ -415,7 +417,7 @@ describe('renderView', () => {
 
         const cb = mockFn();
         dom.on(container, 'error', cb);
-        await delay();
+        await waitForPageLoad();
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0][0].error).toBe(error);
     });
@@ -536,6 +538,7 @@ describe('renderView', () => {
         dom.on(container, 'pageleave', pageleave);
 
         const element = await screen.findByText('foo');
+        await waitForPageLoad();
         await actAwaitSetImmediate(() => app.navigate('/dummy/bar'));
         expect(pageleave).toBeCalledTimes(1);
         expect(pageleave.mock.results[0].value).toBe(element);
@@ -571,6 +574,7 @@ describe('renderView', () => {
         }), { view: 'bar' });
         const { unmount } = render(<div>{renderView(BarAnim, Foo)}</div>);
         await screen.findByText('bar');
+        await waitForPageLoad();
 
         await actAwaitSetImmediate(() => app.navigate('/dummy/foo'));
         expect(cb).toBeCalledTimes(1);
@@ -587,6 +591,7 @@ describe('renderView', () => {
         }, { view: 'bar' });
         const { asFragment, unmount } = render(<div>{renderView(Foo, BarTest)}</div>);
         await screen.findByText('foo');
+        await waitForPageLoad();
 
         await navigateTo(BarTest, null, { text: 'BarTest' });
         await screen.findByText('BarTest');
@@ -606,6 +611,7 @@ describe('renderView', () => {
         }, { view: 'bar' });
         const { asFragment, unmount } = render(<div>{renderView(Foo, BarTest)}</div>);
         await screen.findByText('foo');
+        await waitForPageLoad();
 
         const promise = navigateTo(BarTest, null, { text: 'baz' });
         await app.navigate('/dummy/foo', true);
@@ -622,6 +628,7 @@ describe('renderView', () => {
         }, { view: 'bar' });
         const { asFragment, unmount } = render(<div>{renderView(Foo, BarTest)}</div>);
         await screen.findByText('foo');
+        await waitForPageLoad();
 
         const promise = navigateTo(BarTest, null, { text: 'baz' });
         await app.navigate('/dummy/foo');
@@ -637,7 +644,7 @@ describe('renderView', () => {
             return <div>{viewData.text || 'bar'}</div>;
         }, { view: 'bar' });
 
-        await app.navigate('/dummy/foo', false, { text: 'baz' });
+        await app.navigate('/dummy/bar', false, { text: 'baz' });
         const { asFragment, unmount } = render(<div>{renderView(BarTest)}</div>);
 
         await screen.findByText('baz');
@@ -653,6 +660,7 @@ describe('renderView', () => {
 
         const { unmount } = render(<div>{renderView(Parent)}</div>);
         await screen.findByText('foo');
+        await waitForPageLoad();
 
         view = Bar;
         await expect(app.navigate('/dummy/bar')).resolves.toMatchObject({
@@ -679,6 +687,7 @@ describe('renderView', () => {
 
         const { unmount } = render(<div>{renderView(FooParent, BarParent)}</div>);
         await screen.findByText('foo');
+        await waitForPageLoad();
 
         await expect(app.navigate('/dummy/bar')).resolves.toMatchObject({
             path: '/dummy/bar',
@@ -747,6 +756,7 @@ describe('navigateTo', () => {
         }, { view: 'bar' });
         const { asFragment, unmount } = render(<div>{renderView(Foo, BarTest)}</div>);
         await screen.findByText('foo');
+        await waitForPageLoad();
 
         await navigateTo(BarTest, null, { text: 'BarTest' });
         await screen.findByTestId('test');
@@ -773,6 +783,7 @@ describe('redirectTo', () => {
         }, { view: 'bar' });
         const { asFragment, unmount } = render(<div>{renderView(Foo, BarTest)}</div>);
         await screen.findByText('foo');
+        await waitForPageLoad();
 
         await redirectTo(BarTest, null, { text: 'BarTest' });
         await screen.findByTestId('test');
@@ -811,6 +822,7 @@ describe('useViewContainerState', () => {
 
         render(<div>{renderView(Foo, Bar)}</div>);
         await screen.findByText('foo');
+        await waitForPageLoad();
         expect(fooResult).toMatchObject({ view: Foo, active: true });
 
         await actAwaitSetImmediate(() => app.navigate('/dummy/bar'));
