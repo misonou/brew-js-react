@@ -1,4 +1,4 @@
-/*! brew-js-react v0.4.2 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
+/*! brew-js-react v0.4.3 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
@@ -590,15 +590,17 @@ var setBaseUrl = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_br
 
 
 
+var _ = createPrivateStore();
+
 var root = zeta_dom_dom.root;
 var routeMap = new Map();
 var usedParams = {};
 var sortedViews = [];
 var emitter = new ZetaEventContainer();
-var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext(Object.freeze({
-  container: root,
-  active: true
+var rootContext = freeze(extend(new ViewContext(null, null), {
+  container: root
 }));
+var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext(rootContext);
 var errorView;
 /** @type {Partial<Zeta.ZetaEventType<"beforepageload", Brew.RouterEventMap, Element>>} */
 
@@ -606,11 +608,25 @@ var view_event = {};
 onAppInit(function () {
   app_app.on('beforepageload', function (e) {
     view_event = e;
+
+    _(rootContext).setPage(app_app.page);
   });
 });
 
-function ViewContext(view) {
-  defineOwnProperty(this, 'view', view, true);
+function ViewContext(view, page) {
+  var self = this;
+  defineOwnProperty(self, 'view', view, true);
+
+  _(self, {
+    setPage: defineObservableProperty(self, 'page', page, true),
+    setActive: defineObservableProperty(self, 'active', true, true)
+  });
+
+  watch(self, 'page', function (page, previousPage) {
+    emitter.emit('pagechange', self, {
+      previousPage: previousPage
+    });
+  });
 }
 
 definePrototype(ViewContext, {
@@ -676,31 +692,40 @@ function ViewContainer() {
   this.stateId = history.state;
 }
 
+ViewContainer.contextType = StateContext;
 definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react_root_React_.Component, {
   componentDidMount: function componentDidMount() {
     /** @type {any} */
     var self = this;
     self.componentWillUnmount = combineFn(watch(app_app.route, function () {
-      self.setActive(self.getViewComponent() === self.currentViewComponent);
+      (self.setActive || noop)(self.getViewComponent() === self.currentViewComponent);
     }), app_app.on('beforepageload', function () {
       self.stateId = history.state;
-      self.updateView();
-      self.forceUpdate();
+
+      if (self.context === rootContext || self.updateOnNext) {
+        view_event.waitFor(new Promise(function (resolve) {
+          self.onRender = resolve;
+        }));
+        self.updateView();
+        self.forceUpdate();
+      }
     }));
   },
   render: function render() {
     /** @type {any} */
     var self = this;
 
-    if (history.state === self.stateId) {
+    if (history.state === self.stateId && self.context.active) {
       self.updateView();
     }
 
+    (self.onRender || noop)();
     return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
   },
   updateView: function updateView() {
     var self = this;
     var V = self.getViewComponent();
+    self.updateOnNext = false;
 
     if (V) {
       // ensure the current path actually corresponds to the matched view
@@ -709,6 +734,8 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
 
       if (targetPath !== removeQueryAndHash(app_app.path)) {
         app_app.navigate(targetPath, true);
+        self.updateOnNext = true;
+        return;
       }
     }
 
@@ -728,6 +755,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         });
       }
 
+      (self.cancelPrevious || noop)();
       var onComponentLoaded;
       var promise = new Promise(function (resolve) {
         onComponentLoaded = resolve;
@@ -743,7 +771,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         });
         notifyAsync(element, promise);
       });
-      var state = new ViewContext(V);
+      var state = new ViewContext(V, app_app.page);
       var viewProps = freeze({
         navigationType: view_event.navigationType,
         viewContext: state,
@@ -758,17 +786,11 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         onComponentLoaded: onComponentLoaded,
         viewProps: viewProps
       }))));
-      extend(self, {
+      extend(self, _(state), {
+        cancelPrevious: onComponentLoaded,
         currentPath: app_app.path,
         currentView: view,
-        currentViewComponent: V,
-        setPage: defineObservableProperty(state, 'page', app_app.page, true),
-        setActive: defineObservableProperty(state, 'active', true, true)
-      });
-      watch(state, 'page', function (page, previousPage) {
-        emitter.emit('pagechange', state, {
-          previousPage: previousPage
-        });
+        currentViewComponent: V
       });
       (view_event.waitFor || noop)(promise);
     }
@@ -846,6 +868,7 @@ function createViewComponent(factory) {
     if (isThenable(children)) {
       promise = children;
       children = null;
+      catchAsync(promise);
     }
 
     var state = (0,external_zeta_dom_react_.useAsync)(function () {
@@ -994,10 +1017,11 @@ function useAppReadyState() {
 }
 function useRouteParam(name, defaultValue) {
   var container = useViewContext();
+  var params = container.page.params;
   var route = app_app.route;
-  var value = route[name] || '';
+  var value = params[name] || '';
   var ref = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useRef)(value);
-  var forceUpdate = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)()[1];
+  var forceUpdate = (0,external_zeta_dom_react_.useUpdateTrigger)();
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
     var setValue = function setValue() {
       var current = route[name] || '';
@@ -1005,7 +1029,7 @@ function useRouteParam(name, defaultValue) {
       if (current !== ref.current) {
         if (container.active) {
           ref.current = current;
-          forceUpdate({});
+          forceUpdate();
         } else {
           watch(container, 'active', setValue);
         }
@@ -1025,8 +1049,8 @@ function useRouteParam(name, defaultValue) {
   }, [name, defaultValue]);
   ref.current = value;
 
-  if (defaultValue !== undefined && (!value || name === 'remainingSegments' && value === '/')) {
-    app_app.navigate(route.getPath(extend({}, route, kv(name, defaultValue))), true);
+  if (defaultValue && container.active && (!value || name === 'remainingSegments' && value === '/')) {
+    app_app.navigate(route.getPath(extend({}, params, kv(name, defaultValue))), true);
   }
 
   return value;
@@ -1284,7 +1308,7 @@ var observe_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
 
 
 
-var _ = createPrivateStore();
+var StatefulMixin_ = createPrivateStore();
 
 function MixinRefImpl(mixin) {
   this.mixin = mixin;
@@ -1298,7 +1322,7 @@ definePrototype(MixinRefImpl, {
 function StatefulMixin() {
   Mixin.call(this);
 
-  _(this, {
+  StatefulMixin_(this, {
     elements: new Set(),
     flush: watch(this, false),
     dispose: [],
@@ -1316,18 +1340,18 @@ definePrototype(StatefulMixin, Mixin, {
   },
 
   get state() {
-    var obj = _(this);
+    var obj = StatefulMixin_(this);
 
     var key = obj.prefix + obj.counter;
     return obj.states[key] || (obj.states[key] = this.initState());
   },
 
   reset: function reset() {
-    _(this).counter = 0;
+    StatefulMixin_(this).counter = 0;
     return this;
   },
   next: function next() {
-    _(this).counter++;
+    StatefulMixin_(this).counter++;
     return this;
   },
   getRef: function getRef() {
@@ -1336,20 +1360,20 @@ definePrototype(StatefulMixin, Mixin, {
     return function (current) {
       state.element = current;
 
-      if (current && setAdd(_(self).elements, current)) {
+      if (current && setAdd(StatefulMixin_(self).elements, current)) {
         self.initElement(current, state);
       }
     };
   },
   elements: function elements() {
-    return values(_(this).states).map(function (v) {
+    return values(StatefulMixin_(this).states).map(function (v) {
       return v.element;
     }).filter(function (v) {
       return v;
     });
   },
   onDispose: function onDispose(callback) {
-    _(this).dispose.push(callback);
+    StatefulMixin_(this).dispose.push(callback);
   },
   initState: function initState() {
     return {
@@ -1361,7 +1385,7 @@ definePrototype(StatefulMixin, Mixin, {
     var self = this;
     var clone = inherit(Object.getPrototypeOf(self), self);
 
-    _(clone, extend({}, _(self), {
+    StatefulMixin_(clone, extend({}, StatefulMixin_(self), {
       prefix: randomId() + '.',
       counter: 0
     }));
@@ -1369,7 +1393,7 @@ definePrototype(StatefulMixin, Mixin, {
     return clone;
   },
   dispose: function dispose() {
-    var state = _(this);
+    var state = StatefulMixin_(this);
 
     var states = state.states;
     combineFn(state.dispose.splice(0))();
@@ -1741,6 +1765,8 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
       'scroller-snap-page': options.paged,
       'scroller-page': options.pagedItemSelector,
       'scroller-state': 'pageIndex'
+    }, options.persistScroll && {
+      'persist-scroll': ''
     });
   },
   onPageIndexChanged: function onPageIndexChanged(callback) {
