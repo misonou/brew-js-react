@@ -1,5 +1,5 @@
 import { createElement, useEffect, useRef, useState } from "react";
-import { ViewStateProvider, useObservableProperty } from "zeta-dom-react";
+import { ViewStateProvider, useObservableProperty, useUpdateTrigger } from "zeta-dom-react";
 import { definePrototype, extend, kv, setImmediateOnce, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { bind } from "./include/zeta-dom/domUtil.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
@@ -48,17 +48,18 @@ export function useAppReadyState() {
 
 export function useRouteParam(name, defaultValue) {
     const container = useViewContainerState();
+    const params = container.page.params;
     const route = app.route;
-    const value = route[name] || '';
+    const value = params[name] || '';
     const ref = useRef(value);
-    const forceUpdate = useState()[1];
+    const forceUpdate = useUpdateTrigger();
     useEffect(function () {
         var setValue = function () {
             var current = route[name] || '';
             if (current !== ref.current) {
                 if (container.active) {
                     ref.current = current;
-                    forceUpdate({});
+                    forceUpdate();
                 } else {
                     watch(container, 'active', setValue);
                 }
@@ -74,8 +75,8 @@ export function useRouteParam(name, defaultValue) {
         console.error('Route parameter ' + name + ' does not exist');
     }, [name, defaultValue]);
     ref.current = value;
-    if (defaultValue !== undefined && (!value || (name === 'remainingSegments' && value === '/'))) {
-        app.navigate(route.getPath(extend({}, route, kv(name, defaultValue))), true);
+    if (defaultValue && container.active && (!value || (name === 'remainingSegments' && value === '/'))) {
+        app.navigate(route.getPath(extend({}, params, kv(name, defaultValue))), true);
     }
     return value;
 }

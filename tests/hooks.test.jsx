@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
 import { render, screen } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react-hooks";
+import { addAnimateOut } from "brew-js/anim";
 import { useRouteParam, useRouteState, ViewStateContainer } from "src/hooks";
 import { registerView, renderView } from "src/view";
 import { cleanup, delay, mockFn } from "@misonou/test-utils";
-import { useViewState } from "zeta-dom-react";
-import initAppBeforeAll from "./harness/initAppBeforeAll";
+import { useUpdateTrigger, useViewState } from "zeta-dom-react";
+import initAppBeforeAll, { waitForPageLoad } from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
 
 const { actAwaitSetImmediate } = composeAct(act);
@@ -47,6 +48,78 @@ describe('useRouteParam', () => {
         await act(async () => void await app.watchOnce('path'));
         expect(result.current).toBe('/foo');
         expect(app.path).toBe('/view/sub/foo');
+    });
+
+    it('should redirect to path determined by parent view container', async () => {
+        const View = registerView(function () {
+            useRouteParam('sub', 'bar');
+            return (<>foo</>);
+        }, { view: 'foo' });
+        const { unmount } = render(<div>{renderView(View)}</div>);
+        await waitForPageLoad();
+        expect(app.path).toBe('/foo/bar');
+        unmount();
+    });
+
+    it('should not redirect when the parent view is going to unmount', async () => {
+        const Foo = registerView(async () => {
+            return {
+                default: ({ viewContext }) => {
+                    const update = useUpdateTrigger();
+                    useRouteParam('sub', 'baz');
+                    useEffect(() => {
+                        addAnimateOut('animate-out-e3vpv', () => delay(100));
+                        return app.on(viewContext.container, 'pageleave', update);
+                    }, []);
+                    return (<div animate-out="" animate-out-e3vpv="">foo</div>);
+                }
+            }
+        }, { view: 'foo' });
+        const Bar = registerView(async () => {
+            return {
+                default: () => {
+                    return (<div>bar</div>);
+                }
+            }
+        }, { view: 'bar' });
+        const { unmount } = render(<div>{renderView(Foo, Bar)}</div>);
+        await waitForPageLoad();
+
+        await expect(app.navigate('/bar')).resolves.toMatchObject({
+            path: '/bar',
+            redirected: false
+        });
+        unmount();
+    });
+
+    it('should return previous value when the parent view is going to unmount', async () => {
+        const cb = mockFn();
+        const Foo = registerView(async () => {
+            return {
+                default: ({ viewContext }) => {
+                    const update = useUpdateTrigger();
+                    cb(useRouteParam('sub', 'baz'));
+                    useEffect(() => {
+                        addAnimateOut('animate-out-gujno', () => delay(100));
+                        return app.on(viewContext.container, 'pageleave', update);
+                    }, []);
+                    return (<div animate-out="" animate-out-gujno="">foo</div>);
+                }
+            }
+        }, { view: 'foo' });
+        const Bar = registerView(async () => {
+            return {
+                default: () => {
+                    return (<div>bar</div>);
+                }
+            }
+        }, { view: 'bar' });
+        const { unmount } = render(<div>{renderView(Foo, Bar)}</div>);
+        await waitForPageLoad();
+
+        await app.navigate('/bar');
+        expect(cb).lastCalledWith('baz');
+        unmount();
     });
 
     it('should cause component to re-render after navigate event', async () => {
