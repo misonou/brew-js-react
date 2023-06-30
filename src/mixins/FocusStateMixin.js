@@ -14,7 +14,7 @@ definePrototype(FocusStateMixin, StatefulMixin, {
         FocusStateMixinSuper.initElement.call(this, element, state);
         this.onDispose(dom.on(element, {
             focusin: function (e) {
-                state.focused = true;
+                state.focused = e.source;
                 setClass(element, 'focused', e.source);
             },
             focusout: function () {
@@ -24,6 +24,12 @@ definePrototype(FocusStateMixin, StatefulMixin, {
         }));
     },
     getClassNames: function () {
-        return [{ focused: !!this.state.focused }];
+        var classes = {};
+        var focused = this.state.focused;
+        if (focused) {
+            classes.focused = true;
+            classes['focused-' + focused] = true;
+        }
+        return [classes];
     }
 });

@@ -443,15 +443,19 @@ describe('FocusStateMixin', () => {
 
         dom.focus(div);
         expect(div).toHaveClassName('focused');
+        expect(div).toHaveClassName('focused-script');
 
         rerender(<Component />);
         expect(div).toHaveClassName('focused');
+        expect(div).toHaveClassName('focused-script');
 
         dom.focus(dom.root);
         expect(div).not.toHaveClassName('focused');
+        expect(div).not.toHaveClassName('focused-script');
 
         rerender(<Component />);
         expect(div).not.toHaveClassName('focused');
+        expect(div).not.toHaveClassName('focused-script');
         unmount();
     });
 });
