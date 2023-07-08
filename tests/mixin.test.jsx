@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { jest } from "@jest/globals";
-import { render, fireEvent } from "@testing-library/react";
+import { render, fireEvent, screen } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { openFlyout } from "brew-js/domAction";
 import dom from "zeta-dom/dom";
@@ -456,6 +456,51 @@ describe('FocusStateMixin', () => {
         rerender(<Component />);
         expect(div).not.toHaveClassName('focused');
         expect(div).not.toHaveClassName('focused-script');
+        unmount();
+    });
+
+    it('should synchronize focus state for target element by selector', () => {
+        const Component = function () {
+            return (
+                <div {...Mixin.use(useFocusStateMixin().for('[data-testid="target"]'))}>
+                    <div data-testid="target"></div>
+                </div>
+            );
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+        const target = screen.getByTestId('target');
+
+        dom.focus(div);
+        expect(dom.activeElement).toBe(target);
+        expect(div).toHaveClassName('focused');
+
+        dom.blur(target);
+        expect(dom.activeElement).toBe(div.parentElement);
+        expect(div).not.toHaveClassName('focused');
+        unmount();
+    });
+
+    it('should synchronize focus state for target element by ref', () => {
+        const Component = function () {
+            const ref = useRef();
+            return (
+                <div {...Mixin.use(useFocusStateMixin().for(ref))}>
+                    <div ref={ref} data-testid="target"></div>
+                </div>
+            );
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+        const target = screen.getByTestId('target');
+
+        dom.focus(div);
+        expect(dom.activeElement).toBe(target);
+        expect(div).toHaveClassName('focused');
+
+        dom.blur(target);
+        expect(dom.activeElement).toBe(div.parentElement);
+        expect(div).not.toHaveClassName('focused');
         unmount();
     });
 });
