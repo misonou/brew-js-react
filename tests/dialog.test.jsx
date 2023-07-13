@@ -62,7 +62,7 @@ describe('createDialog', () => {
             }
         });
         actAndReturn(() => dialog.open());
-        dismiss();
+        await expect(dismiss()).rejects.toBe(42);
         expect(onCommit).toBeCalledTimes(1);
 
         await delay(100);
@@ -80,7 +80,7 @@ describe('createDialog', () => {
             }
         });
         actAndReturn(() => dialog.open());
-        dismiss();
+        await expect(dismiss()).rejects.toBe(42);
         expect(onCommit).toBeCalledTimes(1);
 
         await delay(100);

@@ -43,7 +43,7 @@ export function createDialog(props) {
                     closeDialog: function (value) {
                         var promise = makeAsync(props.onCommit || pipe)(value);
                         catchAsync(lock(dom.activeElement, promise));
-                        promise.then(closeDialog, noop);
+                        return promise.then(closeDialog);
                     }
                 });
                 var content = createElement(props.onRender, dialogProps);

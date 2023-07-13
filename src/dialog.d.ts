@@ -1,4 +1,4 @@
-export type DialogCloseCallback<T> = (value?: T) => void;
+export type DialogCloseCallback<T> = (value?: T) => Promise<void>;
 
 export interface DialogState<T> {
     readonly root: HTMLElement;
