@@ -1,4 +1,4 @@
-/*! brew-js-react v0.4.3 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
+/*! brew-js-react v0.4.4 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
@@ -402,7 +402,8 @@ var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
     retainFocus = _lib$dom.retainFocus,
     releaseFocus = _lib$dom.releaseFocus,
     iterateFocusPath = _lib$dom.iterateFocusPath,
-    dom_focus = _lib$dom.focus;
+    dom_focus = _lib$dom.focus,
+    dom_blur = _lib$dom.blur;
 
 ;// CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
 
@@ -444,14 +445,23 @@ function createDialog(props) {
   var _closeDialog = closeFlyout.bind(0, root);
 
   var promise;
-  zeta_dom_dom.on(root, 'flyouthide', function () {
-    removeNode(root);
-    (props.onClose || noop)(root);
+  zeta_dom_dom.on(root, {
+    flyouthide: function flyouthide() {
+      removeNode(root);
+      (props.onClose || noop)(root);
 
-    if (props.onRender) {
-      reactRoot.unmount();
+      if (props.onRender) {
+        reactRoot.unmount();
+      }
+    },
+    asyncStart: function asyncStart() {
+      setClass(root, 'loading', true);
+    },
+    asyncEnd: function asyncEnd() {
+      setClass(root, 'loading', false);
     }
   });
+  subscribeAsync(root);
   return {
     root: root,
     close: _closeDialog,
@@ -473,8 +483,8 @@ function createDialog(props) {
         var dialogProps = extend({}, props, {
           closeDialog: function closeDialog(value) {
             var promise = makeAsync(props.onCommit || pipe)(value);
-            catchAsync(lock(zeta_dom_dom.activeElement, promise));
-            promise.then(_closeDialog, noop);
+            notifyAsync(zeta_dom_dom.activeElement, promise);
+            return promise.then(_closeDialog);
           }
         });
         var content = /*#__PURE__*/(0,external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement)(props.onRender, dialogProps);
@@ -484,6 +494,9 @@ function createDialog(props) {
         }
 
         reactRoot.render(content);
+        setImmediate(function () {
+          zeta_dom_dom.focus(root);
+        });
       }
 
       promise = openFlyout(root);
@@ -1323,7 +1336,7 @@ function StatefulMixin() {
   Mixin.call(this);
 
   StatefulMixin_(this, {
-    elements: new Set(),
+    elements: new WeakSet(),
     flush: watch(this, false),
     dispose: [],
     states: {},
@@ -1398,7 +1411,7 @@ definePrototype(StatefulMixin, Mixin, {
     var states = state.states;
     combineFn(state.dispose.splice(0))();
     state.flush();
-    state.elements.clear();
+    state.elements = new WeakSet();
     each(states, function (i, v) {
       delete states[i];
     });
@@ -1538,6 +1551,8 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
 ;// CONCATENATED MODULE: ./src/mixins/FlyoutToggleMixin.js
 
 
+
+
 var FlyoutToggleMixinSuper = ClassNameMixin.prototype;
 function FlyoutToggleMixin(mixin) {
   ClassNameMixin.call(this, ['target-opened']);
@@ -1550,11 +1565,12 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
   close: function close(value) {
     return this.flyoutMixin.close(value);
   },
-  getCustomAttributes: function getCustomAttributes() {
-    var element = this.flyoutMixin.elements()[0];
-    return extend({}, FlyoutToggleMixinSuper.getCustomAttributes.call(this), {
-      'toggle': element && '#' + element.id
-    });
+  initElement: function initElement(element, state) {
+    var self = this;
+    FlyoutToggleMixinSuper.initElement.call(self, element, state);
+    self.onDispose(zeta_dom_dom.on(element, 'click', function () {
+      openFlyout(self.flyoutMixin.elements()[0], null, element, true);
+    }));
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/FlyoutMixin.js
@@ -1565,7 +1581,6 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
 
 var FlyoutMixinSuper = ClassNameMixin.prototype;
 var valueMap = new WeakMap();
-var flyoutMixinCounter = 0;
 function FlyoutMixin() {
   var self = this;
   ClassNameMixin.call(self, ['open', 'closing', 'visible', 'tweening-in', 'tweening-out']);
@@ -1633,11 +1648,6 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
   initElement: function initElement(element, state) {
     var self = this;
     FlyoutMixinSuper.initElement.call(self, element, state);
-
-    if (!element.id) {
-      element.id = 'flyout-' + ++flyoutMixinCounter;
-    }
-
     self.onDispose(app_app.on(element, {
       animationstart: function animationstart() {
         self.animating = true;
@@ -1646,11 +1656,6 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         self.animating = false;
       }
     }, true));
-    setImmediate(function () {
-      each(self.toggle.elements(), function (i, v) {
-        v.setAttribute('toggle', '#' + element.id);
-      });
-    });
   },
   clone: function clone() {
     var self = this;
@@ -1677,23 +1682,47 @@ function FocusStateMixin() {
   StatefulMixin.call(this);
 }
 definePrototype(FocusStateMixin, StatefulMixin, {
+  "for": function _for(ref) {
+    this.state.ref = ref;
+    return this;
+  },
   initElement: function initElement(element, state) {
     FocusStateMixinSuper.initElement.call(this, element, state);
+
+    var checkTarget = function checkTarget(callback, arg) {
+      var ref = state.ref;
+      var target = ref && (typeof ref === 'string' ? element.querySelector(ref) : ref.current);
+
+      if (target && !zeta_dom_dom.focused(target)) {
+        callback(arg || target);
+      }
+    };
+
     this.onDispose(zeta_dom_dom.on(element, {
       focusin: function focusin(e) {
-        state.focused = true;
+        state.focused = e.source;
         setClass(element, 'focused', e.source);
+        checkTarget(zeta_dom_dom.focus);
       },
       focusout: function focusout() {
         state.focused = false;
         setClass(element, 'focused', false);
+      },
+      focuschange: function focuschange() {
+        checkTarget(zeta_dom_dom.blur, element);
       }
     }));
   },
   getClassNames: function getClassNames() {
-    return [{
-      focused: !!this.state.focused
-    }];
+    var classes = {};
+    var focused = this.state.focused;
+
+    if (focused) {
+      classes.focused = true;
+      classes['focused-' + focused] = true;
+    }
+
+    return [classes];
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/LoadingStateMixin.js
