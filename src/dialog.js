@@ -1,10 +1,10 @@
 import { createElement, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import ReactDOMClient from "./include/external/react-dom-client.js";
-import { always, catchAsync, either, extend, makeAsync, noop, pipe, setImmediate } from "./include/zeta-dom/util.js";
-import { containsOrEquals, removeNode } from "./include/zeta-dom/domUtil.js";
+import { always, either, extend, makeAsync, noop, pipe, setImmediate } from "./include/zeta-dom/util.js";
+import { containsOrEquals, removeNode, setClass } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
-import { lock, preventLeave } from "./include/zeta-dom/domLock.js";
+import { lock, notifyAsync, preventLeave, subscribeAsync } from "./include/zeta-dom/domLock.js";
 import { closeFlyout, openFlyout } from "./include/brew-js/domAction.js";
 
 /**
@@ -16,13 +16,22 @@ export function createDialog(props) {
     var closeDialog = closeFlyout.bind(0, root);
     var promise;
 
-    dom.on(root, 'flyouthide', function () {
-        removeNode(root);
-        (props.onClose || noop)(root);
-        if (props.onRender) {
-            reactRoot.unmount();
+    dom.on(root, {
+        flyouthide: function () {
+            removeNode(root);
+            (props.onClose || noop)(root);
+            if (props.onRender) {
+                reactRoot.unmount();
+            }
+        },
+        asyncStart: function () {
+            setClass(root, 'loading', true);
+        },
+        asyncEnd: function () {
+            setClass(root, 'loading', false);
         }
     });
+    subscribeAsync(root);
 
     return {
         root: root,
@@ -42,7 +51,7 @@ export function createDialog(props) {
                 var dialogProps = extend({}, props, {
                     closeDialog: function (value) {
                         var promise = makeAsync(props.onCommit || pipe)(value);
-                        catchAsync(lock(dom.activeElement, promise));
+                        notifyAsync(dom.activeElement, promise);
                         return promise.then(closeDialog);
                     }
                 });

@@ -87,6 +87,25 @@ describe('createDialog', () => {
         expect(screen.getByText('text')).toBeTruthy();
     });
 
+    it('should add loading class to dialog awaiting onCommit', async () => {
+        const dismiss = mockFn();
+        const onCommit = mockFn(() => delay(100).then(() => { throw 42 }));
+        const dialog = createDialogMock({
+            onCommit: onCommit,
+            onRender: function Component({ closeDialog }) {
+                dismiss.mockImplementationOnce(closeDialog);
+                return <span>text</span>;
+            }
+        });
+        actAndReturn(() => dialog.open());
+
+        const result = dismiss();
+        expect(dialog.root).toHaveClassName('loading');
+
+        await expect(result).rejects.toBe(42);
+        expect(dialog.root).not.toHaveClassName('loading');
+    });
+
     it('should set dialog as modal when modal is true', () => {
         const cb = mockFn();
         const dialog = createDialogMock({
