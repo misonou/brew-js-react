@@ -23,7 +23,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
         var options = this.options || {};
         return extend({}, ScrollableMixinSuper.getCustomAttributes.call(this), {
             'scrollable': [options.direction || 'both', options.handle || 'auto'].join(' '),
-        }, options.paged && {
+        }, options.pagedItemSelector && {
             'scroller-snap-page': options.paged,
             'scroller-page': options.pagedItemSelector,
         }, options.persistScroll && {
