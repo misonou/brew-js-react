@@ -24,10 +24,8 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
         return extend({}, ScrollableMixinSuper.getCustomAttributes.call(this), {
             'scrollable': [options.direction || 'both', options.handle || 'auto'].join(' '),
         }, options.paged && {
-            'var': '{ pageIndex: 0 }',
             'scroller-snap-page': options.paged,
             'scroller-page': options.pagedItemSelector,
-            'scroller-state': 'pageIndex'
         }, options.persistScroll && {
             'persist-scroll': ''
         });
@@ -38,15 +36,13 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
     initElement: function (element, state) {
         var self = this;
         self.onDispose(app.on(element, {
-            statechange: function (e) {
-                if ('pageIndex' in e.newValues) {
-                    extend(self, { pageIndex: e.newValues.pageIndex });
-                }
+            scrollIndexChange: function (e) {
+                self.pageIndex = e.newIndex;
             },
-            scrollStart: function() {
+            scrollStart: function () {
                 self.scrolling = true;
             },
-            scrollStop: function() {
+            scrollStop: function () {
                 self.scrolling = false;
             }
         }, true));
