@@ -1,4 +1,4 @@
-/*! brew-js-react v0.4.4 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
+/*! brew-js-react v0.4.5 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
@@ -397,6 +397,7 @@ var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
     setShortcut = _lib$dom.setShortcut,
     focusable = _lib$dom.focusable,
     focused = _lib$dom.focused,
+    setTabRoot = _lib$dom.setTabRoot,
     setModal = _lib$dom.setModal,
     releaseModal = _lib$dom.releaseModal,
     retainFocus = _lib$dom.retainFocus,
@@ -1738,20 +1739,9 @@ function LoadingStateMixin() {
 definePrototype(LoadingStateMixin, StatefulMixin, {
   initElement: function initElement(element, state) {
     LoadingStateMixinSuper.initElement.call(this, element, state);
-    lock(element);
-    this.onDispose(zeta_dom_dom.on(element, {
-      asyncStart: function asyncStart() {
-        state.loading = true;
-        setClass(element, 'loading', true);
-      },
-      asyncEnd: function asyncEnd() {
-        state.loading = false;
-        setClass(element, 'loading', false);
-      },
-      cancelled: function cancelled() {
-        state.loading = false;
-        setClass(element, 'loading', false);
-      }
+    this.onDispose(subscribeAsync(element, function (loading) {
+      state.loading = loading;
+      setClass(element, 'loading', loading);
     }));
   },
   getClassNames: function getClassNames() {
@@ -1789,11 +1779,9 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
     var options = this.options || {};
     return extend({}, ScrollableMixinSuper.getCustomAttributes.call(this), {
       'scrollable': [options.direction || 'both', options.handle || 'auto'].join(' ')
-    }, options.paged && {
-      'var': '{ pageIndex: 0 }',
+    }, options.pagedItemSelector && {
       'scroller-snap-page': options.paged,
-      'scroller-page': options.pagedItemSelector,
-      'scroller-state': 'pageIndex'
+      'scroller-page': options.pagedItemSelector
     }, options.persistScroll && {
       'persist-scroll': ''
     });
@@ -1804,12 +1792,8 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
   initElement: function initElement(element, state) {
     var self = this;
     self.onDispose(app_app.on(element, {
-      statechange: function statechange(e) {
-        if ('pageIndex' in e.newValues) {
-          extend(self, {
-            pageIndex: e.newValues.pageIndex
-          });
-        }
+      scrollIndexChange: function scrollIndexChange(e) {
+        self.pageIndex = e.newIndex;
       },
       scrollStart: function scrollStart() {
         self.scrolling = true;
