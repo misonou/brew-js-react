@@ -1,6 +1,6 @@
 import dom from "../include/zeta-dom/dom.js";
 import { definePrototype } from "../include/zeta-dom/util.js";
-import { openFlyout } from "../include/brew-js/domAction.js";
+import { toggleFlyout } from "../include/brew-js/domAction.js";
 import ClassNameMixin from "./ClassNameMixin.js";
 
 const FlyoutToggleMixinSuper = ClassNameMixin.prototype;
@@ -21,7 +21,7 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
         var self = this;
         FlyoutToggleMixinSuper.initElement.call(self, element, state);
         self.onDispose(dom.on(element, 'click', function () {
-            openFlyout(self.flyoutMixin.elements()[0], null, element, true);
+            toggleFlyout(self.flyoutMixin.elements()[0], element);
         }));
     }
 });
