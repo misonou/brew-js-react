@@ -54,7 +54,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
     }
 });
 
-each('destroy enable disable setOptions refresh scrollPadding stop scrollLeft scrollTop scrollBy scrollTo scrollByPage scrollToPage scrollToElement', function (i, v) {
+each('destroy enable disable setOptions setStickyPosition refresh scrollPadding stop scrollLeft scrollTop scrollBy scrollTo scrollByPage scrollToPage scrollToElement', function (i, v) {
     defineHiddenProperty(ScrollableMixin.prototype, v, function () {
         var obj = $(this.elements());
         return obj.scrollable.apply(obj, [v].concat(makeArray(arguments)));
