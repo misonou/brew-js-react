@@ -8,7 +8,7 @@ interface MixinState {
 
 export interface MixinRef<T extends StatefulMixin = StatefulMixin> { }
 
-export default abstract class StatefulMixin extends Mixin {
+export default abstract class StatefulMixin<T extends MixinState = MixinState> extends Mixin {
     get ref(): MixinRef<typeof this>;
     protected get state(): MixinState;
 
@@ -18,7 +18,7 @@ export default abstract class StatefulMixin extends Mixin {
     elements(): HTMLElement[];
     onDispose(callback: Zeta.UnregisterCallback): void;
 
-    protected initState(): MixinState;
-    protected initElement(element: HTMLElement, state: MixinState): void;
+    protected initState(): T;
+    protected initElement(element: HTMLElement, state: T): void;
     protected clone(): this;
 }
