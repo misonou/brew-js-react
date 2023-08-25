@@ -1,5 +1,5 @@
-import $ from "../include/external/jquery.js";
-import { defineAliasProperty, defineHiddenProperty, definePrototype, each, extend, makeArray } from "../include/zeta-dom/util.js";
+import { defineAliasProperty, defineHiddenProperty, definePrototype, each, extend } from "../include/zeta-dom/util.js";
+import { getDirectiveComponent } from "../include/brew-js/directive.js";
 import { app } from "../app.js";
 import Mixin from "./Mixin.js";
 import ClassNameMixin from "./ClassNameMixin.js";
@@ -56,7 +56,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
 
 each('destroy enable disable setOptions setStickyPosition refresh scrollPadding stop scrollLeft scrollTop scrollBy scrollTo scrollByPage scrollToPage scrollToElement', function (i, v) {
     defineHiddenProperty(ScrollableMixin.prototype, v, function () {
-        var obj = $(this.elements());
-        return obj.scrollable.apply(obj, [v].concat(makeArray(arguments)));
+        var obj = getDirectiveComponent(this.elements()[0]);
+        return obj.scrollable[v].apply(null, arguments);
     });
 });

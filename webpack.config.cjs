@@ -113,6 +113,7 @@ const brewJSPath = processModule('brew-js', {
         dom: 'lib',
         defaults: 'lib.defaults',
         domAction: 'lib',
+        directive: 'lib',
         index: 'lib'
     }
 });
