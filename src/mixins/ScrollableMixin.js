@@ -5,6 +5,7 @@ import Mixin from "./Mixin.js";
 import ClassNameMixin from "./ClassNameMixin.js";
 
 const ScrollableMixinSuper = ClassNameMixin.prototype;
+const aliasProps = 'pageIndex scrolling'.split(' ');
 
 export default function ScrollableMixin() {
     var self = this;
@@ -49,7 +50,9 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
     },
     clone: function () {
         var mixin = ScrollableMixinSuper.clone.call(this);
-        defineAliasProperty(mixin, 'pageIndex', this);
+        each(aliasProps, function (i, v) {
+            defineAliasProperty(mixin, v, self);
+        });
         return mixin;
     }
 });
