@@ -9,7 +9,7 @@ import initAppBeforeAll from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
 
 const createDialogMock = mockFn(createDialog);
-const { actAndReturn } = composeAct(act);
+const { actAndReturn, actAwaitSetImmediate } = composeAct(act);
 
 initAppBeforeAll(() => { });
 
@@ -79,7 +79,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        actAndReturn(() => dialog.open());
+        await actAwaitSetImmediate(() => dialog.open());
         await expect(dismiss()).rejects.toBe(42);
         expect(onCommit).toBeCalledTimes(1);
 
@@ -97,7 +97,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        actAndReturn(() => dialog.open());
+        await actAwaitSetImmediate(() => dialog.open());
 
         const result = dismiss();
         expect(dialog.root).toHaveClassName('loading');
