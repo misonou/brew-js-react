@@ -1,24 +1,16 @@
-/*! brew-js-react v0.4.5 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
+/*! brew-js-react v0.4.6 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
+		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew-js-react", ["brew-js", "react", "react-dom", "react-dom/client", "zeta-dom", "zeta-dom-react", "waterpipe", "jQuery"], factory);
+		define("brew-js-react", ["brew-js", "react", "react-dom", "react-dom/client", "zeta-dom", "zeta-dom-react", "waterpipe"], factory);
 	else if(typeof exports === 'object')
-		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jQuery"));
+		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
 	else
-		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["react-dom/client"], root["zeta"], root["zeta-dom-react"], root["waterpipe"], root["jQuery"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__715__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__, __WEBPACK_EXTERNAL_MODULE__145__) {
+		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["react-dom/client"], root["zeta"], root["zeta-dom-react"], root["waterpipe"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__715__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__) {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
-
-/***/ 145:
-/***/ ((module) => {
-
-"use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__145__;
-
-/***/ }),
 
 /***/ 715:
 /***/ ((module) => {
@@ -398,6 +390,7 @@ var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
     focusable = _lib$dom.focusable,
     focused = _lib$dom.focused,
     setTabRoot = _lib$dom.setTabRoot,
+    unsetTabRoot = _lib$dom.unsetTabRoot,
     setModal = _lib$dom.setModal,
     releaseModal = _lib$dom.releaseModal,
     retainFocus = _lib$dom.retainFocus,
@@ -423,7 +416,9 @@ var domLock_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
 ;// CONCATENATED MODULE: ./tmp/brew-js/domAction.js
 
 var addAsyncAction = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addAsyncAction,
+    isFlyoutOpen = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.isFlyoutOpen,
     closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.closeFlyout,
+    toggleFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toggleFlyout,
     openFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.openFlyout;
 
 ;// CONCATENATED MODULE: ./src/dialog.js
@@ -1570,7 +1565,7 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
     var self = this;
     FlyoutToggleMixinSuper.initElement.call(self, element, state);
     self.onDispose(zeta_dom_dom.on(element, 'click', function () {
-      openFlyout(self.flyoutMixin.elements()[0], null, element, true);
+      toggleFlyout(self.flyoutMixin.elements()[0], element);
     }));
   }
 });
@@ -1582,6 +1577,7 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
 
 var FlyoutMixinSuper = ClassNameMixin.prototype;
 var valueMap = new WeakMap();
+var aliasProps = 'animating isFlyoutOpened modal tabThrough visible'.split(' ');
 function FlyoutMixin() {
   var self = this;
   ClassNameMixin.call(self, ['open', 'closing', 'visible', 'tweening-in', 'tweening-out']);
@@ -1663,8 +1659,9 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     var mixin = extend(FlyoutMixinSuper.clone.call(self), {
       toggle: self.toggle.ref.getMixin()
     });
-    defineAliasProperty(mixin, 'isFlyoutOpened', self);
-    defineAliasProperty(mixin, 'modal', self);
+    each(aliasProps, function (i, v) {
+      defineAliasProperty(mixin, v, self);
+    });
     return mixin;
   },
   onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {
@@ -1750,12 +1747,11 @@ definePrototype(LoadingStateMixin, StatefulMixin, {
     }];
   }
 });
-// EXTERNAL MODULE: external "jQuery"
-var external_jQuery_ = __webpack_require__(145);
-;// CONCATENATED MODULE: ./src/include/external/jquery.js
-// @ts-nocheck
+;// CONCATENATED MODULE: ./tmp/brew-js/directive.js
 
-/* harmony default export */ const jquery = (external_jQuery_);
+var getDirectiveComponent = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.getDirectiveComponent,
+    registerDirective = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.registerDirective;
+
 ;// CONCATENATED MODULE: ./src/mixins/ScrollableMixin.js
 
 
@@ -1763,6 +1759,7 @@ var external_jQuery_ = __webpack_require__(145);
 
 
 var ScrollableMixinSuper = ClassNameMixin.prototype;
+var ScrollableMixin_aliasProps = 'pageIndex scrolling'.split(' ');
 function ScrollableMixin() {
   var self = this;
   ClassNameMixin.call(self, ['scrollable-x', 'scrollable-x-l', 'scrollable-x-r', 'scrollable-y', 'scrollable-y-d', 'scrollable-y-u']);
@@ -1805,14 +1802,16 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
   },
   clone: function clone() {
     var mixin = ScrollableMixinSuper.clone.call(this);
-    defineAliasProperty(mixin, 'pageIndex', this);
+    each(ScrollableMixin_aliasProps, function (i, v) {
+      defineAliasProperty(mixin, v, self);
+    });
     return mixin;
   }
 });
-each('destroy enable disable setOptions refresh scrollPadding stop scrollLeft scrollTop scrollBy scrollTo scrollByPage scrollToPage scrollToElement', function (i, v) {
+each('destroy enable disable setOptions setStickyPosition refresh scrollPadding stop scrollLeft scrollTop scrollBy scrollTo scrollByPage scrollToPage scrollToElement', function (i, v) {
   defineHiddenProperty(ScrollableMixin.prototype, v, function () {
-    var obj = jquery(this.elements());
-    return obj.scrollable.apply(obj, [v].concat(makeArray(arguments)));
+    var obj = getDirectiveComponent(this.elements()[0]);
+    return obj.scrollable[v].apply(null, arguments);
   });
 });
 ;// CONCATENATED MODULE: ./src/mixins/ScrollIntoViewMixin.js
