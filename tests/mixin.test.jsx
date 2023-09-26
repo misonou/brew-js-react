@@ -521,6 +521,7 @@ describe('LoadingStateMixin', () => {
         expect(div).toHaveClassName('loading');
 
         await promise;
+        await delay(0);
         expect(div).not.toHaveClassName('loading');
 
         rerender(<Component />);
