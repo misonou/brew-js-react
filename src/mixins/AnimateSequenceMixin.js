@@ -19,6 +19,8 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
     },
     getCustomAttributes: function () {
         return extend({}, AnimateSequenceMixinSuper.getCustomAttributes.call(this), {
+            'animate-in': null,
+            'animate-sequence-type': (this.effects || []).join(' '),
             'animate-sequence': '.' + this.className
         });
     },
