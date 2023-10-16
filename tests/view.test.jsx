@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
 import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext } from "src/view";
@@ -9,6 +9,7 @@ import { addAnimateIn, addAnimateOut } from "brew-js/anim";
 import { subscribeAsync } from "zeta-dom/domLock";
 import initAppBeforeAll, { waitForPageLoad } from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
+import { useRouteParam } from "src/hooks";
 
 const { actAwaitSetImmediate } = composeAct(act);
 
@@ -285,6 +286,17 @@ describe('renderView', () => {
         await screen.findByText('foo');
         expect(asFragment()).toMatchSnapshot();
         expect(app.path).toBe('/dummy/foo');
+    });
+
+    it('should render matched view when nested', async () => {
+        const Outer = registerView(() => renderView(Foo, Baz), { view: 'foo', baz: /.?/ });
+        const { asFragment } = render(<div>{renderView(Outer)}</div>)
+        await screen.findByText('foo');
+        await waitForPageLoad();
+
+        await app.navigate('/dummy/foo/baz');
+        await screen.findByText('baz');
+        expect(asFragment()).toMatchSnapshot();
     });
 
     it('should pass props to view container', async () => {
@@ -612,6 +624,7 @@ describe('renderView', () => {
 
         await navigateTo(BarTest, null, { text: 'BarTest' });
         await screen.findByText('BarTest');
+        await delay();
         expect(asFragment()).toMatchSnapshot();
 
         history.back();
@@ -635,6 +648,7 @@ describe('renderView', () => {
         await expect(promise).resolves.toMatchObject({ path: '/dummy/foo' });
 
         await app.navigate('/dummy/bar');
+        await delay();
         expect(asFragment()).toMatchSnapshot();
         unmount();
     });
@@ -652,6 +666,7 @@ describe('renderView', () => {
         await expect(promise).rejects.toBeTruthy();
 
         await app.navigate('/dummy/bar');
+        await delay();
         expect(asFragment()).toMatchSnapshot();
         unmount();
     });
@@ -670,16 +685,15 @@ describe('renderView', () => {
     });
 
     it('should update after parent view component', async () => {
-        let view = Foo;
         const Parent = registerView(() => {
-            return (<div>{renderView(view)}</div>);
+            const view = useRouteParam('view');
+            return (<div>{renderView(view === 'bar' ? Bar : Foo)}</div>);
         }, { view: /./ });
 
         const { unmount } = render(<div>{renderView(Parent)}</div>);
         await screen.findByText('foo');
         await waitForPageLoad();
 
-        view = Bar;
         await expect(app.navigate('/dummy/bar')).resolves.toMatchObject({
             path: '/dummy/bar',
             redirected: false
@@ -777,6 +791,7 @@ describe('navigateTo', () => {
 
         await navigateTo(BarTest, null, { text: 'BarTest' });
         await screen.findByTestId('test');
+        await delay();
         expect(asFragment()).toMatchSnapshot();
         unmount();
     });
@@ -804,6 +819,7 @@ describe('redirectTo', () => {
 
         await redirectTo(BarTest, null, { text: 'BarTest' });
         await screen.findByTestId('test');
+        await delay();
         expect(asFragment()).toMatchSnapshot();
         unmount();
     });

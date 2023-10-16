@@ -146,6 +146,20 @@ exports[`renderView should render matched view 1`] = `
 </DocumentFragment>
 `;
 
+exports[`renderView should render matched view when nested 1`] = `
+<DocumentFragment>
+  <div>
+    <div>
+      <div>
+        <div>
+          baz
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`renderView should retrieve view data when view container is mounted after navigation 1`] = `
 <DocumentFragment>
   <div>

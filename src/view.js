@@ -3,7 +3,7 @@ import { useAsync } from "zeta-dom-react";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
-import { any, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
+import { any, arrRemove, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { animateIn, animateOut } from "./include/brew-js/anim.js";
 import { removeQueryAndHash } from "./include/brew-js/util/path.js";
 import { app, onAppInit } from "./app.js";
@@ -25,6 +25,23 @@ var event = {};
 onAppInit(function () {
     app.on('beforepageload', function (e) {
         event = e;
+        e.waitFor(new Promise(function (resolve) {
+            (function updateViewRecursive(next) {
+                if (!next[0]) {
+                    return resolve();
+                }
+                resolveAll(map(next, function (v) {
+                    return new Promise(function (resolve) {
+                        v.onRender = resolve;
+                        v.forceUpdate();
+                    });
+                })).then(function () {
+                    updateViewRecursive(map(next, function (v) {
+                        return v.children;
+                    }));
+                });
+            })(_(rootContext).children);
+        }));
         _(rootContext).setPage(app.page);
     });
 });
@@ -33,6 +50,7 @@ function ViewContext(view, page) {
     var self = this;
     defineOwnProperty(self, 'view', view, true);
     _(self, {
+        children: [],
         setPage: defineObservableProperty(self, 'page', page, true),
         setActive: defineObservableProperty(self, 'active', true, true)
     });
@@ -86,34 +104,27 @@ definePrototype(ErrorBoundary, React.Component, {
 
 function ViewContainer() {
     React.Component.apply(this, arguments);
-    this.stateId = history.state;
 }
 ViewContainer.contextType = StateContext;
 
 definePrototype(ViewContainer, React.Component, {
     componentDidMount: function () {
-        /** @type {any} */
         var self = this;
+        var parent = _(self.context).children;
+        parent.push(self);
         self.componentWillUnmount = combineFn(
             watch(app.route, function () {
                 (self.setActive || noop)(self.getViewComponent() === self.currentViewComponent);
             }),
-            app.on('beforepageload', function () {
-                self.stateId = history.state;
-                if (self.context === rootContext || self.updateOnNext) {
-                    event.waitFor(new Promise(function (resolve) {
-                        self.onRender = resolve;
-                    }));
-                    self.updateView();
-                    self.forceUpdate();
-                }
-            })
+            function () {
+                arrRemove(parent, self);
+            }
         );
     },
     render: function () {
         /** @type {any} */
         var self = this;
-        if (history.state === self.stateId && self.context.active) {
+        if (self.context.active) {
             self.updateView();
         }
         (self.onRender || noop)();
@@ -122,14 +133,12 @@ definePrototype(ViewContainer, React.Component, {
     updateView: function () {
         var self = this;
         var V = self.getViewComponent();
-        self.updateOnNext = false;
         if (V) {
             // ensure the current path actually corresponds to the matched view
             // when some views are not included in the list of allowed views
             var targetPath = resolvePath(V, getCurrentParams(V, true));
             if (targetPath !== removeQueryAndHash(app.path)) {
                 app.navigate(targetPath, true);
-                self.updateOnNext = true;
                 return;
             }
         }
