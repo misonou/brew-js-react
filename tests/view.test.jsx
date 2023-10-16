@@ -289,7 +289,7 @@ describe('renderView', () => {
     });
 
     it('should render matched view when nested', async () => {
-        const Outer = registerView(() => renderView(Foo, Baz), { view: 'foo', baz: /.?/ });
+        const Outer = registerView(() => renderView(Foo, Baz), { view: 'foo' });
         const { asFragment } = render(<div>{renderView(Outer)}</div>)
         await screen.findByText('foo');
         await waitForPageLoad();

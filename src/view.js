@@ -133,7 +133,8 @@ definePrototype(ViewContainer, React.Component, {
     updateView: function () {
         var self = this;
         var V = self.getViewComponent();
-        if (V) {
+        var viewChanged = V !== self.currentViewComponent;
+        if (V && (viewChanged || !(self.children || '')[0])) {
             // ensure the current path actually corresponds to the matched view
             // when some views are not included in the list of allowed views
             var targetPath = resolvePath(V, getCurrentParams(V, true));
@@ -142,7 +143,7 @@ definePrototype(ViewContainer, React.Component, {
                 return;
             }
         }
-        if (V && V !== self.currentViewComponent) {
+        if (V && viewChanged) {
             var prevElement = self.currentElement;
             if (prevElement) {
                 self.setActive(false);
