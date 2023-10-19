@@ -13,15 +13,20 @@ export default function AnimateSequenceMixin() {
 }
 
 definePrototype(AnimateSequenceMixin, AnimateMixin, {
+    withOptions: function (options) {
+        this.selector = options;
+        return this;
+    },
     reset: function () {
         this.item.reset();
         return AnimateSequenceMixinSuper.reset.call(this);
     },
     getCustomAttributes: function () {
-        return extend({}, AnimateSequenceMixinSuper.getCustomAttributes.call(this), {
+        var self = this;
+        return extend({}, AnimateSequenceMixinSuper.getCustomAttributes.call(self), {
             'animate-in': null,
-            'animate-sequence-type': (this.effects || []).join(' '),
-            'animate-sequence': '.' + this.className
+            'animate-sequence-type': (self.effects || []).join(' '),
+            'animate-sequence': self.selector || '.' + self.className
         });
     },
     clone: function () {

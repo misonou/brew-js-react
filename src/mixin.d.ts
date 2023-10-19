@@ -46,7 +46,7 @@ export function useFlyoutMixin(options?: FlyoutMixinOptions): FlyoutMixin;
 
 export function useAnimateMixin(): AnimateMixin;
 
-export function useAnimateSequenceMixin(): AnimateSequenceMixin;
+export function useAnimateSequenceMixin(selector?: string): AnimateSequenceMixin;
 
 export function useFocusStateMixin(): FocusStateMixin;
 
