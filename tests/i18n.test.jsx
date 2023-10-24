@@ -48,6 +48,14 @@ describe('translate', () => {
         expect(translate('prefix.key')).toBe('en_string');
     });
 
+    it('should return translated string in specified language', () => {
+        const { translate } = makeTranslation({
+            en: { prefix: { key: 'en_string' } },
+            de: { prefix: { key: 'de_string' } },
+        }, 'de');
+        expect(translate('prefix.key', null, 'de')).toBe('de_string');
+    });
+
     it('should return translated string in default language if key does not exist', () => {
         const { translate } = makeTranslation({
             de: { prefix: { key: 'de_string' } }
@@ -124,6 +132,14 @@ describe('getTranslation', () => {
             de: { prefix: { key: 'de_string' } },
         }, 'de');
         expect(getTranslation('prefix')('key')).toBe('en_string');
+    });
+
+    it('should return translated string in specified language', () => {
+        const { getTranslation } = makeTranslation({
+            en: { prefix: { key: 'en_string' } },
+            de: { prefix: { key: 'de_string' } },
+        }, 'de');
+        expect(getTranslation('prefix')('key', null, 'de')).toBe('de_string');
     });
 
     it('should return translated string in default language if key does not exist', () => {
@@ -203,6 +219,15 @@ describe('useTranslation', () => {
         }, 'de');
         const { result } = renderHook(() => useTranslation('prefix'));
         expect(result.current.t('key')).toBe('en_string');
+    });
+
+    it('should return translated string in specified language', () => {
+        const { useTranslation } = makeTranslation({
+            en: { prefix: { key: 'en_string' } },
+            de: { prefix: { key: 'de_string' } },
+        }, 'de');
+        const { result } = renderHook(() => useTranslation('prefix'));
+        expect(result.current.t('key', null, 'de')).toBe('de_string');
     });
 
     it('should return translated string in default language if key does not exist', () => {

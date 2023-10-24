@@ -17,16 +17,16 @@ if (toPrimitive) {
 }
 
 function createCallback(translate) {
-    var callback = function (key, data) {
-        var result = translate(key, data, true);
+    var callback = function (key, data, lang) {
+        var result = translate(key, data, lang, true);
         return result !== undefined ? result : key;
     };
     return extend(callback, {
-        html: function (id, data) {
-            return { __html: translate(id, data) };
+        html: function (id, data, lang) {
+            return { __html: translate(id, data, lang) };
         },
-        lazy: function (id, data) {
-            return new TString(translate.bind(0, id, data, true));
+        lazy: function (id, data, lang) {
+            return new TString(translate.bind(0, id, data, lang, true));
         }
     });
 }
@@ -52,17 +52,17 @@ export function makeTranslation(resources, defaultLang) {
         }
     }
 
-    function translate(key, data, noEncode) {
+    function translate(key, data, lang, noEncode) {
         var prefix = re.test(key) ? RegExp.$1 : '';
         var name = prefix ? key.slice(RegExp.lastMatch.length) : key;
-        return getTranslation(prefix, name, data, noEncode, app.language);
+        return getTranslation(prefix, name, data, noEncode, lang || app.language);
     }
 
     function getTranslationCallback() {
         var prefix = makeArray(arguments);
         var key = prefix.join(' ');
-        return cache[key] || (cache[key] = createCallback(function (key, data, noEncode) {
-            var lang = app.language;
+        return cache[key] || (cache[key] = createCallback(function (key, data, lang, noEncode) {
+            lang = lang || app.language;
             return single(prefix, function (v) {
                 return getTranslation(v, key, data, noEncode, lang);
             });

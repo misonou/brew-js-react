@@ -6,20 +6,23 @@ export interface Translate<T> {
      * Returns a translation string.
      * @param key Tranlsation key.
      * @param data Data object to be passed to template engine.
+     * @param language Default to current language. If translation is not available, translation from default language will be returned.
      */
-    (key: T, data?: any): string;
+    (key: T, data?: any, language?: string): string;
     /**
      * Returns a object containing the translated HTML content that can be passed to {@link React.DOMAttributes.dangerouslySetInnerHTML}.
      * @param key Tranlsation key.
      * @param data Data object to be passed to template engine.
+     * @param language Default to current language. If translation is not available, translation from default language will be returned.
      */
-    html(key: T, data?: any): { __html: string };
+    html(key: T, data?: any, language?: string): { __html: string };
     /**
      * Returns a string-coercible object that will convert to translation string when coerced.
      * @param key Tranlsation key.
      * @param data Data object to be passed to template engine.
+     * @param language Default to current language. If translation is not available, translation from default language will be returned.
      */
-    lazy(key: T, data?: any): { [Symbol.toPrimitive](): string; toString(): string };
+    lazy(key: T, data?: any, language?: string): { [Symbol.toPrimitive](): string; toString(): string };
 }
 
 export interface Translation<T> {
