@@ -59,26 +59,28 @@ export function makeTranslation(resources, defaultLang) {
     }
 
     function getTranslationCallback() {
+        var currentLang = String(this);
         var prefix = makeArray(arguments);
-        var key = prefix.join(' ');
-        return cache[key] || (cache[key] = createCallback(function (key, data, lang, noEncode) {
-            lang = lang || app.language;
+        var key = currentLang + ' ' + prefix.join(' ');
+        return cache[key] || (cache[key] = prefix[0] ? createCallback(function (key, data, lang, noEncode) {
+            lang = lang || currentLang || app.language;
             return single(prefix, function (v) {
                 return getTranslation(v, key, data, noEncode, lang);
-            });
+            })
+        }) : createCallback(function (key, data, lang, noEncode) {
+            return translate(key, data, lang || currentLang, noEncode);
         }));
     }
 
     function useTranslation() {
         var language = useLanguage();
-        var t = getTranslationCallback.apply(0, arguments);
+        var t = getTranslationCallback.apply(language, arguments);
         return { language, t };
     }
 
-    cache[''] = createCallback(translate);
     return {
-        translate: cache[''],
-        getTranslation: getTranslationCallback,
+        translate: createCallback(translate),
+        getTranslation: getTranslationCallback.bind(''),
         useTranslation: useTranslation,
         keys: function (prefix) {
             return keys(resources[defaultLang][prefix] || empty);

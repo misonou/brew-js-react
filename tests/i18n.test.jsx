@@ -212,6 +212,27 @@ describe('getTranslation', () => {
 });
 
 describe('useTranslation', () => {
+    it('should return unique function for each langauge', async () => {
+        const { useTranslation } = makeTranslation({
+            en: { prefix: { key: '' } }
+        }, 'en');
+        const { result } = renderHook(() => useTranslation('prefix'));
+        const t = result.current.t;
+        expect(result.current.language).toBe('en');
+
+        await act(async () => {
+            app.language = 'de';
+        });
+        expect(result.current.language).toBe('de');
+        expect(result.current.t).not.toBe(t);
+
+        await act(async () => {
+            app.language = 'en';
+        });
+        expect(result.current.language).toBe('en');
+        expect(result.current.t).toBe(t);
+    });
+
     it('should return translated string in current language', () => {
         const { useTranslation } = makeTranslation({
             en: { prefix: { key: 'en_string' } },
