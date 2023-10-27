@@ -1,4 +1,4 @@
-/*! brew-js-react v0.4.6 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
+/*! brew-js-react v0.4.7 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
@@ -257,6 +257,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     noop = _lib$util.noop,
     pipe = _lib$util.pipe,
     either = _lib$util.either,
+    sameValueZero = _lib$util.sameValueZero,
     is = _lib$util.is,
     isUndefinedOrNull = _lib$util.isUndefinedOrNull,
     isArray = _lib$util.isArray,
@@ -321,6 +322,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     lcfirst = _lib$util.lcfirst,
     trim = _lib$util.trim,
     matchWord = _lib$util.matchWord,
+    matchWordMulti = _lib$util.matchWordMulti,
     htmlDecode = _lib$util.htmlDecode,
     resolve = _lib$util.resolve,
     reject = _lib$util.reject,
@@ -617,6 +619,24 @@ var view_event = {};
 onAppInit(function () {
   app_app.on('beforepageload', function (e) {
     view_event = e;
+    e.waitFor(new Promise(function (resolve) {
+      (function updateViewRecursive(next) {
+        if (!next[0]) {
+          return resolve();
+        }
+
+        resolveAll(map(next, function (v) {
+          return new Promise(function (resolve) {
+            v.onRender = resolve;
+            v.forceUpdate();
+          });
+        })).then(function () {
+          updateViewRecursive(map(next, function (v) {
+            return v.children;
+          }));
+        });
+      })(_(rootContext).children);
+    }));
 
     _(rootContext).setPage(app_app.page);
   });
@@ -627,6 +647,7 @@ function ViewContext(view, page) {
   defineOwnProperty(self, 'view', view, true);
 
   _(self, {
+    children: [],
     setPage: defineObservableProperty(self, 'page', page, true),
     setActive: defineObservableProperty(self, 'active', true, true)
   });
@@ -698,33 +719,27 @@ definePrototype(ErrorBoundary, external_commonjs_react_commonjs2_react_amd_react
 
 function ViewContainer() {
   external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(this, arguments);
-  this.stateId = history.state;
 }
 
 ViewContainer.contextType = StateContext;
 definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react_root_React_.Component, {
   componentDidMount: function componentDidMount() {
-    /** @type {any} */
     var self = this;
+
+    var parent = _(self.context).children;
+
+    parent.push(self);
     self.componentWillUnmount = combineFn(watch(app_app.route, function () {
       (self.setActive || noop)(self.getViewComponent() === self.currentViewComponent);
-    }), app_app.on('beforepageload', function () {
-      self.stateId = history.state;
-
-      if (self.context === rootContext || self.updateOnNext) {
-        view_event.waitFor(new Promise(function (resolve) {
-          self.onRender = resolve;
-        }));
-        self.updateView();
-        self.forceUpdate();
-      }
-    }));
+    }), function () {
+      arrRemove(parent, self);
+    });
   },
   render: function render() {
     /** @type {any} */
     var self = this;
 
-    if (history.state === self.stateId && self.context.active) {
+    if (self.context.active) {
       self.updateView();
     }
 
@@ -734,21 +749,20 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
   updateView: function updateView() {
     var self = this;
     var V = self.getViewComponent();
-    self.updateOnNext = false;
+    var viewChanged = V !== self.currentViewComponent;
 
-    if (V) {
+    if (V && (viewChanged || !(self.children || '')[0])) {
       // ensure the current path actually corresponds to the matched view
       // when some views are not included in the list of allowed views
       var targetPath = resolvePath(V, getCurrentParams(V, true));
 
       if (targetPath !== removeQueryAndHash(app_app.path)) {
         app_app.navigate(targetPath, true);
-        self.updateOnNext = true;
         return;
       }
     }
 
-    if (V && V !== self.currentViewComponent) {
+    if (V && viewChanged) {
       var prevElement = self.currentElement;
 
       if (prevElement) {
@@ -1148,19 +1162,19 @@ if (toPrimitive) {
 }
 
 function createCallback(translate) {
-  var callback = function callback(key, data) {
-    var result = translate(key, data, true);
+  var callback = function callback(key, data, lang) {
+    var result = translate(key, data, lang, true);
     return result !== undefined ? result : key;
   };
 
   return extend(callback, {
-    html: function html(id, data) {
+    html: function html(id, data, lang) {
       return {
-        __html: translate(id, data)
+        __html: translate(id, data, lang)
       };
     },
-    lazy: function lazy(id, data) {
-      return new TString(translate.bind(0, id, data, true));
+    lazy: function lazy(id, data, lang) {
+      return new TString(translate.bind(0, id, data, lang, true));
     }
   });
 }
@@ -1190,36 +1204,38 @@ function makeTranslation(resources, defaultLang) {
     }
   }
 
-  function translate(key, data, noEncode) {
+  function translate(key, data, lang, noEncode) {
     var prefix = re.test(key) ? RegExp.$1 : '';
     var name = prefix ? key.slice(RegExp.lastMatch.length) : key;
-    return getTranslation(prefix, name, data, noEncode, app_app.language);
+    return getTranslation(prefix, name, data, noEncode, lang || app_app.language);
   }
 
   function getTranslationCallback() {
+    var currentLang = String(this);
     var prefix = makeArray(arguments);
-    var key = prefix.join(' ');
-    return cache[key] || (cache[key] = createCallback(function (key, data, noEncode) {
-      var lang = app_app.language;
+    var key = currentLang + ' ' + prefix.join(' ');
+    return cache[key] || (cache[key] = prefix[0] ? createCallback(function (key, data, lang, noEncode) {
+      lang = lang || currentLang || app_app.language;
       return single(prefix, function (v) {
         return getTranslation(v, key, data, noEncode, lang);
       });
+    }) : createCallback(function (key, data, lang, noEncode) {
+      return translate(key, data, lang || currentLang, noEncode);
     }));
   }
 
   function useTranslation() {
     var language = useLanguage();
-    var t = getTranslationCallback.apply(0, arguments);
+    var t = getTranslationCallback.apply(language, arguments);
     return {
       language: language,
       t: t
     };
   }
 
-  cache[''] = createCallback(translate);
   return {
-    translate: cache[''],
-    getTranslation: getTranslationCallback,
+    translate: createCallback(translate),
+    getTranslation: getTranslationCallback.bind(''),
     useTranslation: useTranslation,
     keys: function keys(prefix) {
       return util_keys(resources[defaultLang][prefix] || empty);
@@ -1529,13 +1545,20 @@ function AnimateSequenceMixin() {
   self.item = new AnimateSequenceItemMixin(self.className);
 }
 definePrototype(AnimateSequenceMixin, AnimateMixin, {
+  withOptions: function withOptions(options) {
+    this.selector = options;
+    return this;
+  },
   reset: function reset() {
     this.item.reset();
     return AnimateSequenceMixinSuper.reset.call(this);
   },
   getCustomAttributes: function getCustomAttributes() {
-    return extend({}, AnimateSequenceMixinSuper.getCustomAttributes.call(this), {
-      'animate-sequence': '.' + this.className
+    var self = this;
+    return extend({}, AnimateSequenceMixinSuper.getCustomAttributes.call(self), {
+      'animate-in': null,
+      'animate-sequence-type': (self.effects || []).join(' '),
+      'animate-sequence': self.selector || '.' + self.className
     });
   },
   clone: function clone() {
