@@ -1,7 +1,6 @@
 import { createElement, useEffect, useRef, useState } from "react";
 import { ViewStateProvider, useObservableProperty, useUpdateTrigger } from "zeta-dom-react";
 import { definePrototype, extend, kv, setImmediateOnce, throwNotFunction, watch } from "./include/zeta-dom/util.js";
-import { bind } from "./include/zeta-dom/domUtil.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
 import { app } from "./app.js";
 import { useViewContainerState } from "./view.js";
@@ -93,15 +92,15 @@ export function useRouteState(key, defaultValue, snapshotOnUpdate) {
         cur.set(key, state[0]);
     }
     useEffect(function () {
-        if (snapshotOnUpdate) {
-            return bind(window, 'popstate', function () {
-                if (container.active) {
+        return app.on('beforepageload popstate', function () {
+            if (container.active) {
+                state[1](function (oldValue) {
                     var cur = getCurrentStates();
-                    state[1](cur.has(key) ? cur.get(key) : defaultValue);
-                }
-            });
-        }
-    }, [container, snapshotOnUpdate]);
+                    return cur.has(key) ? cur.get(key) : (cur.set(key, oldValue), oldValue);
+                });
+            }
+        });
+    }, [container, key]);
     return state;
 }
 

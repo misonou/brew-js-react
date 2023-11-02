@@ -176,6 +176,49 @@ describe('useRouteParam', () => {
 
 describe('useRouteState', () => {
     it('should retain previous state when navigated back', async () => {
+        const sym = Symbol();
+        const stateId = history.state;
+        const { result, unmount } = renderHook(() => useRouteState(sym, 'foo'));
+
+        await app.navigate('/foo');
+        expect(history.state).not.toBe(stateId);
+        act(() => result.current[1]('baz'));
+
+        await act(async () => void await app.back());
+        await delay();
+        expect(history.state).toBe(stateId);
+        expect(result.current[0]).toBe('foo');
+
+        history.forward();
+        await new Promise(resolve => cleanup(app.on('pageload', resolve)));
+        await delay();
+        expect(result.current[0]).toBe('baz');
+        unmount();
+    });
+
+    it('should retain previous state when navigated back between snapshots', async () => {
+        const sym = Symbol();
+        const stateId = history.state;
+        const { result, unmount } = renderHook(() => useRouteState(sym, 'foo'));
+
+        await actAwaitSetImmediate(() => app.snapshot());
+        expect(history.state).not.toBe(stateId);
+        act(() => result.current[1]('bar'));
+
+        await act(async () => void await app.back());
+        await delay();
+        expect(history.state).toBe(stateId);
+        expect(result.current[0]).toBe('foo');
+
+        // jsdom does not behave correctly when calling history.back()
+        // history.forward();
+        // await new Promise(resolve => cleanup(bind(window, 'popstate', resolve)));
+        // await delay(100);
+        // expect(result.current[0]).toBe('bar');
+        unmount();
+    });
+
+    it('should retain previous state when remounted with the same key', async () => {
         const { result, unmount } = renderHook(() => useRouteState('view', 'foo'));
         act(() => result.current[1]('bar'));
 
@@ -194,21 +237,6 @@ describe('useRouteState', () => {
 
         await actAwaitSetImmediate(() => result.current[1]('bar'));
         expect(history.state).not.toBe(stateId);
-        unmount();
-    });
-
-    it('should retain previous state when navigated back if snapshotOnUpdate is true', async () => {
-        const sym = Symbol();
-        const stateId = history.state;
-        const { result, unmount } = renderHook(() => useRouteState(sym, 'foo', true));
-
-        await actAwaitSetImmediate(() => result.current[1]('bar'));
-        expect(history.state).not.toBe(stateId);
-
-        await act(async () => void await app.back());
-        await delay();
-        expect(history.state).toBe(stateId);
-        expect(result.current[0]).toBe('foo');
         unmount();
     });
 
@@ -292,6 +320,17 @@ describe('useRouteState', () => {
             ]);
         }
         unmount();
+    });
+
+    it('should persist values in every page', async () => {
+        const { result, unmount } = renderHook(() => useRouteState('foo', 'bar'));
+        const current = app.historyStorage.current;
+
+        await app.navigate('/foo');
+        expect(app.historyStorage.current).not.toBe(current);
+        expect(app.historyStorage.current.get('foo')).toBe('bar');
+        expect(result.all.length).toBe(1);
+        unmount()
     });
 });
 
