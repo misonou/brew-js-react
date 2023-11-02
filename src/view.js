@@ -48,6 +48,7 @@ onAppInit(function () {
 
 function ViewContext(view, page) {
     var self = this;
+    watch(self, true);
     defineOwnProperty(self, 'view', view, true);
     _(self, {
         children: [],
