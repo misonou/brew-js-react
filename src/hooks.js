@@ -1,6 +1,6 @@
 import { createElement, useEffect, useRef, useState } from "react";
 import { ViewStateProvider, useObservableProperty, useUpdateTrigger } from "zeta-dom-react";
-import { definePrototype, extend, kv, setImmediateOnce, throwNotFunction, watch } from "./include/zeta-dom/util.js";
+import { definePrototype, delay, extend, kv, setImmediateOnce, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
 import { app } from "./app.js";
 import { useViewContainerState } from "./view.js";
@@ -83,8 +83,11 @@ export function useRouteParam(name, defaultValue) {
 export function useRouteState(key, defaultValue, snapshotOnUpdate) {
     var container = useViewContainerState();
     var cur = getCurrentStates();
-    var state = useState(cur.has(key) ? cur.get(key) : defaultValue);
-    if (container.active && cur.get(key) !== state[0]) {
+    var state = useState(cur && cur.has(key) ? cur.get(key) : defaultValue);
+    if (!cur) {
+        // delay app ready to ensure that beforepageload event can be caught
+        app.beforeInit(delay(1));
+    } else if (container.active && cur.get(key) !== state[0]) {
         if (snapshotOnUpdate && cur.has(key)) {
             app.snapshot();
             cur = getCurrentStates();
