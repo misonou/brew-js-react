@@ -16,6 +16,7 @@ const usedParams = {};
 const sortedViews = [];
 const emitter = new ZetaEventContainer();
 const rootContext = freeze(extend(new ViewContext(null, null), { container: root }));
+const rootState = _(rootContext);
 const StateContext = React.createContext(rootContext);
 
 var errorView;
@@ -24,6 +25,8 @@ var event = {};
 
 onAppInit(function () {
     app.on('beforepageload', function (e) {
+        rootState.setPage(app.page);
+        rootState.setActive(true);
         event = e;
         e.waitFor(new Promise(function (resolve) {
             (function updateViewRecursive(next) {
@@ -40,9 +43,8 @@ onAppInit(function () {
                         return v.children;
                     }));
                 });
-            })(_(rootContext).children);
+            })(rootState.children);
         }));
-        _(rootContext).setPage(app.page);
     });
 });
 
@@ -53,7 +55,7 @@ function ViewContext(view, page) {
     _(self, {
         children: [],
         setPage: defineObservableProperty(self, 'page', page, true),
-        setActive: defineObservableProperty(self, 'active', true, true)
+        setActive: defineObservableProperty(self, 'active', !!page, true)
     });
     watch(self, 'page', function (page, previousPage) {
         emitter.emit('pagechange', self, { previousPage });
