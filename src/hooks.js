@@ -1,9 +1,9 @@
 import { createElement, useEffect, useRef, useState } from "react";
 import { ViewStateProvider, useObservableProperty, useUpdateTrigger } from "zeta-dom-react";
-import { definePrototype, delay, extend, kv, setImmediateOnce, throwNotFunction, watch } from "./include/zeta-dom/util.js";
+import { definePrototype, delay, each, extend, kv, setImmediateOnce, throwNotFunction, watch } from "./include/zeta-dom/util.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
 import { app } from "./app.js";
-import { useViewContainerState } from "./view.js";
+import { useViewContext } from "./view.js";
 
 const emitter = new ZetaEventContainer();
 
@@ -11,19 +11,18 @@ function getCurrentStates() {
     return app.historyStorage.current;
 }
 
-function ViewState(key, value) {
+function ViewState(key, dispose) {
     this.key = key;
-    this.value = value;
+    this.store = getCurrentStates();
+    this.dispose = dispose;
 }
 
 definePrototype(ViewState, {
     get: function () {
-        return this.value;
+        return this.store.get(this.key);
     },
     set: function (value) {
-        var self = this;
-        self.value = value;
-        self.store.set(self.key, value);
+        this.store.set(this.key, value);
     },
     onPopState: function (callback) {
         throwNotFunction(callback);
@@ -32,6 +31,29 @@ definePrototype(ViewState, {
         });
     }
 });
+
+function updateViewState(state, key, store) {
+    var newValue = state.get();
+    if (key !== state.key || (store !== state.store && store.has(key))) {
+        newValue = store.get(key);
+        emitter.emit('popstate', state, { newValue });
+    }
+    state.key = key;
+    state.store = store;
+    store.set(key, newValue);
+}
+
+function useViewContextWithEffect(callback, deps) {
+    const container = useViewContext();
+    useEffect(function () {
+        return app.on('beforepageload popstate', function () {
+            if (container.active) {
+                callback(getCurrentStates());
+            }
+        });
+    }, deps);
+    return container;
+}
 
 export function useAppReady() {
     return useAppReadyState().ready;
@@ -46,7 +68,7 @@ export function useAppReadyState() {
 }
 
 export function useRouteParam(name, defaultValue) {
-    const container = useViewContainerState();
+    const container = useViewContext();
     const params = container.page.params;
     const route = app.route;
     const value = params[name] || '';
@@ -81,9 +103,13 @@ export function useRouteParam(name, defaultValue) {
 }
 
 export function useRouteState(key, defaultValue, snapshotOnUpdate) {
-    var container = useViewContainerState();
     var cur = getCurrentStates();
     var state = useState(cur && cur.has(key) ? cur.get(key) : defaultValue);
+    var container = useViewContextWithEffect(function (cur) {
+        state[1](function (oldValue) {
+            return cur.has(key) ? cur.get(key) : (cur.set(key, oldValue), oldValue);
+        });
+    }, [key]);
     if (!cur) {
         // delay app ready to ensure that beforepageload event can be caught
         app.beforeInit(delay(1));
@@ -94,41 +120,26 @@ export function useRouteState(key, defaultValue, snapshotOnUpdate) {
         }
         cur.set(key, state[0]);
     }
-    useEffect(function () {
-        return app.on('beforepageload popstate', function () {
-            if (container.active) {
-                state[1](function (oldValue) {
-                    var cur = getCurrentStates();
-                    return cur.has(key) ? cur.get(key) : (cur.set(key, oldValue), oldValue);
-                });
-            }
-        });
-    }, [container, key]);
     return state;
 }
 
 export function ViewStateContainer(props) {
-    const container = useViewContainerState();
+    const cache = useState({})[0];
+    const container = useViewContextWithEffect(function (cur) {
+        each(cache, function (i, v) {
+            updateViewState(v, v.key, cur);
+        });
+    }, []);
     const provider = useState(function () {
-        const cache = {};
         return {
             getState: function (uniqueId, key) {
-                var cur = getCurrentStates();
-                var value = cur.get(key);
-                var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(key, value));
-                if (container.active) {
-                    var store = state.store;
-                    if (store && ((store !== cur && cur.has(key)) || key !== state.key)) {
-                        emitter.emit('popstate', state, {
-                            newValue: value
-                        });
-                        state.value = value;
-                        state.key = key;
-                    }
-                    state.store = cur;
-                    cur.set(key, state.value);
+                var state = cache[uniqueId];
+                if (state && container.active) {
+                    updateViewState(state, key, getCurrentStates());
                 }
-                return state;
+                return state || (cache[uniqueId] = new ViewState(key, function () {
+                    delete cache[uniqueId];
+                }));
             }
         };
     })[0];

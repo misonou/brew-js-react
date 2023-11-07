@@ -4,7 +4,7 @@ import { act, renderHook } from "@testing-library/react-hooks";
 import { addAnimateOut } from "brew-js/anim";
 import { useRouteParam, useRouteState, ViewStateContainer } from "src/hooks";
 import { registerView, renderView } from "src/view";
-import { cleanup, delay, mockFn } from "@misonou/test-utils";
+import { after, cleanup, delay, mockFn } from "@misonou/test-utils";
 import { useUpdateTrigger, useViewState } from "zeta-dom-react";
 import initAppBeforeAll, { waitForPageLoad } from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
@@ -336,21 +336,43 @@ describe('useRouteState', () => {
 
 describe('ViewStateContainer', () => {
     it('should bring current value to new state', async () => {
-        const cb = mockFn();
         const Component = function () {
             const state = useViewState('foo');
             useEffect(() => {
                 state.set('foo');
             }, [state]);
-            cb(state.get());
             return (<div>{state.get()}</div>);
         };
-        const { rerender } = render(<Component />, { wrapper: ViewStateContainer });
+        const { unmount } = render(<Component />, { wrapper: ViewStateContainer });
+        const current = app.historyStorage.current;
+        expect(app.historyStorage.current.get('foo')).toBe('foo');
 
-        cb.mockClear();
         await app.navigate('/foo');
-        rerender(<Component />);
-        expect(cb).toBeCalledWith('foo');
+        expect(app.historyStorage.current).not.toBe(current);
+        expect(app.historyStorage.current.get('foo')).toBe('foo');
+        unmount();
+    });
+
+    it('should not bring value for disposed view state', async () => {
+        const Inner = function () {
+            const state = useViewState('foo');
+            useEffect(() => {
+                state.set('foo');
+            }, [state]);
+            return null;
+        };
+        const Component = function ({ renderHook }) {
+            return renderHook ? <Inner /> : null;
+        };
+        const { rerender, unmount } = render(<Component renderHook />, { wrapper: ViewStateContainer });
+        const current = app.historyStorage.current;
+        expect(app.historyStorage.current.get('foo')).toBe('foo');
+
+        await after(() => rerender(<Component renderHook={false} />));
+        await app.navigate('/foo');
+        expect(app.historyStorage.current).not.toBe(current);
+        expect(app.historyStorage.current.has('foo')).toBe(false);
+        unmount();
     });
 
     it('should invoke onPopState when traversing through history', async () => {
@@ -363,17 +385,16 @@ describe('ViewStateContainer', () => {
             }, [state]);
             return (<div>{state.get()}</div>);
         };
-        const { rerender } = render(<Component />, { wrapper: ViewStateContainer });
+        const { unmount } = render(<Component />, { wrapper: ViewStateContainer });
 
         await app.navigate('/foo');
-        rerender(<Component />);
         expect(cb).not.toBeCalled();
 
         cb.mockClear();
         await app.back();
-        rerender(<Component />);
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0]).toEqual(['foo']);
+        unmount();
     });
 
     it('should invoke onPopState when key has changed', async () => {
@@ -386,7 +407,7 @@ describe('ViewStateContainer', () => {
             }, [state]);
             return (<div>{state.get()}</div>);
         };
-        const { rerender } = render(<Component stateKey="foo" />, { wrapper: ViewStateContainer });
+        const { rerender, unmount } = render(<Component stateKey="foo" />, { wrapper: ViewStateContainer });
 
         rerender(<Component stateKey="bar" />);
         expect(cb).toBeCalledTimes(1);
@@ -396,5 +417,6 @@ describe('ViewStateContainer', () => {
         rerender(<Component stateKey="foo" />);
         expect(cb).toBeCalledTimes(1);
         expect(cb.mock.calls[0]).toEqual(['foo']);
+        unmount();
     });
 });

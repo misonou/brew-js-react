@@ -27,7 +27,7 @@
     "brew-js": ">=0.5.13",
     "waterpipe": "^2.5.0",
     "zeta-dom": ">=0.4.3",
-    "zeta-dom-react": ">=0.4.6"
+    "zeta-dom-react": ">=0.4.14"
   },
   "peerDependencies": {
     "react": ">=16.8.0",
