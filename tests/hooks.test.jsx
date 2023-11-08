@@ -375,6 +375,56 @@ describe('ViewStateContainer', () => {
         unmount();
     });
 
+    it('should create snapshot to store new state if snapshot flag is true', async () => {
+        const Component = function () {
+            const state = useViewState('foo');
+            useEffect(() => {
+                state.set('bar', true);
+            }, [state]);
+            return (<div>{state.get()}</div>);
+        };
+        const current = app.historyStorage.current;
+        current.set('foo', 'foo');
+
+        const { unmount } = render(<Component />, { wrapper: ViewStateContainer });
+        expect(app.historyStorage.current).not.toBe(current);
+        expect(app.historyStorage.current.get('foo')).toBe('bar');
+        unmount();
+    });
+
+    it('should not create snapshot to store new state if value did not change', async () => {
+        const Component = function () {
+            const state = useViewState('foo');
+            useEffect(() => {
+                state.set('foo', true);
+            }, [state]);
+            return (<div>{state.get()}</div>);
+        };
+        const current = app.historyStorage.current;
+        current.set('foo', 'foo');
+
+        const { unmount } = render(<Component />, { wrapper: ViewStateContainer });
+        expect(app.historyStorage.current).toBe(current);
+        expect(app.historyStorage.current.get('foo')).toBe('foo');
+        unmount();
+    });
+
+    it('should not create snapshot to store new state if value was not present', async () => {
+        const Component = function () {
+            const state = useViewState('foo');
+            useEffect(() => {
+                state.set('foo', true);
+            }, [state]);
+            return (<div>{state.get()}</div>);
+        };
+        const current = app.historyStorage.current;
+
+        const { unmount } = render(<Component />, { wrapper: ViewStateContainer });
+        expect(app.historyStorage.current).toBe(current);
+        expect(app.historyStorage.current.get('foo')).toBe('foo');
+        unmount();
+    });
+
     it('should invoke onPopState when traversing through history', async () => {
         const cb = mockFn();
         const Component = function () {

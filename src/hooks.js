@@ -21,8 +21,8 @@ definePrototype(ViewState, {
     get: function () {
         return this.store.get(this.key);
     },
-    set: function (value) {
-        this.store.set(this.key, value);
+    set: function (value, snapshot) {
+        this.store = updatePersistedValue(this.store, this.key, value, snapshot);
     },
     onPopState: function (callback) {
         throwNotFunction(callback);
@@ -31,6 +31,17 @@ definePrototype(ViewState, {
         });
     }
 });
+
+function updatePersistedValue(cur, key, value, snapshot) {
+    if (cur.get(key) !== value) {
+        if (snapshot && cur.has(key)) {
+            app.snapshot();
+            cur = getCurrentStates();
+        }
+        cur.set(key, value);
+    }
+    return cur;
+}
 
 function updateViewState(state, key, store) {
     var newValue = state.get();
@@ -113,12 +124,8 @@ export function useRouteState(key, defaultValue, snapshotOnUpdate) {
     if (!cur) {
         // delay app ready to ensure that beforepageload event can be caught
         app.beforeInit(delay(1));
-    } else if (container.active && cur.get(key) !== state[0]) {
-        if (snapshotOnUpdate && cur.has(key)) {
-            app.snapshot();
-            cur = getCurrentStates();
-        }
-        cur.set(key, state[0]);
+    } else if (container.active) {
+        updatePersistedValue(cur, key, state[0], snapshotOnUpdate);
     }
     return state;
 }
