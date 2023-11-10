@@ -1,26 +1,16 @@
-/*! brew-js-react v0.4.7 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
+/*! brew-js-react v0.4.8 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
+		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew-js-react", ["brew-js", "react", "react-dom", "react-dom/client", "zeta-dom", "zeta-dom-react", "waterpipe"], factory);
+		define("brew-js-react", ["brew-js", "react", "react-dom", "zeta-dom", "zeta-dom-react", "waterpipe"], factory);
 	else if(typeof exports === 'object')
-		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), (function webpackLoadOptionalExternalModule() { try { return require("react-dom/client"); } catch(e) {} }()), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
+		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
 	else
-		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["react-dom/client"], root["zeta"], root["zeta-dom-react"], root["waterpipe"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__715__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__) {
+		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["zeta"], root["zeta-dom-react"], root["waterpipe"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__) {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
-
-/***/ 715:
-/***/ ((module) => {
-
-"use strict";
-if(typeof __WEBPACK_EXTERNAL_MODULE__715__ === 'undefined') { var e = new Error("Cannot find module 'react-dom/client'"); e.code = 'MODULE_NOT_FOUND'; throw e; }
-
-module.exports = __WEBPACK_EXTERNAL_MODULE__715__;
-
-/***/ }),
 
 /***/ 28:
 /***/ ((module) => {
@@ -70,38 +60,33 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__654__;
 
 /***/ }),
 
-/***/ 662:
+/***/ 862:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var React = __webpack_require__(318);
+var ReactDOM = __webpack_require__(318);
 var ReactDOMClient;
-try {
-    ReactDOMClient = __webpack_require__(715);
-} catch (e) {
+
+if (ReactDOM.createRoot) {
+    ReactDOMClient = ReactDOM;
+} else {
     ReactDOMClient = {
         createRoot(container, options) {
             return {
                 render(children) {
-                    React.render(children, container);
+                    ReactDOM.render(children, container);
                 },
                 unmount() {
-                    React.unmountComponentAtNode(container);
+                    ReactDOM.unmountComponentAtNode(container);
                 }
             };
         },
         hydrateRoot(container, initialChildren, options) {
-            React.hydrate(initialChildren, container);
-            return {
-                render(children) {
-                    React.render(children, container);
-                },
-                unmount() {
-                    React.unmountComponentAtNode(container);
-                }
-            };
+            ReactDOM.hydrate(initialChildren, container);
+            return ReactDOMClient.createRoot(container, options);
         },
     };
 }
+
 /** @type {import("react-dom/client")} */
 module.exports = ReactDOMClient;
 
@@ -241,14 +226,14 @@ var install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_
 var external_commonjs_react_commonjs2_react_amd_react_root_React_ = __webpack_require__(359);
 // EXTERNAL MODULE: external {"commonjs":"react-dom","commonjs2":"react-dom","amd":"react-dom","root":"ReactDOM"}
 var external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_ = __webpack_require__(318);
-// EXTERNAL MODULE: ./node_modules/@misonou/react-dom-client/index.js
-var react_dom_client = __webpack_require__(662);
+// EXTERNAL MODULE: ./node_modules/@misonou/react-dom-client/fallback.js
+var fallback = __webpack_require__(862);
 ;// CONCATENATED MODULE: ./src/include/external/react-dom-client.js
 // @ts-nocheck
 
 /** @type {import("react-dom/client")} */
 
-/* harmony default export */ const external_react_dom_client = (react_dom_client);
+/* harmony default export */ const react_dom_client = (fallback);
 // EXTERNAL MODULE: external {"commonjs":"zeta-dom","commonjs2":"zeta-dom","amd":"zeta-dom","root":"zeta"}
 var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(654);
 ;// CONCATENATED MODULE: ./tmp/zeta-dom/util.js
@@ -438,7 +423,7 @@ var addAsyncAction = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_roo
 
 function createDialog(props) {
   var root = document.createElement('div');
-  var reactRoot = external_react_dom_client.createRoot(root);
+  var reactRoot = react_dom_client.createRoot(root);
 
   var _closeDialog = closeFlyout.bind(0, root);
 
@@ -611,6 +596,9 @@ var emitter = new ZetaEventContainer();
 var rootContext = freeze(extend(new ViewContext(null, null), {
   container: root
 }));
+
+var rootState = _(rootContext);
+
 var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext(rootContext);
 var errorView;
 /** @type {Partial<Zeta.ZetaEventType<"beforepageload", Brew.RouterEventMap, Element>>} */
@@ -618,6 +606,8 @@ var errorView;
 var view_event = {};
 onAppInit(function () {
   app_app.on('beforepageload', function (e) {
+    rootState.setPage(app_app.page);
+    rootState.setActive(true);
     view_event = e;
     e.waitFor(new Promise(function (resolve) {
       (function updateViewRecursive(next) {
@@ -635,21 +625,20 @@ onAppInit(function () {
             return v.children;
           }));
         });
-      })(_(rootContext).children);
+      })(rootState.children);
     }));
-
-    _(rootContext).setPage(app_app.page);
   });
 });
 
 function ViewContext(view, page) {
   var self = this;
+  watch(self, true);
   defineOwnProperty(self, 'view', view, true);
 
   _(self, {
     children: [],
     setPage: defineObservableProperty(self, 'page', page, true),
-    setActive: defineObservableProperty(self, 'active', true, true)
+    setActive: defineObservableProperty(self, 'active', !!page, true)
   });
 
   watch(self, 'page', function (page, previousPage) {
@@ -1000,26 +989,24 @@ function redirectTo(view, params, data) {
 
 
 
-
 var hooks_emitter = new ZetaEventContainer();
 
 function getCurrentStates() {
   return app_app.historyStorage.current;
 }
 
-function ViewState(key, value) {
+function ViewState(key, dispose) {
   this.key = key;
-  this.value = value;
+  this.store = getCurrentStates();
+  this.dispose = dispose;
 }
 
 definePrototype(ViewState, {
   get: function get() {
-    return this.value;
+    return this.store.get(this.key);
   },
   set: function set(value) {
-    var self = this;
-    self.value = value;
-    self.store.set(self.key, value);
+    this.store.set(this.key, value);
   },
   onPopState: function onPopState(callback) {
     throwNotFunction(callback);
@@ -1028,6 +1015,34 @@ definePrototype(ViewState, {
     });
   }
 });
+
+function updateViewState(state, key, store) {
+  var newValue = state.get();
+
+  if (key !== state.key || store !== state.store && store.has(key)) {
+    newValue = store.get(key);
+    hooks_emitter.emit('popstate', state, {
+      newValue: newValue
+    });
+  }
+
+  state.key = key;
+  state.store = store;
+  store.set(key, newValue);
+}
+
+function useViewContextWithEffect(callback, deps) {
+  var container = useViewContext();
+  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
+    return app_app.on('beforepageload popstate', function () {
+      if (container.active) {
+        callback(getCurrentStates());
+      }
+    });
+  }, deps);
+  return container;
+}
+
 function useAppReady() {
   return useAppReadyState().ready;
 }
@@ -1079,11 +1094,18 @@ function useRouteParam(name, defaultValue) {
   return value;
 }
 function useRouteState(key, defaultValue, snapshotOnUpdate) {
-  var container = useViewContext();
   var cur = getCurrentStates();
-  var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(cur.has(key) ? cur.get(key) : defaultValue);
+  var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(cur && cur.has(key) ? cur.get(key) : defaultValue);
+  var container = useViewContextWithEffect(function (cur) {
+    state[1](function (oldValue) {
+      return cur.has(key) ? cur.get(key) : (cur.set(key, oldValue), oldValue);
+    });
+  }, [key]);
 
-  if (container.active && cur.get(key) !== state[0]) {
+  if (!cur) {
+    // delay app ready to ensure that beforepageload event can be caught
+    app_app.beforeInit(delay(1));
+  } else if (container.active && cur.get(key) !== state[0]) {
     if (snapshotOnUpdate && cur.has(key)) {
       app_app.snapshot();
       cur = getCurrentStates();
@@ -1092,44 +1114,27 @@ function useRouteState(key, defaultValue, snapshotOnUpdate) {
     cur.set(key, state[0]);
   }
 
-  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
-    if (snapshotOnUpdate) {
-      return bind(window, 'popstate', function () {
-        if (container.active) {
-          var cur = getCurrentStates();
-          state[1](cur.has(key) ? cur.get(key) : defaultValue);
-        }
-      });
-    }
-  }, [container, snapshotOnUpdate]);
   return state;
 }
 function ViewStateContainer(props) {
-  var container = useViewContext();
+  var cache = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)({})[0];
+  var container = useViewContextWithEffect(function (cur) {
+    each(cache, function (i, v) {
+      updateViewState(v, v.key, cur);
+    });
+  }, []);
   var provider = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
-    var cache = {};
     return {
       getState: function getState(uniqueId, key) {
-        var cur = getCurrentStates();
-        var value = cur.get(key);
-        var state = cache[uniqueId] || (cache[uniqueId] = new ViewState(key, value));
+        var state = cache[uniqueId];
 
-        if (container.active) {
-          var store = state.store;
-
-          if (store && (store !== cur && cur.has(key) || key !== state.key)) {
-            hooks_emitter.emit('popstate', state, {
-              newValue: value
-            });
-            state.value = value;
-            state.key = key;
-          }
-
-          state.store = cur;
-          cur.set(key, state.value);
+        if (state && container.active) {
+          updateViewState(state, key, getCurrentStates());
         }
 
-        return state;
+        return state || (cache[uniqueId] = new ViewState(key, function () {
+          delete cache[uniqueId];
+        }));
       }
     };
   })[0];
