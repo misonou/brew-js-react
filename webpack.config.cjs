@@ -170,6 +170,7 @@ module.exports = {
     },
     resolve: {
         alias: {
+            '@misonou/react-dom-client': '@misonou/react-dom-client/fallback.js',
             'zeta-dom': zetaDOMPath,
             'brew-js': brewJSPath
         }
@@ -187,7 +188,6 @@ module.exports = {
             amd: 'react-dom',
             root: 'ReactDOM'
         },
-        'react-dom/client': 'react-dom/client',
         'jquery': 'jQuery',
         'waterpipe': 'waterpipe',
         'zeta-dom-react': 'zeta-dom-react',
