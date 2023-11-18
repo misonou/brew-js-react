@@ -3,7 +3,9 @@
 exports[`navigateTo should pass data to view component 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div
         data-testid="test"
       >
@@ -17,7 +19,9 @@ exports[`navigateTo should pass data to view component 1`] = `
 exports[`redirectTo should pass data to view component 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div
         data-testid="test"
       >
@@ -31,7 +35,9 @@ exports[`redirectTo should pass data to view component 1`] = `
 exports[`renderView should catch and emit rendering error thrown from error view 1`] = `
 <DocumentFragment>
   <div>
-    <div />
+    <div
+      brew-view=""
+    />
   </div>
 </DocumentFragment>
 `;
@@ -39,7 +45,9 @@ exports[`renderView should catch and emit rendering error thrown from error view
 exports[`renderView should cause redirection to the first match view if none was matched 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div>
         foo
       </div>
@@ -51,7 +59,9 @@ exports[`renderView should cause redirection to the first match view if none was
 exports[`renderView should clear view data when navigation is aborted 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div>
         bar
       </div>
@@ -63,7 +73,9 @@ exports[`renderView should clear view data when navigation is aborted 1`] = `
 exports[`renderView should clear view data when navigation is redirected 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div>
         bar
       </div>
@@ -75,7 +87,9 @@ exports[`renderView should clear view data when navigation is redirected 1`] = `
 exports[`renderView should match views with more params first 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div>
         baz
       </div>
@@ -88,6 +102,7 @@ exports[`renderView should pass props to view container 1`] = `
 <DocumentFragment>
   <div>
     <div
+      brew-view=""
       class="foo"
     >
       <div>
@@ -101,7 +116,9 @@ exports[`renderView should pass props to view container 1`] = `
 exports[`renderView should persist view data in history 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div>
         BarTest
       </div>
@@ -113,7 +130,9 @@ exports[`renderView should persist view data in history 1`] = `
 exports[`renderView should render class component registered without import 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div>
         foo
       </div>
@@ -125,7 +144,9 @@ exports[`renderView should render class component registered without import 1`] 
 exports[`renderView should render functional component registered without import 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div>
         foo
       </div>
@@ -137,7 +158,9 @@ exports[`renderView should render functional component registered without import
 exports[`renderView should render matched view 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div>
         bar
       </div>
@@ -149,8 +172,12 @@ exports[`renderView should render matched view 1`] = `
 exports[`renderView should render matched view when nested 1`] = `
 <DocumentFragment>
   <div>
-    <div>
-      <div>
+    <div
+      brew-view=""
+    >
+      <div
+        brew-view=""
+      >
         <div>
           baz
         </div>
@@ -163,7 +190,9 @@ exports[`renderView should render matched view when nested 1`] = `
 exports[`renderView should retrieve view data when view container is mounted after navigation 1`] = `
 <DocumentFragment>
   <div>
-    <div>
+    <div
+      brew-view=""
+    >
       <div>
         baz
       </div>

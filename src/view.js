@@ -168,7 +168,7 @@ definePrototype(ViewContainer, React.Component, {
                 self.currentElement = element;
                 state.container = element;
                 promise.then(function () {
-                    animateIn(element, 'show');
+                    animateIn(element, 'show', '[brew-view]', true);
                     app.emit('pageenter', element, { pathname: app.path }, true);
                 });
                 notifyAsync(element, promise);
@@ -181,7 +181,7 @@ definePrototype(ViewContainer, React.Component, {
             });
             var view = React.createElement(StateContext.Provider, { key: routeMap.get(V).id, value: state },
                 React.createElement(ViewStateContainer, null,
-                    React.createElement('div', extend({}, self.props.rootProps, { ref: initElement }),
+                    React.createElement('div', extend({}, self.props.rootProps, { ref: initElement, 'brew-view': '' }),
                         React.createElement(ErrorBoundary, { onComponentLoaded, viewProps }))));
             extend(self, _(state), {
                 cancelPrevious: onComponentLoaded,
