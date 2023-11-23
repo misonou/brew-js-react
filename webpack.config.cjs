@@ -188,7 +188,12 @@ module.exports = {
             amd: 'react-dom',
             root: 'ReactDOM'
         },
-        'jquery': 'jQuery',
+        'jquery': {
+            commonjs: 'jquery',
+            commonjs2: 'jquery',
+            amd: 'jquery',
+            root: 'jQuery'
+        },
         'waterpipe': 'waterpipe',
         'zeta-dom-react': 'zeta-dom-react',
         'zeta-dom': {
