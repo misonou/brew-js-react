@@ -1,3 +1,5 @@
+import $ from "../include/external/jquery.js";
+import { watchElements } from "../include/zeta-dom/observe.js";
 import { definePrototype, extend } from "../include/zeta-dom/util.js";
 import AnimateMixin from "./AnimateMixin.js";
 import AnimateSequenceItemMixin from "./AnimateSequenceItemMixin.js";
@@ -24,5 +26,14 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
             'animate-sequence-type': (self.effects || []).join(' '),
             'animate-sequence': self.selector || '.' + self.className
         });
+    },
+    initElement: function (element, state) {
+        var self = this;
+        AnimateSequenceMixinSuper.initElement.call(self, element, state);
+        if (self.selector) {
+            self.onDispose(watchElements(element, self.selector, function (addedNodes) {
+                $(addedNodes).attr('is-animate-sequence', '');
+            }));
+        }
     }
 });

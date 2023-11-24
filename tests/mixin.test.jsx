@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { jest } from "@jest/globals";
-import { act, render, fireEvent, screen } from "@testing-library/react";
+import { act, render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
+import { animateIn } from "brew-js/anim";
 import { openFlyout } from "brew-js/domAction";
 import dom from "zeta-dom/dom";
 import { delay, extend, watch } from "zeta-dom/util";
@@ -10,7 +11,7 @@ import { AnimateSequenceMixin, ClassNameMixin, FlyoutMixin, useAnimateMixin, use
 import Mixin from "src/mixins/Mixin";
 import StatefulMixin from "src/mixins/StatefulMixin";
 import StaticAttributeMixin from "src/mixins/StaticAttributeMixin";
-import { after, mockFn, verifyCalls, _ } from "@misonou/test-utils";
+import { after, mockFn, verifyCalls, _, cleanup } from "@misonou/test-utils";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
 
 initAppBeforeAll(() => { });
@@ -490,6 +491,52 @@ describe('AnimateSequenceMixin', () => {
         const div = container.firstChild;
 
         expect(div).toHaveAttribute('animate-sequence');
+        unmount();
+    });
+
+    it('should support auto start for intro animation', async () => {
+        const Component = function ({ count }) {
+            const mixin = useAnimateSequenceMixin();
+            return (
+                <div {...Mixin.use(mixin.withEffects('fade-in'))}>
+                    {' '.repeat(count).split('').map(v => (
+                        <div data-testid="item" {...Mixin.use(mixin.item)}></div>
+                    ))}
+                </div>
+            );
+        };
+        const { container, rerender, unmount } = render(<Component count={0} />);
+        animateIn(container, 'show', '', true);
+
+        const cb = mockFn();
+        rerender(<Component count={1} />);
+        cleanup(dom.on(screen.getByTestId('item'), 'animatein', cb));
+        await waitFor(() => {
+            expect(cb).toBeCalledTimes(1);
+        });
+        unmount();
+    });
+
+    it('should support auto start for intro animation using selector', async () => {
+        const Component = function ({ count }) {
+            const mixin = useAnimateSequenceMixin('[data-testid="item"]');
+            return (
+                <div {...Mixin.use(mixin.withEffects('fade-in'))}>
+                    {' '.repeat(count).split('').map(v => (
+                        <div data-testid="item"></div>
+                    ))}
+                </div>
+            );
+        };
+        const { container, rerender, unmount } = render(<Component count={0} />);
+        animateIn(container, 'show', '', true);
+
+        const cb = mockFn();
+        rerender(<Component count={1} />);
+        cleanup(dom.on(screen.getByTestId('item'), 'animatein', cb));
+        await waitFor(() => {
+            expect(cb).toBeCalledTimes(1);
+        });
         unmount();
     });
 });
