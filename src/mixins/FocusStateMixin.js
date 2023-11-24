@@ -38,13 +38,7 @@ definePrototype(FocusStateMixin, StatefulMixin, {
             }
         }));
     },
-    getClassNames: function () {
-        var classes = {};
-        var focused = this.state.focused;
-        if (focused) {
-            classes.focused = true;
-            classes['focused-' + focused] = true;
-        }
-        return [classes];
+    onLayoutEffect: function (element, state) {
+        setClass(element, 'focused', state.focused);
     }
 });

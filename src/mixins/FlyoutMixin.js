@@ -1,4 +1,4 @@
-import { defineAliasProperty, definePrototype, each, extend, makeArray } from "../include/zeta-dom/util.js";
+import { definePrototype, extend, makeArray } from "../include/zeta-dom/util.js";
 import { closeFlyout, openFlyout } from "../include/brew-js/domAction.js";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
@@ -6,7 +6,6 @@ import FlyoutToggleMixin from "./FlyoutToggleMixin.js";
 
 const FlyoutMixinSuper = ClassNameMixin.prototype;
 const valueMap = new WeakMap();
-const aliasProps = 'animating isFlyoutOpened modal tabThrough visible'.split(' ');
 
 export default function FlyoutMixin() {
     var self = this;
@@ -24,10 +23,6 @@ export default function FlyoutMixin() {
 }
 
 definePrototype(FlyoutMixin, ClassNameMixin, {
-    reset: function () {
-        this.toggle.reset();
-        return FlyoutMixinSuper.reset.call(this);
-    },
     next: function () {
         this.effects = undefined;
         return FlyoutMixinSuper.next.call(this);
@@ -84,16 +79,6 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
                 self.animating = false;
             },
         }, true));
-    },
-    clone: function () {
-        var self = this;
-        var mixin = extend(FlyoutMixinSuper.clone.call(self), {
-            toggle: self.toggle.ref.getMixin()
-        });
-        each(aliasProps, function (i, v) {
-            defineAliasProperty(mixin, v, self);
-        });
-        return mixin;
     },
     onClassNameUpdated: function (element, prevState, state) {
         var self = this;

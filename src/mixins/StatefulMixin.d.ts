@@ -20,5 +20,7 @@ export default abstract class StatefulMixin<T extends MixinState = MixinState> e
 
     protected initState(): T;
     protected initElement(element: HTMLElement, state: T): void;
+    protected mergeState(element: HTMLElement, state: T, newState: Partial<T>): void;
+    protected onLayoutEffect(element: HTMLElement, state: T): void;
     protected clone(): this;
 }

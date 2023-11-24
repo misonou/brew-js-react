@@ -1,11 +1,10 @@
-import { defineAliasProperty, defineHiddenProperty, definePrototype, each, extend } from "../include/zeta-dom/util.js";
+import { defineHiddenProperty, definePrototype, each, extend } from "../include/zeta-dom/util.js";
 import { getDirectiveComponent } from "../include/brew-js/directive.js";
 import { app } from "../app.js";
 import Mixin from "./Mixin.js";
 import ClassNameMixin from "./ClassNameMixin.js";
 
 const ScrollableMixinSuper = ClassNameMixin.prototype;
-const aliasProps = 'pageIndex scrolling'.split(' ');
 
 export default function ScrollableMixin() {
     var self = this;
@@ -48,13 +47,6 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
                 self.scrolling = false;
             }
         }, true));
-    },
-    clone: function () {
-        var mixin = ScrollableMixinSuper.clone.call(this);
-        each(aliasProps, function (i, v) {
-            defineAliasProperty(mixin, v, self);
-        });
-        return mixin;
     }
 });
 

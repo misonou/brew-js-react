@@ -2,40 +2,153 @@
 
 exports[`ClassNameMixin should persist monitored class names in re-render 1`] = `
 <div
-  class="foo bar test"
+  class=" foo"
 />
 `;
 
-exports[`StatefulMixin#state should return the same state in canonical order 1`] = `
+exports[`StatefulMixin#onLayoutEffect should be called with same state object passed to initElement 1`] = `
 <DocumentFragment>
   <div
     class=""
     data-custom="1"
   >
-    foo
+    1
   </div>
   <div
     class=""
     data-custom="2"
   >
-    foo
+    2
   </div>
 </DocumentFragment>
 `;
 
-exports[`StatefulMixin#state should return the same state in canonical order 2`] = `
+exports[`StatefulMixin#onLayoutEffect should be called with same state object passed to initElement 2`] = `
 <DocumentFragment>
-  <div
-    class=""
-    data-custom="1"
-  >
-    bar
-  </div>
   <div
     class=""
     data-custom="2"
   >
-    bar
+    2
+  </div>
+  <div
+    class=""
+    data-custom="1"
+  >
+    1
+  </div>
+</DocumentFragment>
+`;
+
+exports[`StatefulMixin#onLayoutEffect should be called with same state object passed to initElement 3`] = `
+<DocumentFragment>
+  <div
+    class=""
+    data-custom="3"
+  >
+    3
+  </div>
+  <div
+    class=""
+    data-custom="1"
+  >
+    1
+  </div>
+</DocumentFragment>
+`;
+
+exports[`StatefulMixin#state should set state to correct target in each render cycle 1`] = `
+<DocumentFragment>
+  <div
+    class=""
+    data-index="0"
+    data-text="1"
+  >
+    1
+  </div>
+  <div
+    class=""
+    data-index="1"
+    data-text="2"
+  >
+    2
+  </div>
+</DocumentFragment>
+`;
+
+exports[`StatefulMixin#state should set state to correct target in each render cycle 2`] = `
+<DocumentFragment>
+  <div
+    class=""
+    data-index="0"
+    data-text="2"
+  >
+    2
+  </div>
+  <div
+    class=""
+    data-index="1"
+    data-text="1"
+  >
+    1
+  </div>
+</DocumentFragment>
+`;
+
+exports[`StatefulMixin#state should set state to correct target in each render cycle in child component 1`] = `
+<DocumentFragment>
+  <div
+    class=""
+    data-count="1"
+    data-index="1"
+    data-text="1"
+  >
+    1
+  </div>
+  <div
+    class=""
+    data-count="1"
+    data-index="0"
+    data-text="2"
+  >
+    2
+  </div>
+  <div
+    class=""
+    data-count="1"
+    data-index="1"
+    data-text="3"
+  >
+    3
+  </div>
+</DocumentFragment>
+`;
+
+exports[`StatefulMixin#state should set state to correct target in each render cycle in child component 2`] = `
+<DocumentFragment>
+  <div
+    class=""
+    data-count="1"
+    data-index="1"
+    data-text="1"
+  >
+    1
+  </div>
+  <div
+    class=""
+    data-count="2"
+    data-index="0"
+    data-text="3"
+  >
+    3
+  </div>
+  <div
+    class=""
+    data-count="2"
+    data-index="1"
+    data-text="2"
+  >
+    2
   </div>
 </DocumentFragment>
 `;

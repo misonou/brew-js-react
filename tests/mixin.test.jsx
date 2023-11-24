@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { jest } from "@jest/globals";
-import { render, fireEvent, screen } from "@testing-library/react";
+import { act, render, fireEvent, screen } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { openFlyout } from "brew-js/domAction";
 import dom from "zeta-dom/dom";
-import { delay, watch } from "zeta-dom/util";
+import { delay, extend, watch } from "zeta-dom/util";
+import { classNames, useUpdateTrigger } from "zeta-dom-react";
 import { AnimateSequenceMixin, ClassNameMixin, FlyoutMixin, useAnimateMixin, useAnimateSequenceMixin, useFlyoutMixin, useFocusStateMixin, useLoadingStateMixin, useMixin, useMixinRef, useScrollableMixin } from "src/mixin";
 import Mixin from "src/mixins/Mixin";
 import StatefulMixin from "src/mixins/StatefulMixin";
@@ -151,6 +152,24 @@ describe('StatefulMixin#elements', () => {
         expect(mixin.elements()).toEqual(getAllByText('foo'));
         expect(mixin.elements().length).toBe(2);
     });
+
+    it('should not return unmounted elements', () => {
+        class TestMixin extends StatefulMixin { }
+        let mixin;
+        const Component = function ({ count }) {
+            mixin = useMixin(TestMixin);
+            return (<>
+                {' '.repeat(count).split('').map((_, i) => {
+                    return (<div key={i} {...Mixin.use(mixin)}>foo</div>)
+                })}
+            </>);
+        };
+        const { rerender } = render(<Component count={2} />);
+        expect(mixin.elements().length).toBe(2);
+
+        rerender(<Component count={1} />);
+        expect(mixin.elements().length).toBe(1);
+    });
 });
 
 describe('StatefulMixin#initElement', () => {
@@ -202,50 +221,227 @@ describe('StatefulMixin#initElement', () => {
 });
 
 describe('StatefulMixin#state', () => {
-    it('should return the same state in canonical order', () => {
+    it('should set state to correct target in each render cycle', () => {
         class TestMixin extends StatefulMixin {
-            _counter = 0;
-            getCustomAttributes() {
-                return { 'data-custom': this.state.value };
+            setIndex(index) {
+                this.state.index = index;
+                return this;
             }
-            initState() {
-                return { value: String(++this._counter) };
+            initElement(element, state) {
+                state.text = element.innerHTML;
+            }
+            onLayoutEffect(element, state) {
+                element.setAttribute('data-index', state.index);
+                element.setAttribute('data-text', state.text);
             }
         }
         const Component = function ({ value }) {
-            const mixin = useState(() => new TestMixin())[0].reset();
+            const mixin = useMixin(TestMixin);
             return (<>
-                <div {...Mixin.use(mixin)}>{value}</div>
-                <div {...Mixin.use(mixin)}>{value}</div>
+                {value.map((v, i) => (
+                    <div key={v} {...Mixin.use(mixin.setIndex(i))}>{v}</div>
+                ))}
             </>);
         };
-        const { asFragment, rerender } = render(<Component value="foo" />);
+        const { asFragment, rerender, unmount } = render(<Component value={[1, 2]} />);
         expect(asFragment()).toMatchSnapshot();
 
-        rerender(<Component value="bar" />);
+        rerender(<Component value={[2, 1]} />);
         expect(asFragment()).toMatchSnapshot();
+        unmount();
+    });
+
+    it('should set state to correct target in each render cycle in child component', () => {
+        const updateChild = mockFn();
+        class TestMixin extends StatefulMixin {
+            setIndex(index) {
+                this.state.index = index;
+                return this;
+            }
+            initElement(element, state) {
+                state.text = element.innerHTML;
+                state.count = 0;
+            }
+            onLayoutEffect(element, state) {
+                element.setAttribute('data-index', state.index);
+                element.setAttribute('data-text', state.text);
+                element.setAttribute('data-count', ++state.count);
+            }
+        }
+        const Inner = function ({ mixinRef }) {
+            const mixin = useMixinRef(mixinRef);
+            const [values, setValues] = useState([2, 3]);
+            updateChild.mockImplementation(setValues);
+            return (<>
+                {values.map((v, i) => (
+                    <div key={v} {...Mixin.use(mixin.setIndex(i))}>{v}</div>
+                ))}
+            </>);
+        };
+        const Component = function () {
+            const mixin = useMixin(TestMixin);
+            return (<>
+                <div {...Mixin.use(mixin.setIndex(1))}>{1}</div>
+                <Inner mixinRef={mixin.ref} />
+            </>);
+        }
+        const { asFragment, unmount } = render(<Component />);
+        expect(asFragment()).toMatchSnapshot();
+
+        act(() => updateChild([3, 2]));
+        expect(asFragment()).toMatchSnapshot();
+        unmount();
+    });
+});
+
+describe('StatefulMixin#mergeState', () => {
+    it('should be invoked in each render cycle when needed', () => {
+        const mergeState = mockFn();
+        class TestMixin extends StatefulMixin {
+            setIndex(index) {
+                this.state.index = index;
+                return this;
+            }
+            mergeState(element, state, newState) {
+                mergeState(element, extend({}, state), extend({}, newState));
+                super.mergeState(element, state, newState);
+            }
+        }
+        const Component = function ({ value }) {
+            const mixin = useMixin(TestMixin);
+            return (<>
+                {value.map((v, i) => (
+                    <div key={v} {...Mixin.use(mixin.setIndex(i))}>{v}</div>
+                ))}
+            </>);
+        };
+        const { rerender, unmount } = render(<Component value={['foo', 'bar']} />);
+        expect(mergeState).not.toBeCalled();
+
+        rerender(<Component value={['bar', 'foo']} />);
+        verifyCalls(mergeState, [
+            [screen.getByText('bar'), expect.objectContaining({ index: 1 }), { index: 0 }],
+            [screen.getByText('foo'), expect.objectContaining({ index: 0 }), { index: 1 }],
+        ]);
+        unmount();
+    });
+});
+
+describe('StatefulMixin#onLayoutEffect', () => {
+    it('should be invoked for each element in each render cycle', () => {
+        const onLayoutEffect = mockFn();
+        class TestMixin extends StatefulMixin {
+            onLayoutEffect = onLayoutEffect;
+        }
+        const Component = function ({ value }) {
+            const mixin = useMixin(TestMixin);
+            return (
+                <>
+                    <div data-testid="elm1" {...Mixin.use(mixin)}></div>
+                    <div data-testid="elm2" {...Mixin.use(mixin)}></div>
+                </>
+            );
+        };
+        const { unmount, rerender } = render(<Component value="foo" />);
+        verifyCalls(onLayoutEffect, [
+            [screen.getByTestId('elm1'), _],
+            [screen.getByTestId('elm2'), _],
+        ]);
+        const state1 = onLayoutEffect.mock.calls[0][1];
+        const state2 = onLayoutEffect.mock.calls[1][1];
+
+        onLayoutEffect.mockClear();
+        rerender(<Component value="bar" />);
+        verifyCalls(onLayoutEffect, [
+            [screen.getByTestId('elm1'), state1],
+            [screen.getByTestId('elm2'), state2],
+        ]);
+        unmount();
+    });
+
+    it('should be invoked for each element in updated component only', () => {
+        let update;
+        const onLayoutEffect = mockFn();
+        class TestMixin extends StatefulMixin {
+            onLayoutEffect = onLayoutEffect;
+        }
+        const Inner = function ({ mixinRef }) {
+            const mixin = useMixinRef(mixinRef);
+            update = useUpdateTrigger();
+            return (
+                <div data-testid="elm2" {...Mixin.use(mixin)}></div>
+            );
+        }
+        const Component = function () {
+            const mixin = useMixin(TestMixin);
+            return (
+                <>
+                    <div data-testid="elm1" {...Mixin.use(mixin)}></div>
+                    <Inner mixinRef={mixin.ref} />
+                </>
+            );
+        };
+        const { unmount } = render(<Component />);
+        verifyCalls(onLayoutEffect, [
+            [screen.getByTestId('elm1'), _],
+            [screen.getByTestId('elm2'), _],
+        ]);
+
+        onLayoutEffect.mockClear();
+        act(() => update());
+        verifyCalls(onLayoutEffect, [
+            [screen.getByTestId('elm2'), _],
+        ]);
+        unmount();
+    });
+
+    it('should be called with same state object passed to initElement', () => {
+        class TestMixin extends StatefulMixin {
+            _counter = 0;
+            initElement(element, state) {
+                state.value = String(++this._counter);
+            }
+            onLayoutEffect(element, state) {
+                element.setAttribute('data-custom', state.value);
+            }
+        }
+        const Component = function ({ value }) {
+            const mixin = useMixin(TestMixin);
+            return (<>
+                {value.map(v => (
+                    <div key={v} {...Mixin.use(mixin)}>{v}</div>
+                ))}
+            </>);
+        };
+        const { asFragment, rerender, unmount } = render(<Component value={[1, 2]} />);
+        expect(asFragment()).toMatchSnapshot();
+
+        rerender(<Component value={[2, 1]} />);
+        expect(asFragment()).toMatchSnapshot();
+
+        rerender(<Component value={[3, 1]} />);
+        expect(asFragment()).toMatchSnapshot();
+        unmount();
     });
 });
 
 describe('ClassNameMixin', () => {
-    it('should persist monitored class names in re-render', () => {
-        const mixin = new ClassNameMixin(['foo', 'bar']);
-        const getClassNames = jest.spyOn(mixin, 'getClassNames');
-        const Component = function () {
+    it('should persist monitored class names in re-render', async () => {
+        const mixin = new ClassNameMixin(['foo']);
+        const Component = function ({ value }) {
             mixin.reset();
-            return (<div {...Mixin.use(mixin, 'test')}></div>);
+            return (<div {...Mixin.use(mixin, classNames({ baz: value }))}></div>);
         };
-        const { container, rerender, unmount } = render(<Component />);
+        const { container, rerender, unmount } = render(<Component value={true} />);
         const div = container.firstChild;
-        div.classList.add('foo');
-        div.classList.add('bar');
-        getClassNames.mockClear();
+        await after(() => {
+            div.classList.add('foo');
+            div.classList.add('bar');
+        });
 
-        rerender(<Component />);
-        expect(getClassNames).toBeCalledTimes(1);
-        expect(getClassNames.mock.results[0].value).toEqual([{ foo: true, bar: true }]);
+        rerender(<Component value={false} />);
         expect(div.classList.contains('foo')).toBe(true);
-        expect(div.classList.contains('bar')).toBe(true);
+        expect(div.classList.contains('bar')).toBe(false);
         expect(div).toMatchSnapshot();
         unmount();
     });
@@ -264,7 +460,7 @@ describe('ClassNameMixin', () => {
 
         await delay(100);
         verifyCalls(onClassNameUpdated, [
-            [div, {}, { foo: true, bar: true }]
+            [div, { foo: false, bar: false }, { foo: true, bar: true }]
         ]);
         unmount();
     });
@@ -295,13 +491,6 @@ describe('AnimateSequenceMixin', () => {
 
         expect(div).toHaveAttribute('animate-sequence');
         unmount();
-    });
-
-    it('should clone item mixin', () => {
-        const mixin = new AnimateSequenceMixin();
-        const ref = jest.spyOn(mixin.item, 'ref', 'get');
-        expect(mixin.clone().item).not.toBe(mixin.item);
-        expect(ref).toBeCalledTimes(1);
     });
 });
 
@@ -366,13 +555,6 @@ describe('FlyoutMixin', () => {
         mixin.close('foo');
         await expect(promise).resolves.toBe('foo');
         unmount();
-    });
-
-    it('should clone toggle mixin', () => {
-        const mixin = new FlyoutMixin();
-        const ref = jest.spyOn(mixin.toggle, 'ref', 'get');
-        expect(mixin.clone().toggle).not.toBe(mixin.toggle);
-        expect(ref).toBeCalledTimes(1);
     });
 });
 

@@ -1,7 +1,6 @@
 import { definePrototype } from "../include/zeta-dom/util.js";
 import { setClass } from "../include/zeta-dom/domUtil.js";
 import { subscribeAsync } from "../include/zeta-dom/domLock.js";
-import dom from "../include/zeta-dom/dom.js";
 import StatefulMixin from "./StatefulMixin.js";
 
 const LoadingStateMixinSuper = StatefulMixin.prototype;
@@ -18,7 +17,7 @@ definePrototype(LoadingStateMixin, StatefulMixin, {
             setClass(element, 'loading', loading);
         }));
     },
-    getClassNames: function () {
-        return [{ loading: !!this.state.loading }];
+    onLayoutEffect: function (element, state) {
+        setClass(element, 'loading', state.loading);
     }
 });

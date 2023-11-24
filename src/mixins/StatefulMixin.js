@@ -1,4 +1,4 @@
-import { combineFn, createPrivateStore, definePrototype, each, extend, inherit, randomId, setAdd, values, watch } from "../include/zeta-dom/util.js";
+import { combineFn, createPrivateStore, definePrototype, extend, keys, map, pipe, watch } from "../include/zeta-dom/util.js";
 import Mixin from "./Mixin.js";
 
 const _ = createPrivateStore();
@@ -16,51 +16,53 @@ definePrototype(MixinRefImpl, {
 export default function StatefulMixin() {
     Mixin.call(this);
     _(this, {
-        elements: new WeakSet(),
+        elements: new Set(),
+        states: new WeakMap(),
         flush: watch(this, false),
-        dispose: [],
-        states: {},
-        prefix: '',
-        counter: 0
+        dispose: []
     });
 }
 
 definePrototype(StatefulMixin, Mixin, {
     get ref() {
-        const self = this;
-        const state = self.state;
-        self.next();
-        return state.ref || (state.ref = new MixinRefImpl(self.clone()));
+        const state = _(this);
+        return state.ref || (state.ref = new MixinRefImpl(this));
     },
     get state() {
-        const obj = _(this);
-        const key = obj.prefix + obj.counter;
-        return obj.states[key] || (obj.states[key] = this.initState());
+        return _(this).pending;
     },
     reset: function () {
-        _(this).counter = 0;
+        _(this).pending = {};
         return this;
     },
     next: function () {
-        _(this).counter++;
+        _(this).pending = {};
         return this;
     },
     getRef: function () {
-        const self = this;
-        const state = self.state;
+        var self = this;
+        var obj = _(self);
+        var newState = obj.pending;
+        var state;
         return function (current) {
-            state.element = current;
-            if (current && setAdd(_(self).elements, current)) {
-                self.initElement(current, state);
+            if (current) {
+                state = obj.states.get(current) || extend(self.initState(), newState);
+                if (state.element !== current) {
+                    state.element = current;
+                    self.initElement(current, state);
+                    obj.states.set(current, state);
+                } else if (keys(newState)[0]) {
+                    self.mergeState(current, state, newState);
+                }
+                self.onLayoutEffect(current, state);
+                obj.elements.add(current);
+            } else {
+                obj.elements.delete(state.element);
             }
         };
     },
     elements: function () {
-        return values(_(this).states).map(function (v) {
-            return v.element;
-        }).filter(function (v) {
-            return v;
-        });
+        return map(_(this).elements, pipe);
     },
     onDispose: function (callback) {
         _(this).dispose.push(callback);
@@ -70,23 +72,19 @@ definePrototype(StatefulMixin, Mixin, {
     },
     initElement: function (element, state) {
     },
+    mergeState: function (element, state, newState) {
+        extend(state, newState);
+    },
+    onLayoutEffect: function (element, state) {
+    },
     clone: function () {
-        const self = this;
-        const clone = inherit(Object.getPrototypeOf(self), self);
-        _(clone, extend({}, _(self), {
-            prefix: randomId() + '.',
-            counter: 0
-        }));
-        return clone;
+        return this;
     },
     dispose: function () {
         var state = _(this);
-        var states = state.states;
         combineFn(state.dispose.splice(0))();
         state.flush();
-        state.elements = new WeakSet();
-        each(states, function (i, v) {
-            delete states[i];
-        });
+        state.states = {};
+        state.pending = {};
     }
 });
