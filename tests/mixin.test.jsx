@@ -7,7 +7,7 @@ import { openFlyout } from "brew-js/domAction";
 import dom from "zeta-dom/dom";
 import { delay, extend, watch } from "zeta-dom/util";
 import { classNames, useUpdateTrigger } from "zeta-dom-react";
-import { AnimateSequenceMixin, ClassNameMixin, FlyoutMixin, ScrollIntoViewMixin, useAnimateMixin, useAnimateSequenceMixin, useFlyoutMixin, useFocusStateMixin, useLoadingStateMixin, useMixin, useMixinRef, useScrollableMixin } from "src/mixin";
+import { AnimateSequenceMixin, ClassNameMixin, FlyoutMixin, ScrollIntoViewMixin, useAnimateMixin, useAnimateSequenceMixin, useClassNameToggleMixin, useFlyoutMixin, useFocusStateMixin, useLoadingStateMixin, useMixin, useMixinRef, useScrollableMixin, useUnmanagedClassNameMixin } from "src/mixin";
 import Mixin from "src/mixins/Mixin";
 import StatefulMixin from "src/mixins/StatefulMixin";
 import StaticAttributeMixin from "src/mixins/StaticAttributeMixin";
@@ -846,6 +846,61 @@ describe('ScrollableMixin', () => {
         const div = container.firstChild;
 
         expect(div).toHaveAttribute('scrollable');
+        unmount();
+    });
+});
+
+describe('UnmanagedClassNameMixin', () => {
+    it('should restore target classes', async () => {
+        const Component = function ({ value }) {
+            const mixin = useUnmanagedClassNameMixin();
+            return (<div {...Mixin.use(mixin.memorize('class-1'), classNames({ [value]: true }))}>test</div>);
+        };
+        const { container, rerender, unmount } = render(<Component value="foo" />);
+        const div = container.firstChild;
+        await after(() => {
+            div.classList.add('class-1');
+            div.classList.add('class-2');
+        });
+        rerender(<Component value="bar" />);
+        expect(div).toHaveClassName('class-1');
+        expect(div).not.toHaveClassName('class-2');
+        unmount();
+    });
+});
+
+describe('ClassNameToggleMixin', () => {
+    it('should set target classes', () => {
+        let mixin;
+        const Component = function ({ value }) {
+            mixin = useClassNameToggleMixin({});
+            return (<div {...Mixin.use(mixin)}>test</div>);
+        };
+        const { container, rerender, unmount } = render(<Component value={1} />);
+        const div = container.firstChild;
+        expect(div).not.toHaveClassName('class-1');
+
+        mixin.set('class-1', true);
+        expect(div).toHaveClassName('class-1');
+        rerender(<Component value={2} />);
+        expect(div).toHaveClassName('class-1');
+
+        mixin.set('class-1', false);
+        expect(div).not.toHaveClassName('class-1');
+        rerender(<Component value={3} />);
+        expect(div).not.toHaveClassName('class-1');
+        unmount();
+    });
+
+    it('should set target classes initially', () => {
+        const Component = function () {
+            const mixin = useClassNameToggleMixin({ foo: true, bar: false });
+            return (<div {...Mixin.use(mixin)}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+        expect(div).toHaveClassName('foo');
+        expect(div).not.toHaveClassName('bar');
         unmount();
     });
 });

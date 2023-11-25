@@ -3,6 +3,7 @@ import AnimateMixin from "./mixins/AnimateMixin";
 import AnimateSequenceItemMixin from "./mixins/AnimateSequenceItemMixin";
 import AnimateSequenceMixin from "./mixins/AnimateSequenceMixin";
 import ClassNameMixin from "./mixins/ClassNameMixin";
+import ClassNameToggleMixin from "./mixins/ClassNameToggleMixin";
 import FlyoutMixin, { FlyoutMixinOptions } from "./mixins/FlyoutMixin";
 import FlyoutToggleMixin from "./mixins/FlyoutToggleMixin";
 import FocusStateMixin from "./mixins/FocusStateMixin";
@@ -10,6 +11,7 @@ import LoadingStateMixin from "./mixins/LoadingStateMixin";
 import StatefulMixin, { MixinRef } from "./mixins/StatefulMixin";
 import ScrollableMixin, { ScrollableMixinOptions } from "./mixins/ScrollableMixin";
 import ScrollIntoViewMixin from "./mixins/ScrollIntoViewMixin";
+import UnmanagedClassNameMixin from "./mixins/UnmanagedClassNameMixin";
 
 export * from "./mixins/Mixin";
 export * from "./mixins/AnimateMixin";
@@ -28,13 +30,15 @@ export {
     AnimateSequenceMixin,
     AnimateSequenceItemMixin,
     ClassNameMixin,
+    ClassNameToggleMixin,
     FlyoutMixin,
     FlyoutToggleMixin,
     FocusStateMixin,
     LoadingStateMixin,
     StatefulMixin,
     ScrollableMixin,
-    ScrollIntoViewMixin
+    ScrollIntoViewMixin,
+    UnmanagedClassNameMixin,
 }
 
 /**
@@ -76,6 +80,19 @@ export function useFocusStateMixin(): FocusStateMixin;
  * through `notifyAsync` for any descendent elements. The `asyncStart` and `asyncEnd` events are also enabled on the applied elements.
  */
 export function useLoadingStateMixin(): LoadingStateMixin;
+
+/**
+ * Returns a mixin that keeps track and preserves the presence of specified CSS classes on applied elements
+ * while the host component is re-rendered.
+ */
+export function useUnmanagedClassNameMixin(): UnmanagedClassNameMixin;
+
+/**
+ * Returns a mixin that controls the presence of specified CSS classes on applied elements
+ * without re-rendering the host component.
+ * @param dict A dictionary specifying CSS classes to be initially added.
+ */
+export function useClassNameToggleMixin<T extends Zeta.Dictionary<boolean>>(dict: T): ClassNameToggleMixin<T>;
 
 /**
  * Creates a mixin of the specified type within the lifetime of current component.
