@@ -7,12 +7,24 @@ import { openFlyout } from "brew-js/domAction";
 import dom from "zeta-dom/dom";
 import { delay, extend, watch } from "zeta-dom/util";
 import { classNames, useUpdateTrigger } from "zeta-dom-react";
-import { AnimateSequenceMixin, ClassNameMixin, FlyoutMixin, useAnimateMixin, useAnimateSequenceMixin, useFlyoutMixin, useFocusStateMixin, useLoadingStateMixin, useMixin, useMixinRef, useScrollableMixin } from "src/mixin";
+import { AnimateSequenceMixin, ClassNameMixin, FlyoutMixin, ScrollIntoViewMixin, useAnimateMixin, useAnimateSequenceMixin, useFlyoutMixin, useFocusStateMixin, useLoadingStateMixin, useMixin, useMixinRef, useScrollableMixin } from "src/mixin";
 import Mixin from "src/mixins/Mixin";
 import StatefulMixin from "src/mixins/StatefulMixin";
 import StaticAttributeMixin from "src/mixins/StaticAttributeMixin";
 import { after, mockFn, verifyCalls, _, cleanup } from "@misonou/test-utils";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
+
+class ScrollIntoViewMixinImpl extends ScrollIntoViewMixin {
+    static callback = mockFn();
+    initElement(element, state) {
+        super.initElement(element, state);
+        const callback = state.callback;
+        state.callback = function () {
+            ScrollIntoViewMixinImpl.callback(element);
+            callback();
+        };
+    }
+}
 
 initAppBeforeAll(() => { });
 
@@ -771,6 +783,47 @@ describe('LoadingStateMixin', () => {
 
         await dom.cancelLock(div);
         expect(div).not.toHaveClassName('loading');
+        unmount();
+    });
+});
+
+describe('ScrollIntoViewMixin', () => {
+    it('should scroll element into view when dependency list changes', async () => {
+        const Component = function ({ deps }) {
+            const mixin = useMixin(ScrollIntoViewMixinImpl);
+            return (<div {...Mixin.use(mixin.when(deps))}>test</div>);
+        };
+        const { container, rerender, unmount } = render(<Component deps={[1]} />);
+        await delay(0);
+        expect(ScrollIntoViewMixinImpl.callback).not.toBeCalled();
+
+        rerender(<Component deps={[2]} />);
+        await delay(0);
+        expect(ScrollIntoViewMixinImpl.callback).toBeCalledWith(container.firstChild);
+
+        ScrollIntoViewMixinImpl.callback.mockClear();
+        rerender(<Component deps={[2]} />);
+        await delay(0);
+        expect(ScrollIntoViewMixinImpl.callback).not.toBeCalled();
+        unmount();
+    });
+
+    it('should scroll element into view when flag changed from false to true', async () => {
+        const Component = function ({ index }) {
+            const mixin = useMixin(ScrollIntoViewMixinImpl);
+            return (<>
+                {' '.repeat(3).split('').map((v, i) => (
+                    <div {...Mixin.use(mixin.when(index === i))}>test</div>
+                ))}
+            </>);
+        };
+        const { container, rerender, unmount } = render(<Component index={0} />);
+        await delay(0);
+        expect(ScrollIntoViewMixinImpl.callback).not.toBeCalled();
+
+        rerender(<Component index={1} />);
+        await delay(0);
+        expect(ScrollIntoViewMixinImpl.callback).toBeCalledWith(container.children[1]);
         unmount();
     });
 });
