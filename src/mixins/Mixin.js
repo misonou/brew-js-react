@@ -6,6 +6,9 @@ export default function Mixin() {
 }
 
 definePrototype(Mixin, {
+    reset: function () {
+        return this;
+    },
     next: function () {
     },
     getRef: function () {

@@ -95,6 +95,14 @@ describe('use', () => {
     });
 });
 
+describe('useMixin', () => {
+    it('should work with base class', () => {
+        const { result, unmount } = renderHook(() => useMixin(Mixin));
+        expect(result.current).toBeInstanceOf(Mixin);
+        unmount();
+    });
+});
+
 describe('StaticAttributeMixin', () => {
     it('should add custom attributes to element', () => {
         const Component = function ({ value }) {

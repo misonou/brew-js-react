@@ -17,6 +17,10 @@ export default abstract class Mixin implements ClassNameProvider {
     /**
      * @private Internal use.
      */
+    reset(): this;
+    /**
+     * @private Internal use.
+     */
     next(): this;
     /**
      * @private Internal use.
