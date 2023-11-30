@@ -1,7 +1,9 @@
 /// <reference types="jq-scrollable" />
 
 import ClassNameMixin from "./ClassNameMixin";
+import Mixin from "./Mixin";
 import StaticAttributeMixin from "./StaticAttributeMixin";
+import { useScrollableMixin } from "../mixin";
 
 export interface ScrollableMixinOptions {
     /**
@@ -39,6 +41,11 @@ export interface ScrollableMixinOptions {
     persistScroll?: boolean;
 }
 
+/**
+ * Enables scrollable plugin on the applied element.
+ *
+ * Mixin should be created using {@link useScrollableMixin} and applied to element by {@link Mixin.use}.
+ */
 export default class ScrollableMixin extends ClassNameMixin implements JQueryScrollable {
     /**
      * Gets a mixin object that when applied to descecant element

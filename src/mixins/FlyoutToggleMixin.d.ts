@@ -1,5 +1,11 @@
 import ClassNameMixin from "./ClassNameMixin";
+import FlyoutMixin from "./FlyoutMixin";
 
+/**
+ * Enables applied element as toggle buttons for the associated flyout.
+ *
+ * Instances of this mixin is exposed by {@link FlyoutMixin.toggle}.
+ */
 export default class FlyoutToggleMixin extends ClassNameMixin {
     /**
      * Opens the associated flyout.

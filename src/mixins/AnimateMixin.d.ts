@@ -1,4 +1,6 @@
 import ClassNameMixin from "./ClassNameMixin";
+import Mixin from "./Mixin";
+import { useAnimateMixin } from "../mixin";
 
 /**
  * To use predefined animation effects, import `brew-js/styles`.
@@ -28,6 +30,11 @@ export type AnimationEffect = Zeta.HintedString<'fade-in' | 'slide-down' | 'slid
  */
 export type AnimationTrigger = Zeta.HintedString<'show' | 'open'>;
 
+/**
+ * Enables intro and/or outro animation for applied elements.
+ *
+ * Mixin should be created using {@link useAnimateMixin} and applied to element by {@link Mixin.use}.
+ */
 export default class AnimateMixin extends ClassNameMixin {
     /**
      * Specifies animation effects and trigger for rendered elements.

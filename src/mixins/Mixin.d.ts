@@ -10,9 +10,23 @@ interface MixinProps {
 export default abstract class Mixin implements ClassNameProvider {
     static readonly scrollableTarget: StaticAttributeMixin;
 
-    static readonly use(ref: React.ForwardedRef<any>, ...args: (Mixin | string | undefined)[]): MixinProps;
-    static readonly use(ref: Mixin, ...args: (Mixin | string | undefined)[]): MixinProps;
-    static readonly use(...args: (Mixin | undefined)[]): MixinProps;
+    /**
+     * Applies React ref and mixins to element.
+     * @param ref A ref callback or ref object.
+     * @param args Mixin instances or string literals. String literals are applied to element as CSS classes.
+     */
+    static use(ref: React.ForwardedRef<any>, ...args: (Mixin | string | undefined)[]): MixinProps;
+    /**
+     * Applies mixins to element.
+     * @param mixin Mixin instance.
+     * @param args Mixin instances or string literals. String literals are applied to element as CSS classes.
+     */
+    static use(mixin: Mixin, ...args: (Mixin | string | undefined)[]): MixinProps;
+    /**
+     * Applies mixins to element.
+     * @param mixins Mixin instances.
+     */
+    static use(...mixins: (Mixin | undefined)[]): MixinProps;
 
     /**
      * @private Internal use.
@@ -27,11 +41,11 @@ export default abstract class Mixin implements ClassNameProvider {
      */
     getRef(): React.RefCallback<Element>;
     /**
-     * @private Internal use.
+     * Override this method to apply class names to element.
      */
     getClassNames(): ClassName[];
     /**
-     * @private Internal use.
+     * Override this method to apply custom attributes to element.
      */
     getCustomAttributes(): Zeta.Dictionary<string>;
     /**

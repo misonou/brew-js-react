@@ -1,6 +1,8 @@
 import ClassNameMixin from "./ClassNameMixin";
 import FlyoutToggleMixin from "./FlyoutToggleMixin";
+import Mixin from "./Mixin";
 import { AnimationEffect } from "./AnimateMixin";
+import { useFlyoutMixin } from "../mixin";
 
 export interface FlyoutMixinOptions {
     /**
@@ -17,6 +19,11 @@ export interface FlyoutMixinOptions {
     swipeToDismiss?: 'up' | 'down' | 'left' | 'right';
 }
 
+/**
+ * Provides methods controlling the applied element as a flyout.
+ *
+ * Mixin should be created using {@link useFlyoutMixin} and applied to element by {@link Mixin.use}.
+ */
 export default class FlyoutMixin extends ClassNameMixin {
     /**
      * Gets whether the flyout is open.

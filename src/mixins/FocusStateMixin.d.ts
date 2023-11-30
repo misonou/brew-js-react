@@ -1,6 +1,13 @@
 import React from "react";
 import ClassNameMixin from "./ClassNameMixin";
+import Mixin from "./Mixin";
+import { useFocusStateMixin } from "../mixin";
 
+/**
+ * Adds `focused` and `focused-*` CSS classes to applied elements when being focused.
+ *
+ * Mixin should be created using {@link useFocusStateMixin} and applied to element by {@link Mixin.use}.
+ */
 export default class FocusStateMixin extends ClassNameMixin {
     /**
      * Sets focus state based on another element.
