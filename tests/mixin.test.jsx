@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { jest } from "@jest/globals";
 import { act, render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
-import { animateIn } from "brew-js/anim";
+import { addAnimateIn, addAnimateOut, animateIn } from "brew-js/anim";
 import { openFlyout } from "brew-js/domAction";
 import dom from "zeta-dom/dom";
 import { delay, extend, watch } from "zeta-dom/util";
@@ -25,6 +25,11 @@ class ScrollIntoViewMixinImpl extends ScrollIntoViewMixin {
         };
     }
 }
+
+const customAnimateIn = mockFn(() => delay(10));
+const customAnimateOut = mockFn(() => delay(10));
+addAnimateIn('custom-anim', customAnimateIn)
+addAnimateOut('custom-anim', customAnimateOut)
 
 initAppBeforeAll(() => { });
 
@@ -497,6 +502,20 @@ describe('AnimateMixin', () => {
         const div = container.firstChild;
 
         expect(div).toHaveAttribute('animate-in', 'fade-in');
+        expect(div).toHaveAttribute('animate-on', 'show');
+        unmount();
+    });
+
+    it('should set animate-on attributes', async () => {
+        const Component = function () {
+            const mixin = useAnimateMixin();
+            return (<div {...Mixin.use(mixin.with({ trigger: 'open', effects: ['fade-in'] }))}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        expect(div).toHaveAttribute('animate-in', 'fade-in');
+        expect(div).toHaveAttribute('animate-on', 'open');
         unmount();
     });
 });
@@ -574,6 +593,20 @@ describe('FlyoutMixin', () => {
         unmount();
     });
 
+    it('should set animate-* attributes when withEffects is called', async () => {
+        const Component = function () {
+            const mixin = useFlyoutMixin();
+            return (<div {...Mixin.use(mixin.withEffects('fade-in', 'slide-up'))}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        expect(div).toHaveAttribute('animate-on', 'open');
+        expect(div).toHaveAttribute('animate-in', 'fade-in slide-up');
+        expect(div).toHaveAttribute('animate-out', '');
+        unmount();
+    });
+
     it('should invoke onOpen handler when flyout is opened', async () => {
         const cb = mockFn();
         const Component = function () {
@@ -621,6 +654,58 @@ describe('FlyoutMixin', () => {
         await delay(0);
         mixin.close('foo');
         await expect(promise).resolves.toBe('foo');
+        unmount();
+    });
+
+    it('should set visible and invoke onVisibilityChanged handler at correct timing', async () => {
+        let mixin;
+        const Component = function () {
+            mixin = useFlyoutMixin();
+            return (<div {...Mixin.use(mixin.withEffects('fade-in'))} custom-anim="">test</div>);
+        };
+        const { unmount } = render(<Component />);
+        const cb = mockFn();
+        mixin.onVisibilityChanged(cb);
+        mixin.open();
+        expect(mixin.visible).toBe(false);
+
+        await delay(0);
+        expect(mixin.visible).toBe(true);
+        expect(cb).toBeCalledWith(true, false, _, _);
+
+        await delay(100);
+        mixin.close();
+
+        await delay(0);
+        expect(customAnimateOut).toBeCalled();
+        expect(mixin.visible).toBe(true);
+        expect(cb).toBeCalledTimes(1);
+
+        await customAnimateOut.mock.results[0].value;
+        await delay(0);
+        expect(mixin.visible).toBe(false);
+        expect(cb).toBeCalledWith(false, true, _, _);
+        unmount();
+    });
+
+    it('should set animating to true during animation', async () => {
+        let mixin;
+        const Component = function () {
+            mixin = useFlyoutMixin();
+            return (<div {...Mixin.use(mixin.withEffects('fade-in'))} custom-anim="">test</div>);
+        };
+        const { unmount } = render(<Component />);
+        const animationcomplete = mockFn();
+        cleanup(dom.on(mixin.elements()[0], 'animationcomplete', animationcomplete));
+
+        mixin.open();
+        expect(customAnimateIn).toBeCalledTimes(1);
+        expect(mixin.animating).toBe(true);
+
+        await customAnimateIn.mock.results[0].value;
+        await delay(0);
+        expect(mixin.animating).toBe(false);
+        expect(animationcomplete).toBeCalledTimes(1);
         unmount();
     });
 });

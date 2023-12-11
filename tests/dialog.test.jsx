@@ -131,6 +131,17 @@ describe('createDialog', () => {
         expect(locked()).toBe(true);
     });
 
+    it('should lock root element when preventNavigation is true', () => {
+        const dialog = createDialogMock({
+            preventNavigation: true,
+            onRender: function Component() {
+                return <span>text</span>;
+            }
+        });
+        actAndReturn(() => dialog.open());
+        expect(locked()).toBe(true);
+    });
+
     it('should not prevent leave when dialog is closed', async () => {
         const dialog = createDialogMock({
             preventLeave: true,
