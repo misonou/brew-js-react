@@ -31,7 +31,7 @@ export function createDialog(props) {
             setClass(root, 'loading', false);
         }
     });
-    subscribeAsync(root);
+    subscribeAsync(root, true);
 
     return {
         root: root,

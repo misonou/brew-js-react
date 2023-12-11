@@ -1,6 +1,6 @@
 import React from "react";
 import { act, render, screen, waitForElementToBeRemoved } from "@testing-library/react";
-import { locked } from "zeta-dom/domLock";
+import { locked, subscribeAsync } from "zeta-dom/domLock";
 import { removeNode } from "zeta-dom/domUtil";
 import { createDialog, Dialog } from "src/dialog";
 import { after, delay, mockFn, verifyCalls } from "@misonou/test-utils";
@@ -104,6 +104,38 @@ describe('createDialog', () => {
 
         await expect(result).rejects.toBe(42);
         expect(dialog.root).not.toHaveClassName('loading');
+    });
+
+    it('should notify async awaiting onCommit', async () => {
+        const dismiss = mockFn();
+        const cb = mockFn();
+        const { container } = render(<button></button>);
+        dom.focus(container);
+
+        const dialog = createDialogMock({
+            onRender({ closeDialog }) {
+                dismiss.mockImplementationOnce(closeDialog);
+                return <span>text</span>;
+            },
+            onCommit() {
+                return delay(100);
+            }
+        });
+        subscribeAsync(dialog.root, cb);
+        subscribeAsync(container, cb);
+        subscribeAsync(dom.root, cb);
+        await actAwaitSetImmediate(() => dialog.open());
+
+        const result = dismiss();
+        expect(cb).toBeCalledTimes(1);
+
+        await result;
+        verifyCalls(cb, [
+            [true],
+            [false],
+        ]);
+        expect(cb.mock.instances[0]).toBe(dialog.root);
+        expect(cb.mock.instances[1]).toBe(dialog.root);
     });
 
     it('should set dialog as modal when modal is true', () => {
