@@ -1,14 +1,14 @@
-/*! brew-js-react v0.4.8 | (c) misonou | https://hackmd.io/@misonou/brew-js-react */
+/*! brew-js-react v0.5.0 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
+		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew-js-react", ["brew-js", "react", "react-dom", "zeta-dom", "zeta-dom-react", "waterpipe"], factory);
+		define("brew-js-react", ["brew-js", "react", "react-dom", "zeta-dom", "zeta-dom-react", "waterpipe", "jquery"], factory);
 	else if(typeof exports === 'object')
-		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"));
+		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
 	else
-		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["zeta"], root["zeta-dom-react"], root["waterpipe"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__) {
+		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["zeta"], root["zeta-dom-react"], root["waterpipe"], root["jQuery"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__80__, __WEBPACK_EXTERNAL_MODULE__359__, __WEBPACK_EXTERNAL_MODULE__318__, __WEBPACK_EXTERNAL_MODULE__654__, __WEBPACK_EXTERNAL_MODULE__103__, __WEBPACK_EXTERNAL_MODULE__28__, __WEBPACK_EXTERNAL_MODULE__47__) {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -33,6 +33,14 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__103__;
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__80__;
+
+/***/ }),
+
+/***/ 47:
+/***/ ((module) => {
+
+"use strict";
+module.exports = __WEBPACK_EXTERNAL_MODULE__47__;
 
 /***/ }),
 
@@ -167,6 +175,7 @@ __webpack_require__.d(src_namespaceObject, {
   "AnimateSequenceItemMixin": () => (AnimateSequenceItemMixin),
   "AnimateSequenceMixin": () => (AnimateSequenceMixin),
   "ClassNameMixin": () => (ClassNameMixin),
+  "ClassNameToggleMixin": () => (ClassNameToggleMixin),
   "Dialog": () => (Dialog),
   "FlyoutMixin": () => (FlyoutMixin),
   "FlyoutToggleMixin": () => (FlyoutToggleMixin),
@@ -176,6 +185,7 @@ __webpack_require__.d(src_namespaceObject, {
   "ScrollIntoViewMixin": () => (ScrollIntoViewMixin),
   "ScrollableMixin": () => (ScrollableMixin),
   "StatefulMixin": () => (StatefulMixin),
+  "UnmanagedClassNameMixin": () => (UnmanagedClassNameMixin),
   "ViewStateContainer": () => (ViewStateContainer),
   "createDialog": () => (createDialog),
   "default": () => (src),
@@ -193,6 +203,7 @@ __webpack_require__.d(src_namespaceObject, {
   "useAnimateSequenceMixin": () => (useAnimateSequenceMixin),
   "useAppReady": () => (useAppReady),
   "useAppReadyState": () => (useAppReadyState),
+  "useClassNameToggleMixin": () => (useClassNameToggleMixin),
   "useFlyoutMixin": () => (useFlyoutMixin),
   "useFocusStateMixin": () => (useFocusStateMixin),
   "useLanguage": () => (useLanguage),
@@ -203,6 +214,7 @@ __webpack_require__.d(src_namespaceObject, {
   "useRouteState": () => (useRouteState),
   "useScrollIntoViewMixin": () => (useScrollIntoViewMixin),
   "useScrollableMixin": () => (useScrollableMixin),
+  "useUnmanagedClassNameMixin": () => (useUnmanagedClassNameMixin),
   "useViewContainerState": () => (useViewContext),
   "useViewContext": () => (useViewContext)
 });
@@ -216,6 +228,7 @@ var _defaultExport = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_roo
 var install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.install,
     addExtension = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addExtension,
     addDetect = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addDetect,
+    emitAppEvent = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.emitAppEvent,
     isElementActive = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.isElementActive;
 
 ;// CONCATENATED MODULE: ./src/include/brew-js/app.js
@@ -277,6 +290,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     setIntervalSafe = _lib$util.setIntervalSafe,
     setImmediate = _lib$util.setImmediate,
     setImmediateOnce = _lib$util.setImmediateOnce,
+    clearImmediateOnce = _lib$util.clearImmediateOnce,
     _throws = _lib$util["throws"],
     throwNotFunction = _lib$util.throwNotFunction,
     errorWithCode = _lib$util.errorWithCode,
@@ -776,7 +790,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         self.currentElement = element;
         state.container = element;
         promise.then(function () {
-          animateIn(element, 'show');
+          animateIn(element, 'show', '[brew-view]', true);
           app_app.emit('pageenter', element, {
             pathname: app_app.path
           }, true);
@@ -793,7 +807,8 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         key: routeMap.get(V).id,
         value: state
       }, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewStateContainer, null, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, self.props.rootProps, {
-        ref: initElement
+        ref: initElement,
+        'brew-view': ''
       }), /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ErrorBoundary, {
         onComponentLoaded: onComponentLoaded,
         viewProps: viewProps
@@ -1005,8 +1020,8 @@ definePrototype(ViewState, {
   get: function get() {
     return this.store.get(this.key);
   },
-  set: function set(value) {
-    this.store.set(this.key, value);
+  set: function set(value, snapshot) {
+    this.store = updatePersistedValue(this.store, this.key, value, snapshot);
   },
   onPopState: function onPopState(callback) {
     throwNotFunction(callback);
@@ -1015,6 +1030,19 @@ definePrototype(ViewState, {
     });
   }
 });
+
+function updatePersistedValue(cur, key, value, snapshot) {
+  if (cur.get(key) !== value) {
+    if (snapshot && cur.has(key)) {
+      app_app.snapshot();
+      cur = getCurrentStates();
+    }
+
+    cur.set(key, value);
+  }
+
+  return cur;
+}
 
 function updateViewState(state, key, store) {
   var newValue = state.get();
@@ -1105,13 +1133,8 @@ function useRouteState(key, defaultValue, snapshotOnUpdate) {
   if (!cur) {
     // delay app ready to ensure that beforepageload event can be caught
     app_app.beforeInit(delay(1));
-  } else if (container.active && cur.get(key) !== state[0]) {
-    if (snapshotOnUpdate && cur.has(key)) {
-      app_app.snapshot();
-      cur = getCurrentStates();
-    }
-
-    cur.set(key, state[0]);
+  } else if (container.active) {
+    updatePersistedValue(cur, key, state[0], snapshotOnUpdate);
   }
 
   return state;
@@ -1265,6 +1288,9 @@ definePrototype(StaticAttributeMixin, Mixin, {
 
 function Mixin() {}
 definePrototype(Mixin, {
+  reset: function reset() {
+    return this;
+  },
   next: function next() {},
   getRef: function getRef() {
     return noop;
@@ -1353,54 +1379,59 @@ function StatefulMixin() {
   Mixin.call(this);
 
   StatefulMixin_(this, {
-    elements: new WeakSet(),
+    elements: new Set(),
+    states: new WeakMap(),
     flush: watch(this, false),
-    dispose: [],
-    states: {},
-    prefix: '',
-    counter: 0
+    dispose: []
   });
 }
 definePrototype(StatefulMixin, Mixin, {
   get ref() {
-    var self = this;
-    var state = self.state;
-    self.next();
-    return state.ref || (state.ref = new MixinRefImpl(self.clone()));
+    var state = StatefulMixin_(this);
+
+    return state.ref || (state.ref = new MixinRefImpl(this));
   },
 
   get state() {
-    var obj = StatefulMixin_(this);
-
-    var key = obj.prefix + obj.counter;
-    return obj.states[key] || (obj.states[key] = this.initState());
+    return StatefulMixin_(this).pending;
   },
 
   reset: function reset() {
-    StatefulMixin_(this).counter = 0;
+    StatefulMixin_(this).pending = {};
     return this;
   },
   next: function next() {
-    StatefulMixin_(this).counter++;
+    StatefulMixin_(this).pending = {};
     return this;
   },
   getRef: function getRef() {
     var self = this;
-    var state = self.state;
-    return function (current) {
-      state.element = current;
 
-      if (current && setAdd(StatefulMixin_(self).elements, current)) {
-        self.initElement(current, state);
+    var obj = StatefulMixin_(self);
+
+    var newState = obj.pending;
+    var state;
+    return function (current) {
+      if (current) {
+        state = obj.states.get(current) || extend(self.initState(), newState);
+
+        if (state.element !== current) {
+          state.element = current;
+          self.initElement(current, state);
+          obj.states.set(current, state);
+        } else if (util_keys(newState)[0]) {
+          self.mergeState(current, state, newState);
+        }
+
+        self.onLayoutEffect(current, state);
+        obj.elements.add(current);
+      } else {
+        obj.elements["delete"](state.element);
       }
     };
   },
   elements: function elements() {
-    return values(StatefulMixin_(this).states).map(function (v) {
-      return v.element;
-    }).filter(function (v) {
-      return v;
-    });
+    return map(StatefulMixin_(this).elements, pipe);
   },
   onDispose: function onDispose(callback) {
     StatefulMixin_(this).dispose.push(callback);
@@ -1411,27 +1442,20 @@ definePrototype(StatefulMixin, Mixin, {
     };
   },
   initElement: function initElement(element, state) {},
+  mergeState: function mergeState(element, state, newState) {
+    extend(state, newState);
+  },
+  onLayoutEffect: function onLayoutEffect(element, state) {},
   clone: function clone() {
-    var self = this;
-    var clone = inherit(Object.getPrototypeOf(self), self);
-
-    StatefulMixin_(clone, extend({}, StatefulMixin_(self), {
-      prefix: randomId() + '.',
-      counter: 0
-    }));
-
-    return clone;
+    return this;
   },
   dispose: function dispose() {
     var state = StatefulMixin_(this);
 
-    var states = state.states;
     combineFn(state.dispose.splice(0))();
     state.flush();
-    state.elements = new WeakSet();
-    each(states, function (i, v) {
-      delete states[i];
-    });
+    state.states = {};
+    state.pending = {};
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/ClassNameMixin.js
@@ -1440,23 +1464,15 @@ definePrototype(StatefulMixin, Mixin, {
 
 
 
-var ClassNameMixinSuper = StatefulMixin.prototype;
-
-function checkState(self, element, state, isAsync) {
+function checkState(self, element, state, fireEvent) {
   var classNames = state.classNames;
   var prev = extend({}, classNames);
-  each(self.classNames, function (i, v) {
-    classNames[v] = element.classList.contains(v);
+  each(classNames, function (i) {
+    classNames[i] = element.classList.contains(i);
   });
 
-  if (!equal(prev, classNames)) {
-    var cb = self.onClassNameUpdated.bind(self, element, prev, extend({}, classNames));
-
-    if (isAsync) {
-      setImmediate(cb);
-    } else {
-      cb();
-    }
+  if (fireEvent && !equal(prev, classNames)) {
+    self.onClassNameUpdated(element, prev, extend({}, classNames));
   }
 }
 
@@ -1465,30 +1481,21 @@ function ClassNameMixin(classNames) {
   this.classNames = classNames || [];
 }
 definePrototype(ClassNameMixin, StatefulMixin, {
-  getClassNames: function getClassNames() {
-    return [this.state.classNames];
-  },
-  getRef: function getRef() {
-    var self = this;
-    var element = self.state.element;
-
-    if (element && containsOrEquals(zeta_dom_dom.root, element)) {
-      checkState(self, element, self.state, true);
-    }
-
-    return ClassNameMixinSuper.getRef.call(this);
-  },
   initState: function initState() {
     return {
       element: null,
-      classNames: {}
+      classNames: fill(this.classNames, false)
     };
   },
   initElement: function initElement(element, state) {
     var self = this;
+    checkState(self, element, state);
     watchOwnAttributes(element, 'class', function () {
-      checkState(self, element, state);
+      checkState(self, element, state, true);
     });
+  },
+  onLayoutEffect: function onLayoutEffect(element, state) {
+    setClass(element, state.classNames);
   },
   onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {}
 });
@@ -1533,11 +1540,24 @@ function AnimateSequenceItemMixin(className) {
   this.className = className;
 }
 definePrototype(AnimateSequenceItemMixin, ClassNameMixin, {
+  getCustomAttributes: function getCustomAttributes() {
+    return extend({}, AnimateSequenceItemMixinSuper.getCustomAttributes.call(this), {
+      'is-animate-sequence': ''
+    });
+  },
   getClassNames: function getClassNames() {
     return [this.className].concat(AnimateSequenceItemMixinSuper.getClassNames.call(this));
   }
 });
+// EXTERNAL MODULE: external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":"jQuery"}
+var external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_ = __webpack_require__(47);
+;// CONCATENATED MODULE: ./src/include/external/jquery.js
+// @ts-nocheck
+
+/* harmony default export */ const jquery = (external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_);
 ;// CONCATENATED MODULE: ./src/mixins/AnimateSequenceMixin.js
+
+
 
 
 
@@ -1554,10 +1574,6 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
     this.selector = options;
     return this;
   },
-  reset: function reset() {
-    this.item.reset();
-    return AnimateSequenceMixinSuper.reset.call(this);
-  },
   getCustomAttributes: function getCustomAttributes() {
     var self = this;
     return extend({}, AnimateSequenceMixinSuper.getCustomAttributes.call(self), {
@@ -1566,10 +1582,37 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
       'animate-sequence': self.selector || '.' + self.className
     });
   },
-  clone: function clone() {
-    return extend(AnimateSequenceMixinSuper.clone.call(this), {
-      item: this.item.ref.getMixin()
+  initElement: function initElement(element, state) {
+    var self = this;
+    AnimateSequenceMixinSuper.initElement.call(self, element, state);
+
+    if (self.selector) {
+      self.onDispose(watchElements(element, self.selector, function (addedNodes) {
+        jquery(addedNodes).attr('is-animate-sequence', '');
+      }));
+    }
+  }
+});
+;// CONCATENATED MODULE: ./src/mixins/ClassNameToggleMixin.js
+
+
+
+function ClassNameToggleMixin() {
+  StatefulMixin.call(this);
+}
+definePrototype(ClassNameToggleMixin, StatefulMixin, {
+  withOptions: function withOptions(classes) {
+    this.classes = extend({}, classes);
+  },
+  getClassNames: function getClassNames() {
+    return this.classes;
+  },
+  set: function set(name, value) {
+    value = isPlainObject(name) || kv(name, value);
+    each(this.elements(), function (i, v) {
+      setClass(v, value);
     });
+    extend(this.classes, value);
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/FlyoutToggleMixin.js
@@ -1605,7 +1648,6 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
 
 var FlyoutMixinSuper = ClassNameMixin.prototype;
 var valueMap = new WeakMap();
-var aliasProps = 'animating isFlyoutOpened modal tabThrough visible'.split(' ');
 function FlyoutMixin() {
   var self = this;
   ClassNameMixin.call(self, ['open', 'closing', 'visible', 'tweening-in', 'tweening-out']);
@@ -1621,10 +1663,6 @@ function FlyoutMixin() {
   });
 }
 definePrototype(FlyoutMixin, ClassNameMixin, {
-  reset: function reset() {
-    this.toggle.reset();
-    return FlyoutMixinSuper.reset.call(this);
-  },
   next: function next() {
     this.effects = undefined;
     return FlyoutMixinSuper.next.call(this);
@@ -1682,16 +1720,6 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
       }
     }, true));
   },
-  clone: function clone() {
-    var self = this;
-    var mixin = extend(FlyoutMixinSuper.clone.call(self), {
-      toggle: self.toggle.ref.getMixin()
-    });
-    each(aliasProps, function (i, v) {
-      defineAliasProperty(mixin, v, self);
-    });
-    return mixin;
-  },
   onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {
     var self = this;
     self.visible = state.open;
@@ -1739,20 +1767,11 @@ definePrototype(FocusStateMixin, StatefulMixin, {
       }
     }));
   },
-  getClassNames: function getClassNames() {
-    var classes = {};
-    var focused = this.state.focused;
-
-    if (focused) {
-      classes.focused = true;
-      classes['focused-' + focused] = true;
-    }
-
-    return [classes];
+  onLayoutEffect: function onLayoutEffect(element, state) {
+    setClass(element, 'focused', state.focused);
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/LoadingStateMixin.js
-
 
 
 
@@ -1769,10 +1788,8 @@ definePrototype(LoadingStateMixin, StatefulMixin, {
       setClass(element, 'loading', loading);
     }));
   },
-  getClassNames: function getClassNames() {
-    return [{
-      loading: !!this.state.loading
-    }];
+  onLayoutEffect: function onLayoutEffect(element, state) {
+    setClass(element, 'loading', state.loading);
   }
 });
 ;// CONCATENATED MODULE: ./tmp/brew-js/directive.js
@@ -1787,7 +1804,6 @@ var getDirectiveComponent = external_commonjs_brew_js_commonjs2_brew_js_amd_brew
 
 
 var ScrollableMixinSuper = ClassNameMixin.prototype;
-var ScrollableMixin_aliasProps = 'pageIndex scrolling'.split(' ');
 function ScrollableMixin() {
   var self = this;
   ClassNameMixin.call(self, ['scrollable-x', 'scrollable-x-l', 'scrollable-x-r', 'scrollable-y', 'scrollable-y-d', 'scrollable-y-u']);
@@ -1816,6 +1832,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
   },
   initElement: function initElement(element, state) {
     var self = this;
+    ScrollableMixinSuper.initElement.call(self, element, state);
     self.onDispose(app_app.on(element, {
       scrollIndexChange: function scrollIndexChange(e) {
         self.pageIndex = e.newIndex;
@@ -1827,13 +1844,6 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
         self.scrolling = false;
       }
     }, true));
-  },
-  clone: function clone() {
-    var mixin = ScrollableMixinSuper.clone.call(this);
-    each(ScrollableMixin_aliasProps, function (i, v) {
-      defineAliasProperty(mixin, v, self);
-    });
-    return mixin;
   }
 });
 each('destroy enable disable setOptions setStickyPosition refresh scrollPadding stop scrollLeft scrollTop scrollBy scrollTo scrollByPage scrollToPage scrollToElement', function (i, v) {
@@ -1851,21 +1861,37 @@ function ScrollIntoViewMixin() {
 }
 definePrototype(ScrollIntoViewMixin, StatefulMixin, {
   when: function when(deps) {
-    var state = this.state;
-
-    var callback = state.callback || (state.callback = function () {
-      scrollIntoView(state.element);
-    });
-
-    if (state.deps && !equal(deps, state.deps)) {
-      setImmediateOnce(callback);
+    this.state.deps = deps;
+    return this;
+  },
+  initElement: function initElement(element, state) {
+    state.callback = function () {
+      scrollIntoView(element);
+    };
+  },
+  mergeState: function mergeState(element, state, newState) {
+    if (newState.deps && !equal(newState.deps, state.deps)) {
+      setImmediateOnce(state.callback);
     }
 
-    state.deps = makeArray(deps);
+    extend(state, newState);
+  }
+});
+;// CONCATENATED MODULE: ./src/mixins/UnmanagedClassNameMixin.js
+
+
+function UnmanagedClassNameMixin() {
+  ClassNameMixin.call(this);
+}
+definePrototype(UnmanagedClassNameMixin, ClassNameMixin, {
+  memorize: function memorize() {
+    this.classNames = makeArray(arguments);
     return this;
   }
 });
 ;// CONCATENATED MODULE: ./src/mixin.js
+
+
 
 
 
@@ -1895,11 +1921,13 @@ function createUseFunction(ctor) {
 
 var useAnimateMixin = createUseFunction(AnimateMixin);
 var useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
+var useClassNameToggleMixin = createUseFunction(ClassNameToggleMixin);
 var useFlyoutMixin = createUseFunction(FlyoutMixin);
 var useFocusStateMixin = createUseFunction(FocusStateMixin);
 var useLoadingStateMixin = createUseFunction(LoadingStateMixin);
 var useScrollableMixin = createUseFunction(ScrollableMixin);
 var useScrollIntoViewMixin = createUseFunction(ScrollIntoViewMixin);
+var useUnmanagedClassNameMixin = createUseFunction(UnmanagedClassNameMixin);
 function useMixin(ctor) {
   return (0,external_zeta_dom_react_.useSingleton)(function () {
     return new ctor();
