@@ -1,4 +1,4 @@
-/*! brew-js-react v0.5.0 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.5.1 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
