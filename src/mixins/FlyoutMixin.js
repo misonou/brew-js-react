@@ -15,6 +15,7 @@ export default function FlyoutMixin() {
     self.isFlyoutOpened = false;
     self.animating = false;
     self.visible = false;
+    self.initialFocus = undefined;
     self.toggle = new FlyoutToggleMixin(self);
     self.onDispose(function () {
         self.isFlyoutOpened = false;
@@ -23,6 +24,13 @@ export default function FlyoutMixin() {
 }
 
 definePrototype(FlyoutMixin, ClassNameMixin, {
+    get flyoutOptions() {
+        var options = {};
+        if (this.initialFocus !== undefined) {
+            options.focus = this.initialFocus;
+        }
+        return options;
+    },
     next: function () {
         this.effects = undefined;
         return FlyoutMixinSuper.next.call(this);
@@ -49,7 +57,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     open: function (value) {
         var element = this.elements()[0];
         valueMap.set(element, value);
-        return openFlyout(element);
+        return openFlyout(element, null, this.flyoutOptions);
     },
     close: function (value) {
         return closeFlyout(this.elements()[0], value);

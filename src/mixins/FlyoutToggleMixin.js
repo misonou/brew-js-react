@@ -21,7 +21,7 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
         var self = this;
         FlyoutToggleMixinSuper.initElement.call(self, element, state);
         self.onDispose(dom.on(element, 'click', function () {
-            toggleFlyout(self.flyoutMixin.elements()[0], element);
+            toggleFlyout(self.flyoutMixin.elements()[0], element, self.flyoutMixin.flyoutOptions);
         }));
     }
 });

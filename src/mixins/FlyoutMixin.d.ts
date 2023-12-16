@@ -17,6 +17,11 @@ export interface FlyoutMixinOptions {
      * Enables swipe gesture to close the flyout.
      */
     swipeToDismiss?: 'up' | 'down' | 'left' | 'right';
+    /**
+     * Whether flyout content, or what element, by specifying CSS selector, will be initially focused.
+     * Default is `true` if source element is not an text input element.
+     */
+    initialFocus?: boolean | string;
 }
 
 /**
@@ -43,6 +48,11 @@ export default class FlyoutMixin extends ClassNameMixin {
      * clicking that element will toggle the flyout.
      */
     readonly toggle: FlyoutToggleMixin;
+    /**
+     * Whether flyout content, or what element, by specifying CSS selector, will be initially focused.
+     * Default is `true` if source element is not an text input element.
+     */
+    initialFocus: boolean | string;
     /**
      * Gets or sets whether the flyout is modal.
      */

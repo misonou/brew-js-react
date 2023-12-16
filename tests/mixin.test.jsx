@@ -708,6 +708,18 @@ describe('FlyoutMixin', () => {
         expect(animationcomplete).toBeCalledTimes(1);
         unmount();
     });
+
+    it('should set initial focus to specified element', async () => {
+        let mixin;
+        const Component = function () {
+            mixin = useFlyoutMixin({ initialFocus: '.item' });
+            return (<div {...Mixin.use(mixin)}><button></button><div className="item"></div></div>);
+        };
+        const { container, unmount } = render(<Component />);
+        await after(() => void mixin.open());
+        expect(dom.activeElement).toBe(container.querySelector('.item'));
+        unmount();
+    });
 });
 
 describe('FlyoutToggleMixin', () => {
@@ -763,6 +775,24 @@ describe('FlyoutToggleMixin', () => {
         await delay(0);
         mixin.toggle.close('foo');
         await expect(promise).resolves.toBe('foo');
+        unmount();
+    });
+
+    it('should set initial focus to specified element', async () => {
+        let mixin;
+        const Component = function () {
+            mixin = useFlyoutMixin({ initialFocus: '.item' });
+            return (<>
+                <div {...Mixin.use(mixin)}><div className="item"></div></div>
+                <button {...Mixin.use(mixin.toggle)}></button>
+            </>);
+        };
+        const { container, unmount, getByRole } = render(<Component />);
+
+        // toggle is ready in next event cycle
+        await delay(0);
+        await after(() => fireEvent.click(getByRole('button')));
+        expect(dom.activeElement).toBe(container.querySelector('.item'));
         unmount();
     });
 });
