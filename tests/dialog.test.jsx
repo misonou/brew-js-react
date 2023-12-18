@@ -20,7 +20,7 @@ afterEach(() => {
 });
 
 describe('createDialog', () => {
-    it('should invoke onOpen callback when dialog is opened', () => {
+    it('should invoke onOpen callback when dialog is opened', async () => {
         const cb = mockFn();
         const dialog = createDialogMock({
             onOpen: cb,
@@ -28,7 +28,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        actAndReturn(() => dialog.open());
+        await actAwaitSetImmediate(() => dialog.open());
         verifyCalls(cb, [
             [dialog.root]
         ]);
@@ -42,7 +42,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        actAndReturn(() => dialog.open());
+        await actAwaitSetImmediate(() => dialog.open());
 
         dialog.close();
         await waitForElementToBeRemoved(() => screen.getByText('text'));
@@ -138,7 +138,7 @@ describe('createDialog', () => {
         expect(cb.mock.instances[1]).toBe(dialog.root);
     });
 
-    it('should set dialog as modal when modal is true', () => {
+    it('should set dialog as modal when modal is true', async () => {
         const cb = mockFn();
         const dialog = createDialogMock({
             modal: true,
@@ -147,7 +147,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        actAndReturn(() => dialog.open());
+        await actAwaitSetImmediate(() => dialog.open());
         expect(dialog.root.attributes['is-modal']).toBeTruthy();
         expect(dom.modalElement).toBe(dialog.root);
     });
@@ -181,7 +181,7 @@ describe('createDialog', () => {
                 return <span>text</span>;
             }
         });
-        actAndReturn(() => dialog.open());
+        await actAwaitSetImmediate(() => dialog.open());
         expect(locked()).toBe(true);
         await after(() => void dialog.close());
         expect(locked()).toBe(false);
@@ -221,6 +221,7 @@ describe('DialogState.open', () => {
         });
         const obj = {};
         const p1 = actAndReturn(() => dialog.open());
+        await 0;
         dialog.close(obj);
         await expect(p1).resolves.toBe(obj);
     });
@@ -257,16 +258,16 @@ describe('DialogState.open', () => {
 
 describe('Dialog', () => {
     it('should open and close dialog when isOpen is updated', async () => {
-        const { rerender, unmount } = render(
-            <Dialog isOpen={false}>
-                <button>test</button>
-            </Dialog>
-        );
-        rerender(
-            <Dialog isOpen={true}>
-                <button>test</button>
-            </Dialog>
-        );
+        const Component = function ({ isOpen }) {
+            return (
+                <Dialog isOpen={isOpen}>
+                    <button>test</button>
+                </Dialog>
+            );
+        };
+        const { rerender, unmount } = render(<Component isOpen={false} />);
+        await after(() => rerender(<Component isOpen={true} />));
+
         const root = screen.getByRole('button').parentElement;
         expect(root.classList.contains('open')).toBe(true);
         rerender(

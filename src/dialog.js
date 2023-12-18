@@ -1,7 +1,7 @@
 import { createElement, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import ReactDOMClient from "./include/external/react-dom-client.js";
-import { always, either, extend, makeAsync, noop, pipe, setImmediate } from "./include/zeta-dom/util.js";
+import { either, extend, makeAsync, noop, pick, pipe, resolve } from "./include/zeta-dom/util.js";
 import { containsOrEquals, removeNode, setClass } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
 import { lock, notifyAsync, preventLeave, subscribeAsync } from "./include/zeta-dom/domLock.js";
@@ -17,7 +17,11 @@ export function createDialog(props) {
     var promise;
 
     dom.on(root, {
+        flyoutshow: function () {
+            (props.onOpen || noop)(root);
+        },
         flyouthide: function () {
+            promise = null;
             removeNode(root);
             (props.onClose || noop)(root);
             if (props.onRender) {
@@ -45,7 +49,6 @@ export function createDialog(props) {
             dom.retainFocus(dom.activeElement, root);
             if (props.modal) {
                 root.setAttribute('is-modal', '');
-                dom.setModal(root);
             }
             if (props.onRender) {
                 var dialogProps = extend({}, props, {
@@ -60,20 +63,15 @@ export function createDialog(props) {
                     content = createElement(props.wrapper, dialogProps, content);
                 }
                 reactRoot.render(content);
-                setImmediate(function () {
-                    dom.focus(root);
-                });
             }
-            promise = openFlyout(root);
+            promise = resolve().then(function () {
+                return openFlyout(root, null, pick(props, ['focus']));
+            });
             if (props.preventLeave) {
                 preventLeave(root, promise);
             } else if (props.preventNavigation) {
                 lock(root, promise);
             }
-            always(promise, function () {
-                promise = null;
-            });
-            (props.onOpen || noop)(root);
             return promise;
         }
     };

@@ -13,6 +13,7 @@ export interface DialogBaseProps<T> {
     preventLeave?: boolean;
     preventNavigation?: boolean;
     modal?: boolean;
+    focus?: boolean | string;
     onCommit?: (value: T | undefined) => void;
     onOpen?: (root: HTMLElement) => void;
     onClose?: (root: HTMLElement) => void;
