@@ -1,4 +1,4 @@
-/*! brew-js-react v0.5.1 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.5.2 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -355,6 +355,7 @@ var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
     createNodeIterator = domUtil_lib$util.createNodeIterator,
     createTreeWalker = domUtil_lib$util.createTreeWalker,
     bind = domUtil_lib$util.bind,
+    bindOnce = domUtil_lib$util.bindOnce,
     bindUntil = domUtil_lib$util.bindUntil,
     dispatchDOMMouseEvent = domUtil_lib$util.dispatchDOMMouseEvent,
     removeNode = domUtil_lib$util.removeNode,
@@ -443,7 +444,11 @@ function createDialog(props) {
 
   var promise;
   zeta_dom_dom.on(root, {
+    flyoutshow: function flyoutshow() {
+      (props.onOpen || noop)(root);
+    },
     flyouthide: function flyouthide() {
+      promise = null;
       removeNode(root);
       (props.onClose || noop)(root);
 
@@ -458,7 +463,7 @@ function createDialog(props) {
       setClass(root, 'loading', false);
     }
   });
-  subscribeAsync(root);
+  subscribeAsync(root, true);
   return {
     root: root,
     close: _closeDialog,
@@ -473,7 +478,6 @@ function createDialog(props) {
 
       if (props.modal) {
         root.setAttribute('is-modal', '');
-        zeta_dom_dom.setModal(root);
       }
 
       if (props.onRender) {
@@ -491,12 +495,11 @@ function createDialog(props) {
         }
 
         reactRoot.render(content);
-        setImmediate(function () {
-          zeta_dom_dom.focus(root);
-        });
       }
 
-      promise = openFlyout(root);
+      promise = resolve().then(function () {
+        return openFlyout(root, null, pick(props, ['focus']));
+      });
 
       if (props.preventLeave) {
         preventLeave(root, promise);
@@ -504,10 +507,6 @@ function createDialog(props) {
         lock(root, promise);
       }
 
-      always(promise, function () {
-        promise = null;
-      });
-      (props.onOpen || noop)(root);
       return promise;
     }
   };
@@ -1636,7 +1635,7 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
     var self = this;
     FlyoutToggleMixinSuper.initElement.call(self, element, state);
     self.onDispose(zeta_dom_dom.on(element, 'click', function () {
-      toggleFlyout(self.flyoutMixin.elements()[0], element);
+      toggleFlyout(self.flyoutMixin.elements()[0], element, self.flyoutMixin.flyoutOptions);
     }));
   }
 });
@@ -1656,6 +1655,7 @@ function FlyoutMixin() {
   self.isFlyoutOpened = false;
   self.animating = false;
   self.visible = false;
+  self.initialFocus = undefined;
   self.toggle = new FlyoutToggleMixin(self);
   self.onDispose(function () {
     self.isFlyoutOpened = false;
@@ -1663,6 +1663,16 @@ function FlyoutMixin() {
   });
 }
 definePrototype(FlyoutMixin, ClassNameMixin, {
+  get flyoutOptions() {
+    var options = {};
+
+    if (this.initialFocus !== undefined) {
+      options.focus = this.initialFocus;
+    }
+
+    return options;
+  },
+
   next: function next() {
     this.effects = undefined;
     return FlyoutMixinSuper.next.call(this);
@@ -1689,7 +1699,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
   open: function open(value) {
     var element = this.elements()[0];
     valueMap.set(element, value);
-    return openFlyout(element);
+    return openFlyout(element, null, this.flyoutOptions);
   },
   close: function close(value) {
     return closeFlyout(this.elements()[0], value);
