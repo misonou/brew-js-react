@@ -64,7 +64,7 @@ export interface DialogBaseProps<T, V = T> {
      * The dialog will be held open until the returned promise resolves.
      * When the promise rejects, the dialog will remain open.
      */
-    onCommit?: (value: V | undefined) => T | Promise<T> | void;
+    onCommit?: (value: V | undefined, context: Zeta.RunAsyncContext) => T | Promise<T> | void;
     /**
      * Callback to be invoked when dialog has opened.
      */

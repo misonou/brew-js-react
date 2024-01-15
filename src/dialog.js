@@ -1,10 +1,10 @@
 import { createElement, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import ReactDOMClient from "@misonou/react-dom-client";
-import { either, extend, makeAsync, noop, pick, pipe, resolve } from "zeta-dom/util";
+import { either, extend, noop, pick, resolve } from "zeta-dom/util";
 import { containsOrEquals, removeNode } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
-import { lock, notifyAsync, preventLeave, subscribeAsync } from "zeta-dom/domLock";
+import { lock, preventLeave, runAsync, subscribeAsync } from "zeta-dom/domLock";
 import { closeFlyout, openFlyout } from "brew-js/domAction";
 
 /**
@@ -47,11 +47,9 @@ export function createDialog(props) {
             }
             if (props.onRender) {
                 var dialogProps = extend({}, props, {
-                    closeDialog: function (value) {
-                        var promise = makeAsync(props.onCommit || pipe)(value);
-                        notifyAsync(dom.activeElement, promise);
-                        return promise.then(closeDialog);
-                    }
+                    closeDialog: props.onCommit ? function (value) {
+                        return runAsync(dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
+                    } : closeDialog
                 });
                 var content = createElement(props.onRender, dialogProps);
                 if (props.wrapper) {

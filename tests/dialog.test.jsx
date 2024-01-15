@@ -236,6 +236,7 @@ describe('DialogState.open', () => {
         });
         const obj = {};
         const p1 = actAndReturn(() => dialog.open());
+        await 0;
         dismiss(obj);
         await expect(p1).resolves.toBe(obj);
     });
