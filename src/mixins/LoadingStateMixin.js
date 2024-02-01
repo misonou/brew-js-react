@@ -1,27 +1,25 @@
 import { any, definePrototype } from "../include/zeta-dom/util.js";
-import { getClass, setClass } from "../include/zeta-dom/domUtil.js";
+import { getClass } from "../include/zeta-dom/domUtil.js";
 import { subscribeAsync } from "../include/zeta-dom/domLock.js";
-import StatefulMixin from "./StatefulMixin.js";
+import { getDirectiveComponent } from "../include/brew-js/directive.js";
+import ClassNameMixin from "./ClassNameMixin.js";
 
-const LoadingStateMixinSuper = StatefulMixin.prototype;
+const LoadingStateMixinSuper = ClassNameMixin.prototype;
 
 export default function LoadingStateMixin() {
-    StatefulMixin.call(this);
+    ClassNameMixin.call(this, ['loading', 'loading-complete']);
     this.loading = false;
 }
 
-definePrototype(LoadingStateMixin, StatefulMixin, {
+definePrototype(LoadingStateMixin, ClassNameMixin, {
     initElement: function (element, state) {
         var self = this;
         LoadingStateMixinSuper.initElement.call(self, element, state);
+        getDirectiveComponent(element).enableLoadingClass = true;
         self.onDispose(subscribeAsync(element, function (loading) {
-            setClass(element, 'loading', loading);
             self.loading = loading || !!any(self.elements(), function (v) {
                 return v !== element && getClass(v, 'loading') === true;
             });
         }));
-    },
-    onLayoutEffect: function (element, state) {
-        setClass(element, 'loading', state.loading);
     }
 });
