@@ -8,4 +8,9 @@ import { useLoadingStateMixin } from "../mixin";
  *
  * Mixin should be created using {@link useLoadingStateMixin} and applied to element by {@link Mixin.use}.
  */
-export default class LoadingStateMixin extends ClassNameMixin { }
+export default class LoadingStateMixin extends ClassNameMixin {
+    /**
+     * Whether any operations are in progress associated to applied element.
+     */
+    readonly loading: boolean;
+}

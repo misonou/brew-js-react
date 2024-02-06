@@ -908,6 +908,36 @@ describe('LoadingStateMixin', () => {
         expect(div).not.toHaveClassName('loading');
         unmount();
     });
+
+    it('should set loading property', async () => {
+        let loadingState;
+        const Component = function () {
+            loadingState = useLoadingStateMixin();
+            return (<>
+                <div {...Mixin.use(loadingState)}>test</div>
+                <div {...Mixin.use(loadingState)}>test</div>
+            </>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div1 = container.firstChild;
+        const div2 = container.lastChild;
+        expect(loadingState.loading).toBe(false);
+
+        const promise1 = delay(100);
+        const promise2 = delay(200);
+        dom.notifyAsync(div1, promise1);
+        expect(loadingState.loading).toBe(true);
+        dom.notifyAsync(div2, promise2);
+        expect(loadingState.loading).toBe(true);
+
+        await promise1;
+        await 0;
+        expect(loadingState.loading).toBe(true);
+        await promise2;
+        await 0;
+        expect(loadingState.loading).toBe(false);
+        unmount();
+    });
 });
 
 describe('ScrollIntoViewMixin', () => {
