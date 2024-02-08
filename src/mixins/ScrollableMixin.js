@@ -21,7 +21,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
     },
     getCustomAttributes: function () {
         var options = this.options || {};
-        return extend({}, ScrollableMixinSuper.getCustomAttributes.call(this), {
+        return extend(ScrollableMixinSuper.getCustomAttributes.call(this), {
             'scrollable': [options.direction || 'both', options.handle || 'auto'].join(' '),
         }, options.pagedItemSelector && {
             'scroller-snap-page': options.paged,

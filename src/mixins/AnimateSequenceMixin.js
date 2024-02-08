@@ -21,7 +21,7 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
     },
     getCustomAttributes: function () {
         var self = this;
-        return extend({}, AnimateSequenceMixinSuper.getCustomAttributes.call(self), {
+        return extend(AnimateSequenceMixinSuper.getCustomAttributes.call(self), {
             'animate-in': null,
             'animate-sequence-type': (self.effects || []).join(' '),
             'animate-sequence': self.selector || '.' + self.className

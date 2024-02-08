@@ -10,7 +10,7 @@ export default function AnimateSequenceItemMixin(className) {
 
 definePrototype(AnimateSequenceItemMixin, ClassNameMixin, {
     getCustomAttributes: function () {
-        return extend({}, AnimateSequenceItemMixinSuper.getCustomAttributes.call(this), {
+        return extend(AnimateSequenceItemMixinSuper.getCustomAttributes.call(this), {
             'is-animate-sequence': ''
         });
     },

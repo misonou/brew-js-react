@@ -26,7 +26,7 @@ definePrototype(AnimateMixin, ClassNameMixin, {
     },
     getCustomAttributes: function () {
         var self = this;
-        return extend({}, AnimateMixinSuper.getCustomAttributes.call(self), {
+        return extend(AnimateMixinSuper.getCustomAttributes.call(self), {
             'animate-in': (self.effects || []).join(' '),
             'animate-on': self.trigger || 'show'
         });
