@@ -1,9 +1,9 @@
-import { definePrototype, extend } from "../include/zeta-dom/util.js";
+import { definePrototype, extend, isPlainObject, kv } from "../include/zeta-dom/util.js";
 import Mixin from "./Mixin.js";
 
-export default function StaticAttributeMixin(attributes) {
+export default function StaticAttributeMixin(name, value) {
     Mixin.call(this);
-    this.attributes = attributes || {};
+    this.attributes = isPlainObject(name) || kv(name, value || '');
 }
 
 definePrototype(StaticAttributeMixin, Mixin, {

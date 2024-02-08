@@ -27,7 +27,7 @@ watchable(Mixin.prototype);
 
 define(Mixin, {
     get scrollableTarget() {
-        return new StaticAttributeMixin({ 'scrollable-target': '' });
+        return new StaticAttributeMixin('scrollable-target');
     },
     use: function () {
         const args = makeArray(arguments);
