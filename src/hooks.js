@@ -1,5 +1,5 @@
 import { createElement, useEffect, useMemo, useRef, useState } from "react";
-import { ViewStateProvider, useMemoizedFunction, useObservableProperty, useUpdateTrigger } from "zeta-dom-react";
+import { ViewStateProvider, useMemoizedFunction, useObservableProperty, useValueTrigger } from "zeta-dom-react";
 import { catchAsync, definePrototype, delay, each, equal, extend, freeze, isFunction, isPlainObject, keys, kv, mapObject, throwNotFunction } from "zeta-dom/util";
 import { ZetaEventContainer } from "zeta-dom/events";
 import { getQueryParam, setQueryParam } from "brew-js/util/common";
@@ -84,20 +84,15 @@ export function useRouteParam(name, defaultValue) {
     const container = useViewContext();
     const params = container.page.params;
     const value = params[name] || '';
-    const ref = useRef(value);
-    const forceUpdate = useUpdateTrigger();
+    const notifyChange = useValueTrigger(value);
     useEffect(function () {
         var setValue = function () {
-            var current = container.page.params[name] || '';
-            if (current !== ref.current) {
-                forceUpdate();
-            }
+            notifyChange(container.page.params[name] || '');
         };
         // route parameter might be changed after state initialization and before useEffect hook is called
         setValue();
         return container.on('pagechange', setValue);
     }, [name]);
-    ref.current = value;
     if (defaultValue && container.active && (!value || (name === 'remainingSegments' && value === '/'))) {
         app.navigate(app.route.getPath(extend({}, params, kv(name, defaultValue))), true);
     }
@@ -129,21 +124,18 @@ export function useQueryParam(key, value, snapshotOnUpdate) {
     }
     var container = useViewContext();
     var getParams = function () {
-        return mapObject(key === false ? value : kv(key, value), function (v, i) {
+        return freeze(mapObject(key === false ? value : kv(key, value), function (v, i) {
             return getQueryParam(i, app.path) || v || '';
-        });
+        }));
     };
-    var state = useState([]);
+    var ref = useRef({});
     useMemo(function () {
-        state[0].splice(0, 2, getParams());
+        ref.current = getParams();
     }, [key]);
-    var current = state[0][0];
-    var trackChanges = function (values) {
-        if (!equal(values, current)) {
-            extend(current, values);
-            state[1]([current]);
-        }
-    };
+    var current = ref.current;
+    var notifyChange = useValueTrigger(current, function (current, params) {
+        return equal(current, params) || !(ref.current = params);
+    });
     var setParams = useMemoizedFunction(function (values) {
         if (key !== false) {
             values = kv(key, isFunction(values) ? values(current[key]) : values);
@@ -160,18 +152,18 @@ export function useQueryParam(key, value, snapshotOnUpdate) {
                     app.snapshot();
                 }
                 catchAsync(app.navigate(search + url.hash, true));
-                trackChanges(getParams());
+                notifyChange(getParams());
             }
         }
     });
     useEffect(function () {
         return app.watch('path', function () {
             if (container.active) {
-                trackChanges(getParams());
+                notifyChange(getParams());
             }
         });
     }, [key]);
-    return [key !== false ? current[key] : (state[0][1] || (state[0][1] = freeze(extend({}, current)))), setParams];
+    return [key !== false ? current[key] : current, setParams];
 }
 
 export function ViewStateContainer(props) {

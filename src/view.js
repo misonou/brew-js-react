@@ -1,6 +1,6 @@
 import { Component, Fragment, createContext, createElement, useContext, useEffect } from "react";
 import { useAsync } from "zeta-dom-react";
-import dom from "zeta-dom/dom";
+import dom, { reportError } from "zeta-dom/dom";
 import { notifyAsync } from "zeta-dom/domLock";
 import { ZetaEventContainer } from "zeta-dom/events";
 import { any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isArray, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
@@ -93,7 +93,7 @@ definePrototype(ErrorBoundary, Component, {
             // emit error in next tick as ref callback may yet to be invoked
             // if error is thrown synchronously in first render
             setImmediate(function () {
-                dom.emit('error', self.context.container, { error }, true);
+                reportError(error, self.context.container);
             });
             // ensure promise sent to beforepageload event is resolved
             self.props.onComponentLoaded();

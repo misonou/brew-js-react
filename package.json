@@ -28,8 +28,8 @@
     "@misonou/react-dom-client": "^1.1.1",
     "brew-js": ">=0.6.5",
     "waterpipe": "^2.5.0",
-    "zeta-dom": ">=0.4.10",
-    "zeta-dom-react": ">=0.4.14"
+    "zeta-dom": ">=0.5.1",
+    "zeta-dom-react": ">=0.5.6"
   },
   "peerDependencies": {
     "react": ">=16.8.0",
