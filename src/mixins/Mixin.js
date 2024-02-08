@@ -29,6 +29,9 @@ define(Mixin, {
     get scrollableTarget() {
         return new StaticAttributeMixin('scrollable-target');
     },
+    get tabRoot() {
+        return new StaticAttributeMixin('tab-root');
+    },
     use: function () {
         const args = makeArray(arguments);
         const ref = args[0];

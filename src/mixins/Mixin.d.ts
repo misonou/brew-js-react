@@ -9,6 +9,7 @@ interface MixinProps {
 
 export default abstract class Mixin implements ClassNameProvider {
     static readonly scrollableTarget: StaticAttributeMixin;
+    static readonly tabRoot: StaticAttributeMixin;
 
     /**
      * Applies React ref and mixins to element.
