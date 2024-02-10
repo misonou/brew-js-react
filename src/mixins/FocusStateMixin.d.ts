@@ -1,5 +1,5 @@
 import React from "react";
-import ClassNameMixin from "./ClassNameMixin";
+import StatefulMixin from "./StatefulMixin";
 import Mixin from "./Mixin";
 import { useFocusStateMixin } from "../mixin";
 
@@ -8,7 +8,7 @@ import { useFocusStateMixin } from "../mixin";
  *
  * Mixin should be created using {@link useFocusStateMixin} and applied to element by {@link Mixin.use}.
  */
-export default class FocusStateMixin extends ClassNameMixin {
+export default class FocusStateMixin extends StatefulMixin {
     /**
      * Sets focus state based on another element.
      *
