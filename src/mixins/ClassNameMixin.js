@@ -9,7 +9,8 @@ function checkState(self, element, state, fireEvent) {
     each(classNames, function (i) {
         classNames[i] = element.classList.contains(i);
     });
-    if (fireEvent && !equal(prev, classNames)) {
+    if (fireEvent && !equal(state.prev || prev, classNames)) {
+        state.prev = prev;
         self.onClassNameUpdated(element, prev, extend({}, classNames));
     }
 }
@@ -35,6 +36,9 @@ definePrototype(ClassNameMixin, StatefulMixin, {
     },
     onLayoutEffect: function (element, state) {
         setClass(element, state.classNames);
+    },
+    onBeforeUpdate: function (element, state) {
+        checkState(this, element, state);
     },
     onClassNameUpdated: function (element, prevState, state) {
     }
