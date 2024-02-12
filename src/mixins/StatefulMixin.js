@@ -56,8 +56,10 @@ definePrototype(StatefulMixin, Mixin, {
                 }
                 self.onLayoutEffect(current, state);
                 obj.elements.add(current);
-            } else {
-                obj.elements.delete(state.element);
+            } else if (state) {
+                var prev = state.element;
+                self.onBeforeUpdate(prev, state);
+                obj.elements.delete(prev);
             }
         };
     },
@@ -76,6 +78,8 @@ definePrototype(StatefulMixin, Mixin, {
         extend(state, newState);
     },
     onLayoutEffect: function (element, state) {
+    },
+    onBeforeUpdate: function (element, state) {
     },
     clone: function () {
         return this;

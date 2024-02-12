@@ -66,6 +66,13 @@ export default abstract class StatefulMixin<T extends MixinState = MixinState> e
      */
     protected onLayoutEffect(element: HTMLElement, state: T): void;
     /**
+     * Override this method to apply changes when element is about to be updated.
+     * It is analogous to `getSnapshotBeforeUpdate` for a {@link React.Component}.
+     * @param element A DOM element.
+     * @param state Persisted state object associated with the element.
+     */
+    protected onBeforeUpdate(element: HTMLElement, state: T): void;
+    /**
      * @deprecated This method is no longer used.
      */
     protected clone(): this;
