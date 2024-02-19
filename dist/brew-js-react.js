@@ -1,4 +1,4 @@
-/*! brew-js-react v0.5.2 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.5.3 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -413,6 +413,7 @@ var domLock_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
     cancelLock = domLock_lib$dom.cancelLock,
     subscribeAsync = domLock_lib$dom.subscribeAsync,
     notifyAsync = domLock_lib$dom.notifyAsync,
+    runAsync = domLock_lib$dom.runAsync,
     preventLeave = domLock_lib$dom.preventLeave;
 
 ;// CONCATENATED MODULE: ./tmp/brew-js/domAction.js
@@ -455,14 +456,9 @@ function createDialog(props) {
       if (props.onRender) {
         reactRoot.unmount();
       }
-    },
-    asyncStart: function asyncStart() {
-      setClass(root, 'loading', true);
-    },
-    asyncEnd: function asyncEnd() {
-      setClass(root, 'loading', false);
     }
   });
+  root.setAttribute('loading-class', '');
   subscribeAsync(root, true);
   return {
     root: root,
@@ -1272,9 +1268,9 @@ function makeTranslation(resources, defaultLang) {
 ;// CONCATENATED MODULE: ./src/mixins/StaticAttributeMixin.js
 
 
-function StaticAttributeMixin(attributes) {
+function StaticAttributeMixin(name, value) {
   Mixin.call(this);
-  this.attributes = attributes || {};
+  this.attributes = isPlainObject(name) || kv(name, value || '');
 }
 definePrototype(StaticAttributeMixin, Mixin, {
   getCustomAttributes: function getCustomAttributes() {
@@ -1305,9 +1301,11 @@ definePrototype(Mixin, {
 watchable(Mixin.prototype);
 util_define(Mixin, {
   get scrollableTarget() {
-    return new StaticAttributeMixin({
-      'scrollable-target': ''
-    });
+    return new StaticAttributeMixin('scrollable-target');
+  },
+
+  get tabRoot() {
+    return new StaticAttributeMixin('tab-root');
   },
 
   use: function use() {
@@ -1424,8 +1422,10 @@ definePrototype(StatefulMixin, Mixin, {
 
         self.onLayoutEffect(current, state);
         obj.elements.add(current);
-      } else {
-        obj.elements["delete"](state.element);
+      } else if (state) {
+        var prev = state.element;
+        self.onBeforeUpdate(prev, state);
+        obj.elements["delete"](prev);
       }
     };
   },
@@ -1445,6 +1445,7 @@ definePrototype(StatefulMixin, Mixin, {
     extend(state, newState);
   },
   onLayoutEffect: function onLayoutEffect(element, state) {},
+  onBeforeUpdate: function onBeforeUpdate(element, state) {},
   clone: function clone() {
     return this;
   },
@@ -1470,7 +1471,8 @@ function checkState(self, element, state, fireEvent) {
     classNames[i] = element.classList.contains(i);
   });
 
-  if (fireEvent && !equal(prev, classNames)) {
+  if (fireEvent && !equal(state.prev || prev, classNames)) {
+    state.prev = prev;
     self.onClassNameUpdated(element, prev, extend({}, classNames));
   }
 }
@@ -1495,6 +1497,9 @@ definePrototype(ClassNameMixin, StatefulMixin, {
   },
   onLayoutEffect: function onLayoutEffect(element, state) {
     setClass(element, state.classNames);
+  },
+  onBeforeUpdate: function onBeforeUpdate(element, state) {
+    checkState(this, element, state);
   },
   onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {}
 });
@@ -1524,7 +1529,7 @@ definePrototype(AnimateMixin, ClassNameMixin, {
   },
   getCustomAttributes: function getCustomAttributes() {
     var self = this;
-    return extend({}, AnimateMixinSuper.getCustomAttributes.call(self), {
+    return extend(AnimateMixinSuper.getCustomAttributes.call(self), {
       'animate-in': (self.effects || []).join(' '),
       'animate-on': self.trigger || 'show'
     });
@@ -1540,7 +1545,7 @@ function AnimateSequenceItemMixin(className) {
 }
 definePrototype(AnimateSequenceItemMixin, ClassNameMixin, {
   getCustomAttributes: function getCustomAttributes() {
-    return extend({}, AnimateSequenceItemMixinSuper.getCustomAttributes.call(this), {
+    return extend(AnimateSequenceItemMixinSuper.getCustomAttributes.call(this), {
       'is-animate-sequence': ''
     });
   },
@@ -1575,7 +1580,7 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
   },
   getCustomAttributes: function getCustomAttributes() {
     var self = this;
-    return extend({}, AnimateSequenceMixinSuper.getCustomAttributes.call(self), {
+    return extend(AnimateSequenceMixinSuper.getCustomAttributes.call(self), {
       'animate-in': null,
       'animate-sequence-type': (self.effects || []).join(' '),
       'animate-sequence': self.selector || '.' + self.className
@@ -1683,7 +1688,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
   },
   getCustomAttributes: function getCustomAttributes() {
     var self = this;
-    return extend({}, FlyoutMixinSuper.getCustomAttributes.call(self), {
+    return extend(FlyoutMixinSuper.getCustomAttributes.call(self), {
       'is-flyout': '',
       'swipe-dismiss': self.swipeToDismiss
     }, self.modal && {
@@ -1781,32 +1786,35 @@ definePrototype(FocusStateMixin, StatefulMixin, {
     setClass(element, 'focused', state.focused);
   }
 });
+;// CONCATENATED MODULE: ./tmp/brew-js/directive.js
+
+var getDirectiveComponent = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.getDirectiveComponent,
+    registerSimpleDirective = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.registerSimpleDirective,
+    registerDirective = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.registerDirective;
+
 ;// CONCATENATED MODULE: ./src/mixins/LoadingStateMixin.js
 
 
 
 
-var LoadingStateMixinSuper = StatefulMixin.prototype;
+
+var LoadingStateMixinSuper = ClassNameMixin.prototype;
 function LoadingStateMixin() {
-  StatefulMixin.call(this);
+  ClassNameMixin.call(this, ['loading', 'loading-complete']);
+  this.loading = false;
 }
-definePrototype(LoadingStateMixin, StatefulMixin, {
+definePrototype(LoadingStateMixin, ClassNameMixin, {
   initElement: function initElement(element, state) {
-    LoadingStateMixinSuper.initElement.call(this, element, state);
-    this.onDispose(subscribeAsync(element, function (loading) {
-      state.loading = loading;
-      setClass(element, 'loading', loading);
+    var self = this;
+    LoadingStateMixinSuper.initElement.call(self, element, state);
+    getDirectiveComponent(element).enableLoadingClass = true;
+    self.onDispose(subscribeAsync(element, function (loading) {
+      self.loading = loading || !!any(self.elements(), function (v) {
+        return v !== element && getClass(v, 'loading') === true;
+      });
     }));
-  },
-  onLayoutEffect: function onLayoutEffect(element, state) {
-    setClass(element, 'loading', state.loading);
   }
 });
-;// CONCATENATED MODULE: ./tmp/brew-js/directive.js
-
-var getDirectiveComponent = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.getDirectiveComponent,
-    registerDirective = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.registerDirective;
-
 ;// CONCATENATED MODULE: ./src/mixins/ScrollableMixin.js
 
 
@@ -1828,7 +1836,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
   },
   getCustomAttributes: function getCustomAttributes() {
     var options = this.options || {};
-    return extend({}, ScrollableMixinSuper.getCustomAttributes.call(this), {
+    return extend(ScrollableMixinSuper.getCustomAttributes.call(this), {
       'scrollable': [options.direction || 'both', options.handle || 'auto'].join(' ')
     }, options.pagedItemSelector && {
       'scroller-snap-page': options.paged,
