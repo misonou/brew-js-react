@@ -20,6 +20,7 @@ export default function FlyoutMixin() {
     self.onDispose(function () {
         self.isFlyoutOpened = false;
         self.visible = false;
+        self.toggle.dispose();
     });
 }
 
