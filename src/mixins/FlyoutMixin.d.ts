@@ -22,6 +22,11 @@ export interface FlyoutMixinOptions {
      * Default is `true` if source element is not an text input element.
      */
     initialFocus?: boolean | string;
+    /**
+     * Whether the flyout should be closed when flyout, or source element if given, loses focus.
+     * Default is `true` if flyout is not dismissible by swipe gesture.
+     */
+    closeOnBlur?: boolean;
 }
 
 /**

@@ -3,7 +3,7 @@ import { jest } from "@jest/globals";
 import { act, render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { addAnimateIn, addAnimateOut, animateIn } from "brew-js/anim";
-import { openFlyout } from "brew-js/domAction";
+import { isFlyoutOpen, openFlyout } from "brew-js/domAction";
 import dom from "zeta-dom/dom";
 import { delay, extend, watch } from "zeta-dom/util";
 import { classNames, useUpdateTrigger } from "zeta-dom-react";
@@ -11,7 +11,7 @@ import { AnimateSequenceMixin, ClassNameMixin, FlyoutMixin, ScrollIntoViewMixin,
 import Mixin from "src/mixins/Mixin";
 import StatefulMixin from "src/mixins/StatefulMixin";
 import StaticAttributeMixin from "src/mixins/StaticAttributeMixin";
-import { after, mockFn, verifyCalls, _, cleanup } from "@misonou/test-utils";
+import { after, mockFn, verifyCalls, _, cleanup, root } from "@misonou/test-utils";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
 
 class ScrollIntoViewMixinImpl extends ScrollIntoViewMixin {
@@ -718,6 +718,23 @@ describe('FlyoutMixin', () => {
         const { container, unmount } = render(<Component />);
         await after(() => void mixin.open());
         expect(dom.activeElement).toBe(container.querySelector('.item'));
+        unmount();
+    });
+
+    it('should not have flyout closed upon focus leaving when closeOnBlur option is set to false', async () => {
+        let mixin;
+        const Component = function () {
+            mixin = useFlyoutMixin({ closeOnBlur: false });
+            return (<div {...Mixin.use(mixin)}><button data-testid="button"></button></div>);
+        };
+        const { unmount } = render(<Component />);
+        const flyout = mixin.elements()[0];
+
+        await after(() => void mixin.open());
+        expect(isFlyoutOpen(flyout)).toBe(true);
+
+        await after(() => dom.focus(root));
+        expect(isFlyoutOpen(flyout)).toBe(true);
         unmount();
     });
 });

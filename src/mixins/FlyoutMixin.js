@@ -1,4 +1,4 @@
-import { definePrototype, extend, makeArray } from "../include/zeta-dom/util.js";
+import { definePrototype, extend, makeArray, pick } from "../include/zeta-dom/util.js";
 import { closeFlyout, openFlyout } from "../include/brew-js/domAction.js";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
@@ -25,10 +25,11 @@ export default function FlyoutMixin() {
 }
 
 definePrototype(FlyoutMixin, ClassNameMixin, {
-    get flyoutOptions() {
-        var options = {};
-        if (this.initialFocus !== undefined) {
-            options.focus = this.initialFocus;
+    getOptions: function () {
+        var self = this;
+        var options = pick(self, ['closeOnBlur']);
+        if (self.initialFocus !== undefined) {
+            options.focus = self.initialFocus;
         }
         return options;
     },
@@ -58,7 +59,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     open: function (value) {
         var element = this.elements()[0];
         valueMap.set(element, value);
-        return openFlyout(element, null, this.flyoutOptions);
+        return openFlyout(element, null, this.getOptions());
     },
     close: function (value) {
         return closeFlyout(this.elements()[0], value);
