@@ -11,8 +11,8 @@ export default function FlyoutToggleMixin(mixin) {
 }
 
 definePrototype(FlyoutToggleMixin, ClassNameMixin, {
-    open: function (value) {
-        return this.flyoutMixin.open(value);
+    open: function (value, source) {
+        return this.flyoutMixin.open(value, source);
     },
     close: function (value) {
         return this.flyoutMixin.close(value);

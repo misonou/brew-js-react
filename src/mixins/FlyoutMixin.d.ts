@@ -89,9 +89,10 @@ export default class FlyoutMixin extends ClassNameMixin {
     /**
      * Opens the flyout.
      * @param state Value to be sent to listener added by {@link FlyoutMixin.onOpen}.
+     * @param source Source element that triggered the flyout.
      * @returns A promise that resolves when the flyout is being closed.
      */
-    open(state?: any): Promise<any>;
+    open(state?: any, source?: Element): Promise<any>;
     /**
      * Closes the flyout.
      * @param state Value to be sent to the promise returned by {@link FlyoutMixin.open}.

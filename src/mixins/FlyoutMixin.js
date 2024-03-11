@@ -56,10 +56,10 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
             'animate-out': ''
         });
     },
-    open: function (value) {
+    open: function (value, source) {
         var element = this.elements()[0];
         valueMap.set(element, value);
-        return openFlyout(element, null, this.getOptions());
+        return openFlyout(element, source, this.getOptions());
     },
     close: function (value) {
         return closeFlyout(this.elements()[0], value);
