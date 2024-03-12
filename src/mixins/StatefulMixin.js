@@ -1,4 +1,4 @@
-import { combineFn, createPrivateStore, definePrototype, extend, keys, map, pipe, watch } from "../include/zeta-dom/util.js";
+import { combineFn, createPrivateStore, definePrototype, extend, keys, map, pipe, watch } from "zeta-dom/util";
 import Mixin from "./Mixin.js";
 
 const _ = createPrivateStore();

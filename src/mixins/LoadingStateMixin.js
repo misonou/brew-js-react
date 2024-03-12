@@ -1,7 +1,7 @@
-import { any, definePrototype } from "../include/zeta-dom/util.js";
-import { getClass } from "../include/zeta-dom/domUtil.js";
-import { subscribeAsync } from "../include/zeta-dom/domLock.js";
-import { getDirectiveComponent } from "../include/brew-js/directive.js";
+import { any, definePrototype } from "zeta-dom/util";
+import { getClass } from "zeta-dom/domUtil";
+import { subscribeAsync } from "zeta-dom/domLock";
+import { getDirectiveComponent } from "brew-js/directive";
 import ClassNameMixin from "./ClassNameMixin.js";
 
 const LoadingStateMixinSuper = ClassNameMixin.prototype;

@@ -1,5 +1,5 @@
-import { defineHiddenProperty, definePrototype, each, extend } from "../include/zeta-dom/util.js";
-import { getDirectiveComponent } from "../include/brew-js/directive.js";
+import { defineHiddenProperty, definePrototype, each, extend } from "zeta-dom/util";
+import { getDirectiveComponent } from "brew-js/directive";
 import { app } from "../app.js";
 import Mixin from "./Mixin.js";
 import ClassNameMixin from "./ClassNameMixin.js";

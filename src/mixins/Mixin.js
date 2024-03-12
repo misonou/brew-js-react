@@ -1,5 +1,5 @@
 import { classNames } from "zeta-dom-react";
-import { combineFn, define, definePrototype, each, extend, makeArray, noop, watchable } from "../include/zeta-dom/util.js";
+import { combineFn, define, definePrototype, each, extend, makeArray, noop, watchable } from "zeta-dom/util";
 import StaticAttributeMixin from "./StaticAttributeMixin.js";
 
 export default function Mixin() {

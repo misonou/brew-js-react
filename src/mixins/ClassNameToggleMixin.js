@@ -1,5 +1,5 @@
-import { definePrototype, each, extend, isPlainObject, kv } from "../include/zeta-dom/util.js";
-import { setClass } from "../include/zeta-dom/domUtil.js";
+import { definePrototype, each, extend, isPlainObject, kv } from "zeta-dom/util";
+import { setClass } from "zeta-dom/domUtil";
 import StatefulMixin from "./StatefulMixin.js";
 
 export default function ClassNameToggleMixin() {

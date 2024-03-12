@@ -1,4 +1,4 @@
-import { definePrototype, extend, makeArray } from "../include/zeta-dom/util.js";
+import { definePrototype, extend, makeArray } from "zeta-dom/util";
 import ClassNameMixin from "./ClassNameMixin.js";
 
 const AnimateMixinSuper = ClassNameMixin.prototype;

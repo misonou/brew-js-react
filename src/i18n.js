@@ -1,6 +1,6 @@
 import { useObservableProperty } from "zeta-dom-react";
-import waterpipe from "./include/external/waterpipe.js"
-import { extend, keys, makeArray, single } from "./include/zeta-dom/util.js";
+import waterpipe from "waterpipe";
+import { extend, keys, makeArray, single } from "zeta-dom/util";
 import { app } from "./app.js";
 
 const empty = Object.create(null);

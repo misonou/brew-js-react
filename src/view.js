@@ -1,11 +1,11 @@
 import React from "react";
 import { useAsync } from "zeta-dom-react";
-import dom from "./include/zeta-dom/dom.js";
-import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { ZetaEventContainer } from "./include/zeta-dom/events.js";
-import { any, arrRemove, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "./include/zeta-dom/util.js";
-import { animateIn, animateOut } from "./include/brew-js/anim.js";
-import { removeQueryAndHash } from "./include/brew-js/util/path.js";
+import dom from "zeta-dom/dom";
+import { notifyAsync } from "zeta-dom/domLock";
+import { ZetaEventContainer } from "zeta-dom/events";
+import { any, arrRemove, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
+import { animateIn, animateOut } from "brew-js/anim";
+import { removeQueryAndHash } from "brew-js/util/path";
 import { app, onAppInit } from "./app.js";
 import { ViewStateContainer } from "./hooks.js";
 

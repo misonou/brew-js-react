@@ -1,5 +1,5 @@
-import { definePrototype, extend, makeArray, pick } from "../include/zeta-dom/util.js";
-import { closeFlyout, openFlyout } from "../include/brew-js/domAction.js";
+import { definePrototype, extend, makeArray, pick } from "zeta-dom/util";
+import { closeFlyout, openFlyout } from "brew-js/domAction";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
 import FlyoutToggleMixin from "./FlyoutToggleMixin.js";

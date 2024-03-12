@@ -1,6 +1,6 @@
-import { combineFn, throwNotFunction } from "./include/zeta-dom/util.js";
-import { install } from "./include/brew-js/app.js";
-import defaults from "./include/brew-js/defaults.js";
+import { combineFn, throwNotFunction } from "zeta-dom/util";
+import { install } from "brew-js/app";
+import defaults from "brew-js/defaults";
 
 /** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
 export var app;

@@ -1,7 +1,7 @@
 import { createElement, useEffect, useRef, useState } from "react";
 import { ViewStateProvider, useObservableProperty, useUpdateTrigger } from "zeta-dom-react";
-import { definePrototype, delay, each, extend, kv, setImmediateOnce, throwNotFunction, watch } from "./include/zeta-dom/util.js";
-import { ZetaEventContainer } from "./include/zeta-dom/events.js";
+import { definePrototype, delay, each, extend, kv, setImmediateOnce, throwNotFunction, watch } from "zeta-dom/util";
+import { ZetaEventContainer } from "zeta-dom/events";
 import { app } from "./app.js";
 import { useViewContext } from "./view.js";
 

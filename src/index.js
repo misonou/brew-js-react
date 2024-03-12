@@ -1,4 +1,4 @@
-import brew from "./include/brew-js/app.js";
+import brew from "brew-js/app";
 export default brew;
 
 export * from "./dialog.js";

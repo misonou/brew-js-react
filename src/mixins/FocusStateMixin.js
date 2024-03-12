@@ -1,6 +1,6 @@
-import { definePrototype } from "../include/zeta-dom/util.js";
-import { setClass } from "../include/zeta-dom/domUtil.js";
-import dom from "../include/zeta-dom/dom.js";
+import { definePrototype } from "zeta-dom/util";
+import { setClass } from "zeta-dom/domUtil";
+import dom from "zeta-dom/dom";
 import StatefulMixin from "./StatefulMixin.js";
 
 const FocusStateMixinSuper = StatefulMixin.prototype;

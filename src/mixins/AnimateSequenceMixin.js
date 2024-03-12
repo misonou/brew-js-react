@@ -1,6 +1,6 @@
-import $ from "../include/external/jquery.js";
-import { watchElements } from "../include/zeta-dom/observe.js";
-import { definePrototype, extend } from "../include/zeta-dom/util.js";
+import $ from "jquery";
+import { watchElements } from "zeta-dom/observe";
+import { definePrototype, extend } from "zeta-dom/util";
 import AnimateMixin from "./AnimateMixin.js";
 import AnimateSequenceItemMixin from "./AnimateSequenceItemMixin.js";
 

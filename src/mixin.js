@@ -1,5 +1,5 @@
 import { useSingleton } from "zeta-dom-react";
-import { extend } from "./include/zeta-dom/util.js";
+import { extend } from "zeta-dom/util";
 import Mixin from "./mixins/Mixin.js";
 import AnimateMixin from "./mixins/AnimateMixin.js";
 import AnimateSequenceItemMixin from "./mixins/AnimateSequenceItemMixin.js";

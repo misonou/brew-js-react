@@ -1,6 +1,6 @@
-import { definePrototype, each, equal, extend, fill } from "../include/zeta-dom/util.js";
-import { setClass } from "../include/zeta-dom/domUtil.js";
-import { watchOwnAttributes } from "../include/zeta-dom/observe.js";
+import { definePrototype, each, equal, extend, fill } from "zeta-dom/util";
+import { setClass } from "zeta-dom/domUtil";
+import { watchOwnAttributes } from "zeta-dom/observe";
 import StatefulMixin from "./StatefulMixin.js";
 
 function checkState(self, element, state, fireEvent) {

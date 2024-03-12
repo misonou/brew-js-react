@@ -1,6 +1,6 @@
-import dom from "../include/zeta-dom/dom.js";
-import { definePrototype } from "../include/zeta-dom/util.js";
-import { toggleFlyout } from "../include/brew-js/domAction.js";
+import dom from "zeta-dom/dom";
+import { definePrototype } from "zeta-dom/util";
+import { toggleFlyout } from "brew-js/domAction";
 import ClassNameMixin from "./ClassNameMixin.js";
 
 const FlyoutToggleMixinSuper = ClassNameMixin.prototype;

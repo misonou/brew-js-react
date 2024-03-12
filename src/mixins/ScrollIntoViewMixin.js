@@ -1,5 +1,5 @@
-import { definePrototype, equal, extend, setImmediateOnce } from "../include/zeta-dom/util.js";
-import { scrollIntoView } from "../include/zeta-dom/domUtil.js";
+import { definePrototype, equal, extend, setImmediateOnce } from "zeta-dom/util";
+import { scrollIntoView } from "zeta-dom/domUtil";
 import StatefulMixin from "./StatefulMixin.js";
 
 export default function ScrollIntoViewMixin() {

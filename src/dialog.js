@@ -1,11 +1,11 @@
 import { createElement, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import ReactDOMClient from "./include/external/react-dom-client.js";
-import { either, extend, makeAsync, noop, pick, pipe, resolve } from "./include/zeta-dom/util.js";
-import { containsOrEquals, removeNode } from "./include/zeta-dom/domUtil.js";
-import dom from "./include/zeta-dom/dom.js";
-import { lock, notifyAsync, preventLeave, subscribeAsync } from "./include/zeta-dom/domLock.js";
-import { closeFlyout, openFlyout } from "./include/brew-js/domAction.js";
+import ReactDOMClient from "@misonou/react-dom-client";
+import { either, extend, makeAsync, noop, pick, pipe, resolve } from "zeta-dom/util";
+import { containsOrEquals, removeNode } from "zeta-dom/domUtil";
+import dom from "zeta-dom/dom";
+import { lock, notifyAsync, preventLeave, subscribeAsync } from "zeta-dom/domLock";
+import { closeFlyout, openFlyout } from "brew-js/domAction";
 
 /**
  * @param {Partial<import("./dialog").DialogOptions<any>>} props
