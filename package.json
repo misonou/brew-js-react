@@ -16,7 +16,7 @@
     "test:react18": "cross-env NODE_OPTIONS=--experimental-vm-modules REACT_VERSION=18 npx jest",
     "snapshot": "npm run test -- -u",
     "version": "npm run build && git add -A dist",
-    "release": "node ./npm-publish.cjs"
+    "release": "npx @misonou/build-utils publish"
   },
   "author": "misonou",
   "license": "ISC",
@@ -38,21 +38,17 @@
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-react": "^7.16.7",
     "@jest/globals": "^26.6.2",
+    "@misonou/build-utils": "^1.1.2",
     "@misonou/test-utils": "^1.0.3",
     "@testing-library/dom": "^8.11.3",
     "@testing-library/react": "^12.1.2",
     "@testing-library/react-hooks": "^7.0.2",
     "@types/jest": "^26.0.15",
-    "babel-loader": "^8.2.1",
-    "clean-webpack-plugin": "^4.0.0",
+    "babel-loader": "^9.1.3",
     "cross-env": "^7.0.2",
-    "glob": "^7.2.0",
     "jest": "^27.0.6",
     "jest-environment-jsdom": "^27.4.6",
-    "ncp": "^2.0.0",
-    "regenerator-runtime": "^0.13.9",
-    "webpack": "^5.3.0",
-    "webpack-cli": "^4.1.0"
+    "regenerator-runtime": "^0.13.9"
   },
   "sideEffects": [
     "./src/app.js"
