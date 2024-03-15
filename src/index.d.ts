@@ -1,6 +1,6 @@
 /// <reference types="brew-js" />
 
-import brew from "brew-js/core";
+import brew from "brew-js/app";
 export default brew;
 
 export * from "./dialog";
