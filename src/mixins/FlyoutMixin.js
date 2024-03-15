@@ -1,5 +1,5 @@
 import { definePrototype, extend, makeArray, pick } from "zeta-dom/util";
-import { closeFlyout, openFlyout } from "brew-js/domAction";
+import { closeFlyout, isFlyoutOpen, openFlyout } from "brew-js/domAction";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
 import FlyoutToggleMixin from "./FlyoutToggleMixin.js";
@@ -58,7 +58,9 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     },
     open: function (value, source) {
         var element = this.elements()[0];
-        valueMap.set(element, value);
+        if (!isFlyoutOpen(element)) {
+            valueMap.set(element, value);
+        }
         return openFlyout(element, source, this.getOptions());
     },
     close: function (value) {
@@ -92,7 +94,11 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     },
     onClassNameUpdated: function (element, prevState, state) {
         var self = this;
+        var isFlyoutOpened = isFlyoutOpen(element);
+        if (!isFlyoutOpened) {
+            valueMap.delete(element);
+        }
         self.visible = state.open;
-        self.isFlyoutOpened = state.open && !state.closing && !state['tweening-out'];
+        self.isFlyoutOpened = isFlyoutOpened;
     }
 });

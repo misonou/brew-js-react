@@ -642,6 +642,35 @@ describe('FlyoutMixin', () => {
         unmount();
     });
 
+    it('should not leak value to subsequent open', async () => {
+        let mixin;
+        const cb = mockFn();
+        const Component = function () {
+            mixin = useFlyoutMixin();
+            useEffect(() => mixin.onOpen(cb), [mixin]);
+            return (<div {...Mixin.use(mixin)}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        await after(() => void mixin.open('foo'));
+        await mixin.close();
+        verifyCalls(cb, [['foo']]);
+        cb.mockClear();
+
+        await after(() => void openFlyout(div));
+        verifyCalls(cb, [[undefined]]);
+        cb.mockClear();
+
+        await after(() => void mixin.open('bar'));
+        expect(cb).not.toBeCalled();
+
+        await mixin.close();
+        await after(() => void openFlyout(div));
+        verifyCalls(cb, [[undefined]]);
+        unmount();
+    });
+
     it('should close flyout and pass value to promise', async () => {
         let mixin;
         const Component = function () {
