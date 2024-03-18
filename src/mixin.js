@@ -27,15 +27,15 @@ function createUseFunction(ctor) {
     };
 }
 
-export const useAnimateMixin = createUseFunction(AnimateMixin);
-export const useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
-export const useClassNameToggleMixin = createUseFunction(ClassNameToggleMixin);
-export const useFlyoutMixin = createUseFunction(FlyoutMixin);
-export const useFocusStateMixin = createUseFunction(FocusStateMixin);
-export const useLoadingStateMixin = createUseFunction(LoadingStateMixin);
-export const useScrollableMixin = createUseFunction(ScrollableMixin);
-export const useScrollIntoViewMixin = createUseFunction(ScrollIntoViewMixin);
-export const useUnmanagedClassNameMixin = createUseFunction(UnmanagedClassNameMixin);
+export const useAnimateMixin = /*#__PURE__*/ createUseFunction(AnimateMixin);
+export const useAnimateSequenceMixin = /*#__PURE__*/ createUseFunction(AnimateSequenceMixin);
+export const useClassNameToggleMixin = /*#__PURE__*/ createUseFunction(ClassNameToggleMixin);
+export const useFlyoutMixin = /*#__PURE__*/ createUseFunction(FlyoutMixin);
+export const useFocusStateMixin = /*#__PURE__*/ createUseFunction(FocusStateMixin);
+export const useLoadingStateMixin = /*#__PURE__*/ createUseFunction(LoadingStateMixin);
+export const useScrollableMixin = /*#__PURE__*/ createUseFunction(ScrollableMixin);
+export const useScrollIntoViewMixin = /*#__PURE__*/ createUseFunction(ScrollIntoViewMixin);
+export const useUnmanagedClassNameMixin = /*#__PURE__*/ createUseFunction(UnmanagedClassNameMixin);
 
 export function useMixin(ctor) {
     return useSingleton(function () {
