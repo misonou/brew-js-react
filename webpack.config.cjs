@@ -10,7 +10,7 @@ module.exports = {
     output: {
         path: paths.dist,
         filename: '[name].js',
-        library: createUMDLibraryDefinition('brew-js-react', 'brew-js-react')
+        library: createUMDLibraryDefinition('brew-js-react', 'brew.react', '*')
     },
     resolve: {
         alias: {
@@ -22,6 +22,6 @@ module.exports = {
         'react-dom': createUMDExternal('react-dom', 'ReactDOM'),
         'jquery': createUMDExternal('jquery', 'jQuery'),
         'waterpipe': 'waterpipe',
-        'zeta-dom-react': 'zeta-dom-react'
+        'zeta-dom-react': createUMDExternal('zeta-dom-react', 'zeta.react')
     }
 };

@@ -1,5 +1,8 @@
-import * as all from "./index.js";
-export default all;
+import { defineGetterProperty } from "zeta-dom/util";
 
-import brew from "brew-js/app";
-brew.react = all;
+defineGetterProperty(window, 'brew-js-react', function () {
+    console.warn('window["brew-js-react"] is deprecated, access brew.react instead.');
+    return brew.react;
+});
+
+export * from "./index.js";
