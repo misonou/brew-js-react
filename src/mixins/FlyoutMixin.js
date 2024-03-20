@@ -1,5 +1,5 @@
 import { definePrototype, extend, makeArray, pick } from "zeta-dom/util";
-import { closeFlyout, isFlyoutOpen, openFlyout } from "brew-js/domAction";
+import { closeFlyout, openFlyout } from "brew-js/domAction";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
 import FlyoutToggleMixin from "./FlyoutToggleMixin.js";
@@ -57,11 +57,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         });
     },
     open: function (value, source) {
-        var element = this.elements()[0];
-        if (!isFlyoutOpen(element)) {
-            valueMap.set(element, value);
-        }
-        return openFlyout(element, source, this.getOptions());
+        return openFlyout(this.elements()[0], value, source, this.getOptions());
     },
     close: function (value) {
         return closeFlyout(this.elements()[0], value);
@@ -84,6 +80,17 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         var self = this;
         FlyoutMixinSuper.initElement.call(self, element, state);
         self.onDispose(app.on(element, {
+            flyoutshow: function (e) {
+                valueMap.set(element, e.data);
+                self.isFlyoutOpened = true;
+                self.visible = true;
+            },
+            flyoutclose: function () {
+                self.isFlyoutOpened = false;
+            },
+            flyouthide: function () {
+                self.visible = false;
+            },
             animationstart: function () {
                 self.animating = true;
             },
@@ -91,14 +98,5 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
                 self.animating = false;
             },
         }, true));
-    },
-    onClassNameUpdated: function (element, prevState, state) {
-        var self = this;
-        var isFlyoutOpened = isFlyoutOpen(element);
-        if (!isFlyoutOpened) {
-            valueMap.delete(element);
-        }
-        self.visible = state.open;
-        self.isFlyoutOpened = isFlyoutOpened;
     }
 });

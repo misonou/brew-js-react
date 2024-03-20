@@ -607,7 +607,7 @@ describe('FlyoutMixin', () => {
         unmount();
     });
 
-    it('should invoke onOpen handler when flyout is opened', async () => {
+    it('should invoke and pass value onOpen handler when flyout is opened', async () => {
         const cb = mockFn();
         const Component = function () {
             const mixin = useFlyoutMixin();
@@ -617,9 +617,11 @@ describe('FlyoutMixin', () => {
         const { container, unmount } = render(<Component />);
         const div = container.firstChild;
 
-        await after(() => void openFlyout(div));
+        await after(() => void openFlyout(div, 'foo'));
         expect(div).toHaveClassName('open');
-        expect(cb).toBeCalledTimes(1);
+        verifyCalls(cb, [
+            ['foo']
+        ]);
         unmount();
     });
 
@@ -696,10 +698,10 @@ describe('FlyoutMixin', () => {
         const cb = mockFn();
         mixin.onVisibilityChanged(cb);
         mixin.open();
-        expect(mixin.visible).toBe(false);
+        expect(mixin.visible).toBe(true);
+        expect(cb).not.toBeCalled();
 
         await delay(0);
-        expect(mixin.visible).toBe(true);
         expect(cb).toBeCalledWith(true, false, _, _);
 
         await delay(100);
