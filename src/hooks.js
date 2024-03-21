@@ -81,34 +81,23 @@ export function useAppReadyState() {
 export function useRouteParam(name, defaultValue) {
     const container = useViewContext();
     const params = container.page.params;
-    const route = app.route;
     const value = params[name] || '';
     const ref = useRef(value);
     const forceUpdate = useUpdateTrigger();
     useEffect(function () {
         var setValue = function () {
-            var current = route[name] || '';
+            var current = container.page.params[name] || '';
             if (current !== ref.current) {
-                if (container.active) {
-                    ref.current = current;
-                    forceUpdate();
-                } else {
-                    watch(container, 'active', setValue);
-                }
+                forceUpdate();
             }
         };
         // route parameter might be changed after state initialization and before useEffect hook is called
         setValue();
-        if (name in route) {
-            return route.watch(name, function () {
-                setImmediateOnce(setValue);
-            });
-        }
-        console.error('Route parameter ' + name + ' does not exist');
-    }, [name, defaultValue]);
+        return container.on('pagechange', setValue);
+    }, [name]);
     ref.current = value;
     if (defaultValue && container.active && (!value || (name === 'remainingSegments' && value === '/'))) {
-        app.navigate(route.getPath(extend({}, params, kv(name, defaultValue))), true);
+        app.navigate(app.route.getPath(extend({}, params, kv(name, defaultValue))), true);
     }
     return value;
 }
