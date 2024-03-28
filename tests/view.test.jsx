@@ -959,4 +959,19 @@ describe('ViewContext', () => {
         expect(cb).not.toBeCalled();
         unmount();
     });
+
+    it('should set active property to false when container is unmounted', async () => {
+        let context;
+        const Foo = registerView(({ viewContext }) => {
+            context = viewContext;
+            return <></>;
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>);
+        await delay();
+
+        expect(context.active).toBe(true);
+        unmount();
+        expect(context.active).toBe(false);
+    });
 });

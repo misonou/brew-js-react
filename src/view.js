@@ -120,9 +120,11 @@ definePrototype(ViewContainer, React.Component, {
                 (self.setActive || noop)(self.getViewComponent() === self.currentViewComponent);
             }),
             function () {
+                (self.setActive || noop)(false);
                 arrRemove(parent, self);
             }
         );
+        (self.setActive || noop)(true);
     },
     render: function () {
         /** @type {any} */
