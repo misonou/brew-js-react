@@ -3,7 +3,7 @@ import { useAsync } from "zeta-dom-react";
 import dom from "zeta-dom/dom";
 import { notifyAsync } from "zeta-dom/domLock";
 import { ZetaEventContainer } from "zeta-dom/events";
-import { any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
+import { any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isArray, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
 import { animateIn, animateOut } from "brew-js/anim";
 import { removeQueryAndHash } from "brew-js/util/path";
 import { app, onAppInit } from "./app.js";
@@ -288,14 +288,13 @@ export function isViewMatched(view) {
     return matchViewParams(view, app.route);
 }
 
-export function matchView(path, views) {
+export function matchView() {
+    var views = makeArray(arguments);
     var route = app.route;
-    if (typeof path === 'string') {
-        route = route.parse(path);
-    } else {
-        views = path;
+    if (typeof views[0] === 'string') {
+        route = route.parse(views.shift());
     }
-    views = views ? makeArray(views).sort(sortViews) : sortedViews;
+    views = views[0] ? (isArray(views[0]) ? makeArray(views[0]) : views).sort(sortViews) : sortedViews;
     return any(views, function (v) {
         return matchViewParams(v, route);
     }) || undefined;

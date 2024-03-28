@@ -138,6 +138,9 @@ describe('matchView', () => {
         expect(matchView('/dummy/foo', [Foo])).toBe(Foo);
         expect(matchView('/dummy/foo/baz', [Foo])).toBe(Foo);
         expect(matchView('/dummy/foo/baz', [Foo, Baz])).toBe(Baz);
+
+        expect(matchView('/dummy/foo', Foo)).toBe(Foo);
+        expect(matchView('/dummy/foo/baz', Foo, Baz)).toBe(Baz);
     });
 
     it('should return undefined if no views are matched', () => {
@@ -151,6 +154,9 @@ describe('matchView', () => {
         await app.navigate('/dummy/foo/baz');
         expect(matchView([Foo])).toBe(Foo);
         expect(matchView([Foo, Baz])).toBe(Baz);
+
+        expect(matchView(Foo)).toBe(Foo);
+        expect(matchView(Foo, Baz)).toBe(Baz);
     });
 });
 

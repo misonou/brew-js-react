@@ -111,6 +111,13 @@ export function matchView(): ViewComponent<any> | undefined;
 export function matchView(views: ViewComponent<any>[]): ViewComponent<any> | undefined;
 
 /**
+ * Gets the view component that matches the current path within the given set of views.
+ * However it does not imply if the view is in fact being rendered.
+ * @param views A list of view components.
+ */
+export function matchView(...views: ViewComponent<any>[]): ViewComponent<any> | undefined;
+
+/**
  * Gets the view component that matches the specified path.
  * @param path A valid path that could navigate to.
  */
@@ -122,6 +129,13 @@ export function matchView(path: string): ViewComponent<any> | undefined;
  * @param views A list of view components.
  */
 export function matchView(path: string, views: ViewComponent<any>[]): ViewComponent<any> | undefined;
+
+/**
+ * Gets the view component that matches the specified path, within the given set of views.
+ * @param path A valid path that could navigate to.
+ * @param views A list of view components.
+ */
+export function matchView(path: string, ...views: ViewComponent<any>[]): ViewComponent<any> | undefined;
 
 /**
  * Renders view by matching current route state against registered route parameters of each supplied views.
