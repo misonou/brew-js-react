@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
-import { isViewMatched, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext } from "src/view";
+import { isViewMatched, isViewRendered, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext } from "src/view";
 import { body, delay, mockFn, verifyCalls, _, cleanup, root } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
 import { addAnimateIn, addAnimateOut } from "brew-js/anim";
@@ -258,6 +258,24 @@ describe('isViewMatched', () => {
 
         await app.navigate('/dummy/foo/baz');
         expect(isViewMatched(FooBazEmpty)).toBe(false);
+    });
+});
+
+describe('isViewRendered', () => {
+    it('should return boolean whether a view is rendered', async () => {
+        const { unmount } = render(<div>{renderView(Foo, Bar)}</div>);
+        await navigateTo(Foo);
+        expect(isViewRendered(Foo)).toBe(true);
+        expect(isViewRendered(Bar)).toBe(false);
+
+        await navigateTo(Bar);
+        expect(isViewRendered(Foo)).toBe(false);
+        expect(isViewRendered(Bar)).toBe(true);
+
+        unmount();
+        await 0;
+        expect(isViewRendered(Foo)).toBe(false);
+        expect(isViewRendered(Bar)).toBe(false);
     });
 });
 

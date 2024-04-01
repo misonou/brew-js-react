@@ -98,6 +98,12 @@ export function registerErrorView(component: React.ComponentType<ErrorViewProps>
 export function isViewMatched(view: ViewComponent<any>): boolean;
 
 /**
+ * Returns whether a registered view component is currently being rendered.
+ * @param view A view component returned from {@link registerView}.
+ */
+export function isViewRendered(view: ViewComponent<any>): boolean;
+
+/**
  * Gets the view component that matches the current path within all registered views.
  * However it does not imply if the view is in fact being rendered.
  */

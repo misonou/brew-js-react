@@ -194,9 +194,11 @@ definePrototype(ViewContainer, React.Component, {
                 currentViewComponent: V,
                 unmountView: executeOnce(function () {
                     self.setActive(false);
+                    routeMap.get(V).rendered--;
                     unmountView();
                 })
             });
+            routeMap.get(V).rendered++;
             (event.waitFor || noop)(promise);
         }
         (self.setPage || noop)(app.page);
@@ -288,6 +290,10 @@ export function isViewMatched(view) {
     return matchViewParams(view, app.route);
 }
 
+export function isViewRendered(view) {
+    return !!(routeMap.get(view) || '').rendered;
+}
+
 export function matchView() {
     var views = makeArray(arguments);
     var route = app.route;
@@ -311,6 +317,7 @@ export function registerView(factory, routeParams) {
     });
     routeMap.set(Component, {
         id: randomId(),
+        rendered: 0,
         matchCount: keys(routeParams).length,
         matchers: routeParams,
         params: pick(routeParams, function (v) {
