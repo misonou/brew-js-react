@@ -15,7 +15,7 @@ const routeMap = new Map();
 const usedParams = {};
 const sortedViews = [];
 const emitter = new ZetaEventContainer();
-const rootContext = freeze(extend(new ViewContext(null, null), { container: root }));
+const rootContext = freeze(extend(new ViewContext(), { container: root }));
 const rootState = _(rootContext);
 const StateContext = React.createContext(rootContext);
 
@@ -48,12 +48,13 @@ onAppInit(function () {
     });
 });
 
-function ViewContext(view, page) {
+function ViewContext(view, page, parent) {
     var self = this;
-    defineOwnProperty(self, 'view', view, true);
+    defineOwnProperty(self, 'view', view || null, true);
+    defineOwnProperty(self, 'parent', parent || null, true);
     _(self, {
         children: [],
-        setPage: defineObservableProperty(self, 'page', page, true),
+        setPage: defineObservableProperty(self, 'page', page || null, true),
         setActive: defineObservableProperty(self, 'active', !!page, true)
     });
     watch(self, 'page', function (page, previousPage) {
@@ -62,6 +63,11 @@ function ViewContext(view, page) {
 }
 
 definePrototype(ViewContext, {
+    getChildren: function () {
+        return map(_(this).children, function (v) {
+            return v.currentState;
+        });
+    },
     on: function (event, handler) {
         return emitter.add(this, event, handler);
     }
@@ -155,7 +161,7 @@ definePrototype(ViewContainer, React.Component, {
         if (V && viewChanged) {
             (self.unmountView || noop)(true);
 
-            var state = new ViewContext(V, app.page);
+            var state = new ViewContext(V, app.page, self.context);
             var onComponentLoaded;
             var promise = new Promise(function (resolve) {
                 onComponentLoaded = resolve;

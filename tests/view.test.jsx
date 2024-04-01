@@ -889,6 +889,17 @@ describe('useViewContainerState', () => {
 });
 
 describe('ViewContext', () => {
+    it('should return correct view for root context', () => {
+        const { result, unmount } = renderHook(() => useViewContext());
+        expect(result.current).toEqual(expect.objectContaining({
+            parent: null,
+            active: true,
+            container: root,
+            page: app.page
+        }));
+        unmount();
+    });
+
     it('should return current page info', async () => {
         const cb = mockFn();
         const Foo = registerView(function ({ viewContext }) {
@@ -899,6 +910,27 @@ describe('ViewContext', () => {
         const { unmount } = render(<div>{renderView(Foo)}</div>)
         await app.navigate('/dummy/foo');
         expect(cb).toBeCalledWith(app.page);
+        unmount();
+    });
+
+    it('should return parent and child view context', async () => {
+        let rootContext;
+        const cb = mockFn();
+        const Foo = registerView(function ({ viewContext }) {
+            cb(viewContext);
+            return (<></>);
+        }, { view: 'foo' });
+        const Root = () => {
+            rootContext = useViewContext();
+            return (<div>{renderView(Foo)}</div>);
+        };
+        const { unmount } = render(<Root />);
+        await app.navigate('/dummy/foo');
+        expect(cb).toBeCalledTimes(1);
+
+        const childContext = cb.mock.calls[0][0];
+        expect(childContext.parent).toBe(rootContext);
+        expect(rootContext.getChildren()).toEqual([childContext]);
         unmount();
     });
 

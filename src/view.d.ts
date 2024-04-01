@@ -16,14 +16,35 @@ export interface ViewContextEventMap {
 }
 
 export interface ViewContext extends Zeta.ZetaEventDispatcher<ViewContextEventMap, ViewContext> {
+    /**
+     * Gets the parent view context, or `null` if there is no parent context.
+     */
+    readonly parent: ViewContext | null;
+    /**
+     * Gets the HTML element associated with this view.
+     */
     readonly container: HTMLElement;
+    /**
+     * Gets the rendered view component.
+     */
     readonly view: ViewComponent<any>;
+    /**
+     * Gets whether the view is active.
+     *
+     * A rendered view becomes inactive if the view will be replaced by another view, or parent container will be unmounted.
+     * It may also be temporarily inactive during navigation.
+     */
     readonly active: boolean;
     /**
      * Gets information of current page that rendered the view.
      * Unlike {@link Brew.WithRouter.page}, it will not change when user has navigated away and the current view is going to unmount.
      */
     readonly page: Brew.PageInfo;
+
+    /**
+     * Gets view contexts rendered under this view container.
+     */
+    getChildren(): ViewContext[];
 }
 
 export interface ViewProps<S = {}> {
