@@ -3,7 +3,7 @@ import { useAsync } from "zeta-dom-react";
 import dom from "zeta-dom/dom";
 import { notifyAsync } from "zeta-dom/domLock";
 import { ZetaEventContainer } from "zeta-dom/events";
-import { any, arrRemove, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
+import { any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
 import { animateIn, animateOut } from "brew-js/anim";
 import { removeQueryAndHash } from "brew-js/util/path";
 import { app, onAppInit } from "./app.js";
@@ -50,7 +50,6 @@ onAppInit(function () {
 
 function ViewContext(view, page) {
     var self = this;
-    watch(self, true);
     defineOwnProperty(self, 'view', view, true);
     _(self, {
         children: [],
@@ -111,20 +110,25 @@ function ViewContainer() {
 ViewContainer.contextType = StateContext;
 
 definePrototype(ViewContainer, React.Component, {
+    setActive: noop,
     componentDidMount: function () {
         var self = this;
         var parent = _(self.context).children;
+        var unwatch = watch(app.route, function () {
+            self.setActive(self.getViewComponent() === self.currentViewComponent);
+        });
+        self.componentWillUnmount = function () {
+            self.setActive(false);
+            arrRemove(parent, self);
+            unwatch();
+            setImmediate(function () {
+                if (self.unmountView && !self.currentState.active) {
+                    self.unmountView();
+                }
+            });
+        };
         parent.push(self);
-        self.componentWillUnmount = combineFn(
-            watch(app.route, function () {
-                (self.setActive || noop)(self.getViewComponent() === self.currentViewComponent);
-            }),
-            function () {
-                (self.setActive || noop)(false);
-                arrRemove(parent, self);
-            }
-        );
-        (self.setActive || noop)(true);
+        self.setActive(true);
     },
     render: function () {
         /** @type {any} */
@@ -149,33 +153,32 @@ definePrototype(ViewContainer, React.Component, {
             }
         }
         if (V && viewChanged) {
-            var prevElement = self.currentElement;
-            if (prevElement) {
-                self.setActive(false);
-                self.prevView = self.currentView;
-                self.currentElement = undefined;
-                app.emit('pageleave', prevElement, { pathname: self.currentPath }, true);
-                animateOut(prevElement, 'show').then(function () {
-                    self.prevView = undefined;
-                    self.forceUpdate();
-                });
-            }
-            (self.cancelPrevious || noop)();
+            (self.unmountView || noop)(true);
 
+            var state = new ViewContext(V, app.page);
             var onComponentLoaded;
             var promise = new Promise(function (resolve) {
                 onComponentLoaded = resolve;
             });
+            var unmountView = onComponentLoaded;
             var initElement = executeOnce(function (element) {
-                self.currentElement = element;
                 state.container = element;
                 promise.then(function () {
-                    animateIn(element, 'show', '[brew-view]', true);
-                    app.emit('pageenter', element, { pathname: app.path }, true);
+                    if (self.currentState === state) {
+                        unmountView = function () {
+                            self.prevView = self.currentView;
+                            app.emit('pageleave', element, { pathname: state.page.path }, true);
+                            animateOut(element, 'show').then(function () {
+                                self.prevView = undefined;
+                                self.forceUpdate();
+                            });
+                        };
+                        animateIn(element, 'show', '[brew-view]', true);
+                        app.emit('pageenter', element, { pathname: state.page.path }, true);
+                    }
                 });
                 notifyAsync(element, promise);
             });
-            var state = new ViewContext(V, app.page);
             var viewProps = freeze({
                 navigationType: event.navigationType,
                 viewContext: state,
@@ -186,10 +189,13 @@ definePrototype(ViewContainer, React.Component, {
                     React.createElement('div', extend({}, self.props.rootProps, { ref: initElement, 'brew-view': '' }),
                         React.createElement(ErrorBoundary, { onComponentLoaded, viewProps }))));
             extend(self, _(state), {
-                cancelPrevious: onComponentLoaded,
-                currentPath: app.path,
+                currentState: state,
                 currentView: view,
-                currentViewComponent: V
+                currentViewComponent: V,
+                unmountView: executeOnce(function () {
+                    self.setActive(false);
+                    unmountView();
+                })
             });
             (event.waitFor || noop)(promise);
         }
