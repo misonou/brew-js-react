@@ -1,14 +1,14 @@
-/*! brew-js-react v0.5.4 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.5.5 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
+		module.exports = factory(require("zeta-dom"), require("react"), require("react-dom"), require("brew-js"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew-js-react", ["brew-js", "react", "react-dom", "zeta-dom", "zeta-dom-react", "waterpipe", "jquery"], factory);
+		define("brew-js-react", ["zeta-dom", "react", "react-dom", "brew-js", "zeta-dom-react", "waterpipe", "jquery"], factory);
 	else if(typeof exports === 'object')
-		exports["brew-js-react"] = factory(require("brew-js"), require("react"), require("react-dom"), require("zeta-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
+		exports["brew-js-react"] = factory(require("zeta-dom"), require("react"), require("react-dom"), require("brew-js"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
 	else
-		root["brew-js-react"] = factory(root["brew"], root["React"], root["ReactDOM"], root["zeta"], root["zeta-dom-react"], root["waterpipe"], root["jQuery"]);
-})(self, (__WEBPACK_EXTERNAL_MODULE__760__, __WEBPACK_EXTERNAL_MODULE__12__, __WEBPACK_EXTERNAL_MODULE__33__, __WEBPACK_EXTERNAL_MODULE__231__, __WEBPACK_EXTERNAL_MODULE__9__, __WEBPACK_EXTERNAL_MODULE__87__, __WEBPACK_EXTERNAL_MODULE__914__) => {
+		root["brew"] = root["brew"] || {}, root["brew"]["react"] = factory(root["zeta"], root["React"], root["ReactDOM"], root["brew"], root["zeta"]["react"], root["waterpipe"], root["jQuery"]);
+})(self, (__WEBPACK_EXTERNAL_MODULE__231__, __WEBPACK_EXTERNAL_MODULE__12__, __WEBPACK_EXTERNAL_MODULE__311__, __WEBPACK_EXTERNAL_MODULE__760__, __WEBPACK_EXTERNAL_MODULE__402__, __WEBPACK_EXTERNAL_MODULE__87__, __WEBPACK_EXTERNAL_MODULE__942__) => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -20,14 +20,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__87__;
 
 /***/ }),
 
-/***/ 9:
-/***/ ((module) => {
-
-"use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__9__;
-
-/***/ }),
-
 /***/ 760:
 /***/ ((module) => {
 
@@ -36,11 +28,11 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__760__;
 
 /***/ }),
 
-/***/ 914:
+/***/ 942:
 /***/ ((module) => {
 
 "use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__914__;
+module.exports = __WEBPACK_EXTERNAL_MODULE__942__;
 
 /***/ }),
 
@@ -52,11 +44,11 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__12__;
 
 /***/ }),
 
-/***/ 33:
+/***/ 311:
 /***/ ((module) => {
 
 "use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__33__;
+module.exports = __WEBPACK_EXTERNAL_MODULE__311__;
 
 /***/ }),
 
@@ -68,10 +60,18 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__231__;
 
 /***/ }),
 
+/***/ 402:
+/***/ ((module) => {
+
+"use strict";
+module.exports = __WEBPACK_EXTERNAL_MODULE__402__;
+
+/***/ }),
+
 /***/ 621:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var ReactDOM = __webpack_require__(33);
+var ReactDOM = __webpack_require__(311);
 var ReactDOMClient;
 
 if (ReactDOM.createRoot) {
@@ -161,77 +161,59 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
+// ESM COMPAT FLAG
+__webpack_require__.r(__webpack_exports__);
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  "default": () => (/* binding */ entry)
+  AnimateMixin: () => (/* reexport */ AnimateMixin),
+  AnimateSequenceItemMixin: () => (/* reexport */ AnimateSequenceItemMixin),
+  AnimateSequenceMixin: () => (/* reexport */ AnimateSequenceMixin),
+  ClassNameMixin: () => (/* reexport */ ClassNameMixin),
+  ClassNameToggleMixin: () => (/* reexport */ ClassNameToggleMixin),
+  Dialog: () => (/* reexport */ Dialog),
+  FlyoutMixin: () => (/* reexport */ FlyoutMixin),
+  FlyoutToggleMixin: () => (/* reexport */ FlyoutToggleMixin),
+  FocusStateMixin: () => (/* reexport */ FocusStateMixin),
+  LoadingStateMixin: () => (/* reexport */ LoadingStateMixin),
+  Mixin: () => (/* reexport */ Mixin),
+  ScrollIntoViewMixin: () => (/* reexport */ ScrollIntoViewMixin),
+  ScrollableMixin: () => (/* reexport */ ScrollableMixin),
+  StatefulMixin: () => (/* reexport */ StatefulMixin),
+  UnmanagedClassNameMixin: () => (/* reexport */ UnmanagedClassNameMixin),
+  ViewStateContainer: () => (/* reexport */ ViewStateContainer),
+  createDialog: () => (/* reexport */ createDialog),
+  isViewMatched: () => (/* reexport */ isViewMatched),
+  isViewRendered: () => (/* reexport */ isViewRendered),
+  linkTo: () => (/* reexport */ linkTo),
+  makeTranslation: () => (/* reexport */ makeTranslation),
+  matchView: () => (/* reexport */ matchView),
+  navigateTo: () => (/* reexport */ navigateTo),
+  redirectTo: () => (/* reexport */ redirectTo),
+  registerErrorView: () => (/* reexport */ registerErrorView),
+  registerView: () => (/* reexport */ registerView),
+  renderView: () => (/* reexport */ renderView),
+  resolvePath: () => (/* reexport */ resolvePath),
+  useAnimateMixin: () => (/* reexport */ useAnimateMixin),
+  useAnimateSequenceMixin: () => (/* reexport */ useAnimateSequenceMixin),
+  useAppReady: () => (/* reexport */ useAppReady),
+  useAppReadyState: () => (/* reexport */ useAppReadyState),
+  useClassNameToggleMixin: () => (/* reexport */ useClassNameToggleMixin),
+  useFlyoutMixin: () => (/* reexport */ useFlyoutMixin),
+  useFocusStateMixin: () => (/* reexport */ useFocusStateMixin),
+  useLanguage: () => (/* reexport */ useLanguage),
+  useLoadingStateMixin: () => (/* reexport */ useLoadingStateMixin),
+  useMixin: () => (/* reexport */ useMixin),
+  useMixinRef: () => (/* reexport */ useMixinRef),
+  useRouteParam: () => (/* reexport */ useRouteParam),
+  useRouteState: () => (/* reexport */ useRouteState),
+  useScrollIntoViewMixin: () => (/* reexport */ useScrollIntoViewMixin),
+  useScrollableMixin: () => (/* reexport */ useScrollableMixin),
+  useUnmanagedClassNameMixin: () => (/* reexport */ useUnmanagedClassNameMixin),
+  useViewContainerState: () => (/* reexport */ useViewContext),
+  useViewContext: () => (/* reexport */ useViewContext)
 });
 
-// NAMESPACE OBJECT: ./src/index.js
-var src_namespaceObject = {};
-__webpack_require__.r(src_namespaceObject);
-__webpack_require__.d(src_namespaceObject, {
-  AnimateMixin: () => (AnimateMixin),
-  AnimateSequenceItemMixin: () => (AnimateSequenceItemMixin),
-  AnimateSequenceMixin: () => (AnimateSequenceMixin),
-  ClassNameMixin: () => (ClassNameMixin),
-  ClassNameToggleMixin: () => (ClassNameToggleMixin),
-  Dialog: () => (Dialog),
-  FlyoutMixin: () => (FlyoutMixin),
-  FlyoutToggleMixin: () => (FlyoutToggleMixin),
-  FocusStateMixin: () => (FocusStateMixin),
-  LoadingStateMixin: () => (LoadingStateMixin),
-  Mixin: () => (Mixin),
-  ScrollIntoViewMixin: () => (ScrollIntoViewMixin),
-  ScrollableMixin: () => (ScrollableMixin),
-  StatefulMixin: () => (StatefulMixin),
-  UnmanagedClassNameMixin: () => (UnmanagedClassNameMixin),
-  ViewStateContainer: () => (ViewStateContainer),
-  createDialog: () => (createDialog),
-  "default": () => (src),
-  isViewMatched: () => (isViewMatched),
-  linkTo: () => (linkTo),
-  makeTranslation: () => (makeTranslation),
-  matchView: () => (matchView),
-  navigateTo: () => (navigateTo),
-  redirectTo: () => (redirectTo),
-  registerErrorView: () => (registerErrorView),
-  registerView: () => (registerView),
-  renderView: () => (renderView),
-  resolvePath: () => (resolvePath),
-  useAnimateMixin: () => (useAnimateMixin),
-  useAnimateSequenceMixin: () => (useAnimateSequenceMixin),
-  useAppReady: () => (useAppReady),
-  useAppReadyState: () => (useAppReadyState),
-  useClassNameToggleMixin: () => (useClassNameToggleMixin),
-  useFlyoutMixin: () => (useFlyoutMixin),
-  useFocusStateMixin: () => (useFocusStateMixin),
-  useLanguage: () => (useLanguage),
-  useLoadingStateMixin: () => (useLoadingStateMixin),
-  useMixin: () => (useMixin),
-  useMixinRef: () => (useMixinRef),
-  useRouteParam: () => (useRouteParam),
-  useRouteState: () => (useRouteState),
-  useScrollIntoViewMixin: () => (useScrollIntoViewMixin),
-  useScrollableMixin: () => (useScrollableMixin),
-  useUnmanagedClassNameMixin: () => (useUnmanagedClassNameMixin),
-  useViewContainerState: () => (useViewContext),
-  useViewContext: () => (useViewContext)
-});
-
-// EXTERNAL MODULE: external {"commonjs":"brew-js","commonjs2":"brew-js","amd":"brew-js","root":"brew"}
-var external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_ = __webpack_require__(760);
-;// CONCATENATED MODULE: ./|umd|/brew-js/app.js
-
-/* harmony default export */ const app = (external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_);
-var install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.install;
-
-// EXTERNAL MODULE: external {"commonjs":"react","commonjs2":"react","amd":"react","root":"React"}
-var external_commonjs_react_commonjs2_react_amd_react_root_React_ = __webpack_require__(12);
-// EXTERNAL MODULE: external {"commonjs":"react-dom","commonjs2":"react-dom","amd":"react-dom","root":"ReactDOM"}
-var external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_ = __webpack_require__(33);
-// EXTERNAL MODULE: ./node_modules/@misonou/react-dom-client/fallback.js
-var fallback = __webpack_require__(621);
 // EXTERNAL MODULE: external {"commonjs":"zeta-dom","commonjs2":"zeta-dom","amd":"zeta-dom","root":"zeta"}
 var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(231);
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/util.js
@@ -243,6 +225,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   combineFn = _lib$util.combineFn,
   createPrivateStore = _lib$util.createPrivateStore,
   util_define = _lib$util.define,
+  defineGetterProperty = _lib$util.defineGetterProperty,
   defineHiddenProperty = _lib$util.defineHiddenProperty,
   defineObservableProperty = _lib$util.defineObservableProperty,
   defineOwnProperty = _lib$util.defineOwnProperty,
@@ -257,6 +240,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   fill = _lib$util.fill,
   freeze = _lib$util.freeze,
   grep = _lib$util.grep,
+  isArray = _lib$util.isArray,
   isFunction = _lib$util.isFunction,
   isPlainObject = _lib$util.isPlainObject,
   isThenable = _lib$util.isThenable,
@@ -279,6 +263,12 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   watch = _lib$util.watch,
   watchable = _lib$util.watchable;
 
+// EXTERNAL MODULE: external {"commonjs":"react","commonjs2":"react","amd":"react","root":["React"]}
+var external_commonjs_react_commonjs2_react_amd_react_root_React_ = __webpack_require__(12);
+// EXTERNAL MODULE: external {"commonjs":"react-dom","commonjs2":"react-dom","amd":"react-dom","root":["ReactDOM"]}
+var external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_ = __webpack_require__(311);
+// EXTERNAL MODULE: ./node_modules/@misonou/react-dom-client/fallback.js
+var fallback = __webpack_require__(621);
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/domUtil.js
 
 var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
@@ -300,6 +290,8 @@ var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
   preventLeave = _lib$dom.preventLeave,
   subscribeAsync = _lib$dom.subscribeAsync;
 
+// EXTERNAL MODULE: external {"commonjs":"brew-js","commonjs2":"brew-js","amd":"brew-js","root":"brew"}
+var external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_ = __webpack_require__(760);
 ;// CONCATENATED MODULE: ./|umd|/brew-js/domAction.js
 
 var closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.closeFlyout,
@@ -404,11 +396,16 @@ function Dialog(props) {
   }, [dialog]);
   return /*#__PURE__*/external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, dialog.root);
 }
-// EXTERNAL MODULE: external "zeta-dom-react"
-var external_zeta_dom_react_ = __webpack_require__(9);
+// EXTERNAL MODULE: external {"commonjs":"zeta-dom-react","commonjs2":"zeta-dom-react","amd":"zeta-dom-react","root":["zeta","react"]}
+var external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_ = __webpack_require__(402);
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/events.js
 
 var EventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
+
+;// CONCATENATED MODULE: ./|umd|/brew-js/app.js
+
+/* harmony default export */ const app = ((/* unused pure expression or super */ null && (lib)));
+var install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.install;
 
 ;// CONCATENATED MODULE: ./|umd|/brew-js/defaults.js
 
@@ -457,7 +454,7 @@ var routeMap = new Map();
 var usedParams = {};
 var sortedViews = [];
 var emitter = new EventContainer();
-var rootContext = freeze(extend(new ViewContext(null, null), {
+var rootContext = freeze(extend(new ViewContext(), {
   container: root
 }));
 var rootState = _(rootContext);
@@ -489,13 +486,13 @@ onAppInit(function () {
     }));
   });
 });
-function ViewContext(view, page) {
+function ViewContext(view, page, parent) {
   var self = this;
-  watch(self, true);
-  defineOwnProperty(self, 'view', view, true);
+  defineOwnProperty(self, 'view', view || null, true);
+  defineOwnProperty(self, 'parent', parent || null, true);
   _(self, {
     children: [],
-    setPage: defineObservableProperty(self, 'page', page, true),
+    setPage: defineObservableProperty(self, 'page', page || null, true),
     setActive: defineObservableProperty(self, 'active', !!page, true)
   });
   watch(self, 'page', function (page, previousPage) {
@@ -505,6 +502,11 @@ function ViewContext(view, page) {
   });
 }
 definePrototype(ViewContext, {
+  getChildren: function getChildren() {
+    return map(_(this).children, function (v) {
+      return v.currentState;
+    });
+  },
   on: function on(event, handler) {
     return emitter.add(this, event, handler);
   }
@@ -561,15 +563,25 @@ function ViewContainer() {
 }
 ViewContainer.contextType = StateContext;
 definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react_root_React_.Component, {
+  setActive: noop,
   componentDidMount: function componentDidMount() {
     var self = this;
     var parent = _(self.context).children;
-    parent.push(self);
-    self.componentWillUnmount = combineFn(watch(app_app.route, function () {
-      (self.setActive || noop)(self.getViewComponent() === self.currentViewComponent);
-    }), function () {
-      arrRemove(parent, self);
+    var unwatch = watch(app_app.route, function () {
+      self.setActive(self.getViewComponent() === self.currentViewComponent);
     });
+    self.componentWillUnmount = function () {
+      self.setActive(false);
+      arrRemove(parent, self);
+      unwatch();
+      setImmediate(function () {
+        if (self.unmountView && !self.currentState.active) {
+          self.unmountView();
+        }
+      });
+    };
+    parent.push(self);
+    self.setActive(true);
   },
   render: function render() {
     /** @type {any} */
@@ -594,36 +606,35 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       }
     }
     if (V && viewChanged) {
-      var prevElement = self.currentElement;
-      if (prevElement) {
-        self.setActive(false);
-        self.prevView = self.currentView;
-        self.currentElement = undefined;
-        app_app.emit('pageleave', prevElement, {
-          pathname: self.currentPath
-        }, true);
-        animateOut(prevElement, 'show').then(function () {
-          self.prevView = undefined;
-          self.forceUpdate();
-        });
-      }
-      (self.cancelPrevious || noop)();
+      (self.unmountView || noop)(true);
+      var state = new ViewContext(V, app_app.page, self.context);
       var onComponentLoaded;
       var promise = new Promise(function (resolve) {
         onComponentLoaded = resolve;
       });
+      var unmountView = onComponentLoaded;
       var initElement = executeOnce(function (element) {
-        self.currentElement = element;
         state.container = element;
         promise.then(function () {
-          animateIn(element, 'show', '[brew-view]', true);
-          app_app.emit('pageenter', element, {
-            pathname: app_app.path
-          }, true);
+          if (self.currentState === state) {
+            unmountView = function unmountView() {
+              self.prevView = self.currentView;
+              app_app.emit('pageleave', element, {
+                pathname: state.page.path
+              }, true);
+              animateOut(element, 'show').then(function () {
+                self.prevView = undefined;
+                self.forceUpdate();
+              });
+            };
+            animateIn(element, 'show', '[brew-view]', true);
+            app_app.emit('pageenter', element, {
+              pathname: state.page.path
+            }, true);
+          }
         });
         notifyAsync(element, promise);
       });
-      var state = new ViewContext(V, app_app.page);
       var viewProps = freeze({
         navigationType: view_event.navigationType,
         viewContext: state,
@@ -640,11 +651,16 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         viewProps: viewProps
       }))));
       extend(self, _(state), {
-        cancelPrevious: onComponentLoaded,
-        currentPath: app_app.path,
+        currentState: state,
         currentView: view,
-        currentViewComponent: V
+        currentViewComponent: V,
+        unmountView: executeOnce(function () {
+          self.setActive(false);
+          routeMap.get(V).rendered--;
+          unmountView();
+        })
       });
+      routeMap.get(V).rendered++;
       (view_event.waitFor || noop)(promise);
     }
     (self.setPage || noop)(app_app.page);
@@ -711,7 +727,7 @@ function createViewComponent(factory) {
       children = null;
       catchAsync(promise);
     }
-    var state = (0,external_zeta_dom_react_.useAsync)(function () {
+    var state = (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useAsync)(function () {
       return promise.then(function (s) {
         return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(s["default"], viewProps);
       });
@@ -731,14 +747,16 @@ function useViewContext() {
 function isViewMatched(view) {
   return matchViewParams(view, app_app.route);
 }
-function matchView(path, views) {
+function isViewRendered(view) {
+  return !!(routeMap.get(view) || '').rendered;
+}
+function matchView() {
+  var views = makeArray(arguments);
   var route = app_app.route;
-  if (typeof path === 'string') {
-    route = route.parse(path);
-  } else {
-    views = path;
+  if (typeof views[0] === 'string') {
+    route = route.parse(views.shift());
   }
-  views = views ? makeArray(views).sort(sortViews) : sortedViews;
+  views = views[0] ? (isArray(views[0]) ? makeArray(views[0]) : views).sort(sortViews) : sortedViews;
   return any(views, function (v) {
     return matchViewParams(v, route);
   }) || undefined;
@@ -754,6 +772,7 @@ function registerView(factory, routeParams) {
   });
   routeMap.set(Component, {
     id: randomId(),
+    rendered: 0,
     matchCount: util_keys(routeParams).length,
     matchers: routeParams,
     params: pick(routeParams, function (v) {
@@ -868,7 +887,7 @@ function useAppReady() {
   return useAppReadyState().ready;
 }
 function useAppReadyState() {
-  var readyState = (0,external_zeta_dom_react_.useObservableProperty)(app_app, 'readyState');
+  var readyState = (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useObservableProperty)(app_app, 'readyState');
   return {
     ready: readyState === 'ready',
     error: readyState === 'error'
@@ -877,34 +896,23 @@ function useAppReadyState() {
 function useRouteParam(name, defaultValue) {
   var container = useViewContext();
   var params = container.page.params;
-  var route = app_app.route;
   var value = params[name] || '';
   var ref = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useRef)(value);
-  var forceUpdate = (0,external_zeta_dom_react_.useUpdateTrigger)();
+  var forceUpdate = (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useUpdateTrigger)();
   (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
     var setValue = function setValue() {
-      var current = route[name] || '';
+      var current = container.page.params[name] || '';
       if (current !== ref.current) {
-        if (container.active) {
-          ref.current = current;
-          forceUpdate();
-        } else {
-          watch(container, 'active', setValue);
-        }
+        forceUpdate();
       }
     };
     // route parameter might be changed after state initialization and before useEffect hook is called
     setValue();
-    if (name in route) {
-      return route.watch(name, function () {
-        setImmediateOnce(setValue);
-      });
-    }
-    console.error('Route parameter ' + name + ' does not exist');
-  }, [name, defaultValue]);
+    return container.on('pagechange', setValue);
+  }, [name]);
   ref.current = value;
   if (defaultValue && container.active && (!value || name === 'remainingSegments' && value === '/')) {
-    app_app.navigate(route.getPath(extend({}, params, kv(name, defaultValue))), true);
+    app_app.navigate(app_app.route.getPath(extend({}, params, kv(name, defaultValue))), true);
   }
   return value;
 }
@@ -944,7 +952,7 @@ function ViewStateContainer(props) {
       }
     };
   })[0];
-  return /*#__PURE__*/(0,external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement)(external_zeta_dom_react_.ViewStateProvider, {
+  return /*#__PURE__*/(0,external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement)(external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.ViewStateProvider, {
     value: provider
   }, props.children);
 }
@@ -982,7 +990,7 @@ function createCallback(translate) {
   });
 }
 function useLanguage() {
-  return (0,external_zeta_dom_react_.useObservableProperty)(app_app, 'language');
+  return (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useObservableProperty)(app_app, 'language');
 }
 function makeTranslation(resources, defaultLang) {
   var re = new RegExp('^(' + Object.keys(resources[defaultLang]).join('|') + ')\\.');
@@ -1104,7 +1112,7 @@ util_define(Mixin, {
     });
     extend(props, {
       ref: combineFn(refs),
-      className: external_zeta_dom_react_.classNames.apply(null, args)
+      className: external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.classNames.apply(null, args)
     });
     each(mixins, function (i, v) {
       v.next();
@@ -1299,8 +1307,8 @@ definePrototype(AnimateSequenceItemMixin, ClassNameMixin, {
     return [this.className].concat(AnimateSequenceItemMixinSuper.getClassNames.call(this));
   }
 });
-// EXTERNAL MODULE: external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":"jQuery"}
-var external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_ = __webpack_require__(914);
+// EXTERNAL MODULE: external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":["jQuery"]}
+var external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_ = __webpack_require__(942);
 ;// CONCATENATED MODULE: ./src/mixins/AnimateSequenceMixin.js
 
 
@@ -1674,17 +1682,17 @@ function createUseFunction(ctor) {
     return mixin;
   };
 }
-var useAnimateMixin = createUseFunction(AnimateMixin);
-var useAnimateSequenceMixin = createUseFunction(AnimateSequenceMixin);
-var useClassNameToggleMixin = createUseFunction(ClassNameToggleMixin);
-var useFlyoutMixin = createUseFunction(FlyoutMixin);
-var useFocusStateMixin = createUseFunction(FocusStateMixin);
-var useLoadingStateMixin = createUseFunction(LoadingStateMixin);
-var useScrollableMixin = createUseFunction(ScrollableMixin);
-var useScrollIntoViewMixin = createUseFunction(ScrollIntoViewMixin);
-var useUnmanagedClassNameMixin = createUseFunction(UnmanagedClassNameMixin);
+var useAnimateMixin = /*#__PURE__*/createUseFunction(AnimateMixin);
+var useAnimateSequenceMixin = /*#__PURE__*/createUseFunction(AnimateSequenceMixin);
+var useClassNameToggleMixin = /*#__PURE__*/createUseFunction(ClassNameToggleMixin);
+var useFlyoutMixin = /*#__PURE__*/createUseFunction(FlyoutMixin);
+var useFocusStateMixin = /*#__PURE__*/createUseFunction(FocusStateMixin);
+var useLoadingStateMixin = /*#__PURE__*/createUseFunction(LoadingStateMixin);
+var useScrollableMixin = /*#__PURE__*/createUseFunction(ScrollableMixin);
+var useScrollIntoViewMixin = /*#__PURE__*/createUseFunction(ScrollIntoViewMixin);
+var useUnmanagedClassNameMixin = /*#__PURE__*/createUseFunction(UnmanagedClassNameMixin);
 function useMixin(ctor) {
-  return (0,external_zeta_dom_react_.useSingleton)(function () {
+  return (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useSingleton)(function () {
     return new ctor();
   }).reset();
 }
@@ -1694,7 +1702,7 @@ function useMixinRef(mixin) {
 
 ;// CONCATENATED MODULE: ./src/index.js
 
-/* harmony default export */ const src = (app);
+/* harmony default export */ const src = ((/* unused pure expression or super */ null && (brew)));
 
 
 
@@ -1702,12 +1710,13 @@ function useMixinRef(mixin) {
 
 ;// CONCATENATED MODULE: ./src/entry.js
 
-/* harmony default export */ const entry = (src_namespaceObject);
+defineGetterProperty(window, 'brew-js-react', function () {
+  console.warn('window["brew-js-react"] is deprecated, access brew.react instead.');
+  return brew.react;
+});
 
-app.react = src_namespaceObject;
 })();
 
-__webpack_exports__ = __webpack_exports__["default"];
 /******/ 	return __webpack_exports__;
 /******/ })()
 ;
