@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useObservableProperty, useViewState } from "zeta-dom-react";
 import { isViewMatched, isViewRendered, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext } from "src/view";
@@ -564,13 +564,13 @@ describe('renderView', () => {
         subscribeAsync(container);
 
         const { unmount } = render(<div>{renderView(Foo)}</div>, { container });
-        const element = await screen.findByText('foo');
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
         verifyCalls(cb, [
             [expect.objectContaining({ type: 'asyncStart' }), _],
             [expect.objectContaining({ type: 'asyncEnd' }), _],
         ]);
         expect(cb.mock.results[0].value).toBe(null);
-        expect(cb.mock.results[1].value).toBe(element);
+        expect(cb.mock.results[1].value).toBe(screen.getByText('foo'));
         unmount();
     });
 
@@ -584,6 +584,23 @@ describe('renderView', () => {
             [expect.objectContaining({ type: 'pageenter', view: Foo }), _]
         ]);
         expect(pageenter.mock.results[0].value).toBe(element);
+        unmount();
+    });
+
+    it('should emit pageenter event after effect is invoked', async () => {
+        const cb = mockFn();
+        const Foo = registerView(() => {
+            useEffect(() => cb('effect'));
+            return (<></>);
+        }, { view: 'foo' });
+        const { container, unmount } = render(<div>{renderView(Foo)}</div>);
+        dom.on(container, 'pageenter', () => cb('pageenter'));
+
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
+        verifyCalls(cb, [
+            ['effect'],
+            ['pageenter']
+        ]);
         unmount();
     });
 

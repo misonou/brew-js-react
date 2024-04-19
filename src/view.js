@@ -90,6 +90,8 @@ definePrototype(ErrorBoundary, React.Component, {
             setImmediate(function () {
                 dom.emit('error', self.context.container, { error }, true);
             });
+            // ensure promise sent to beforepageload event is resolved
+            self.props.onComponentLoaded();
         }
     },
     render: function () {
@@ -278,11 +280,14 @@ function createViewComponent(factory) {
                 return React.createElement(s.default, viewProps);
             });
         }, !!promise)[1];
-        if (!promise || !state.loading) {
-            props.onComponentLoaded();
-            if (state.error) {
-                throw state.error;
+        var loaded = !promise || !state.loading;
+        React.useEffect(function () {
+            if (loaded) {
+                setImmediate(props.onComponentLoaded);
             }
+        }, [loaded]);
+        if (state.error) {
+            throw state.error;
         }
         return children || state.value || React.createElement(React.Fragment);
     };
