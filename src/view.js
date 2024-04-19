@@ -173,14 +173,14 @@ definePrototype(ViewContainer, React.Component, {
                     if (self.currentState === state) {
                         unmountView = function () {
                             self.prevView = self.currentView;
-                            app.emit('pageleave', element, { pathname: state.page.path }, true);
+                            app.emit('pageleave', element, { pathname: state.page.path, view: V }, true);
                             animateOut(element, 'show').then(function () {
                                 self.prevView = undefined;
                                 self.forceUpdate();
                             });
                         };
                         animateIn(element, 'show', '[brew-view]', true);
-                        app.emit('pageenter', element, { pathname: state.page.path }, true);
+                        app.emit('pageenter', element, { pathname: state.page.path, view: V }, true);
                     }
                 });
                 notifyAsync(element, promise);

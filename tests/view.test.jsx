@@ -580,7 +580,9 @@ describe('renderView', () => {
         dom.on(container, 'pageenter', pageenter);
 
         const element = await screen.findByText('foo');
-        expect(pageenter).toBeCalledTimes(1);
+        verifyCalls(pageenter, [
+            [expect.objectContaining({ type: 'pageenter', view: Foo }), _]
+        ]);
         expect(pageenter.mock.results[0].value).toBe(element);
         unmount();
     });
@@ -593,7 +595,9 @@ describe('renderView', () => {
         const element = await screen.findByText('foo');
         await waitForPageLoad();
         await actAwaitSetImmediate(() => app.navigate('/dummy/bar'));
-        expect(pageleave).toBeCalledTimes(1);
+        verifyCalls(pageleave, [
+            [expect.objectContaining({ type: 'pageleave', view: Foo }), _]
+        ]);
         expect(pageleave.mock.results[0].value).toBe(element);
         unmount();
     });

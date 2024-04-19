@@ -1,3 +1,5 @@
+/// <reference path="./brew.d.ts" />
+
 import { useRouteState } from "./hooks";
 
 export type ViewComponentRootProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
