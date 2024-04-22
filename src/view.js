@@ -154,7 +154,7 @@ definePrototype(ViewContainer, React.Component, {
         if (V && (viewChanged || !(self.children || '')[0])) {
             // ensure the current path actually corresponds to the matched view
             // when some views are not included in the list of allowed views
-            var targetPath = resolvePath(V, getCurrentParams(V, true));
+            var targetPath = resolvePath(V, app.route);
             if (targetPath !== removeQueryAndHash(app.path)) {
                 app.navigate(targetPath, true);
                 return;
@@ -217,7 +217,7 @@ definePrototype(ViewContainer, React.Component, {
     }
 });
 
-function getCurrentParams(view, includeAll, params) {
+function getCurrentParams(view, params) {
     var state = routeMap.get(view);
     if (!state.maxParams) {
         var matchers = exclude(state.matchers, ['remainingSegments']);
@@ -246,7 +246,7 @@ function getCurrentParams(view, includeAll, params) {
             });
         }
     }
-    return pick(params || app.route, includeAll ? state.maxParams : state.minParams);
+    return extend(pick(app.route, state.minParams), params && pick(params, state.maxParams), state.params);
 }
 
 function sortViews(a, b) {
@@ -358,12 +358,10 @@ export function renderView() {
 }
 
 export function resolvePath(view, params) {
-    var state = routeMap.get(view);
-    if (!state) {
+    if (!routeMap.has(view)) {
         return '/';
     }
-    var newParams = extend(getCurrentParams(view), getCurrentParams(view, true, params || {}), state.params);
-    return app.route.getPath(newParams);
+    return app.route.getPath(getCurrentParams(view, params));
 }
 
 export function linkTo(view, params) {
