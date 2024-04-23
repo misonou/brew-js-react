@@ -2,10 +2,11 @@ import React, { useEffect } from "react";
 import { render, screen } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react-hooks";
 import { addAnimateOut } from "brew-js/anim";
-import { useRouteParam, useRouteState, ViewStateContainer } from "src/hooks";
+import { useQueryParam, useRouteParam, useRouteState, ViewStateContainer } from "src/hooks";
 import { registerView, renderView } from "src/view";
 import { after, cleanup, delay, mockFn } from "@misonou/test-utils";
 import { useUpdateTrigger, useViewState } from "zeta-dom-react";
+import { catchAsync } from "zeta-dom/util";
 import initAppBeforeAll, { waitForPageLoad } from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
 
@@ -331,6 +332,205 @@ describe('useRouteState', () => {
         expect(app.historyStorage.current.get('foo')).toBe('bar');
         expect(result.all.length).toBe(1);
         unmount()
+    });
+});
+
+describe('useQueryParam', () => {
+    it('should return default value if param is not present', () => {
+        const { result, unmount } = renderHook(() => useQueryParam('foo', 'bar'));
+        expect(result.current[0]).toBe('bar');
+        unmount();
+    });
+
+    it('should return existing value if param is present', () => {
+        app.navigate('?foo=baz');
+
+        const { result, unmount } = renderHook(() => useQueryParam('foo', 'bar'));
+        expect(result.current[0]).toBe('baz');
+        unmount();
+    });
+
+    it('should accept dictionary as initial state', () => {
+        const dict = {
+            foo: 'bar',
+            baz: 'baz'
+        };
+        const { result, unmount } = renderHook(() => useQueryParam(dict));
+        expect(result.current[0]).toEqual(dict);
+        unmount();
+    });
+
+    it('should update query parameter', () => {
+        const { result, unmount } = renderHook(() => useQueryParam('foo', ''));
+        result.current[1]('bar');
+        expect(location.search).toBe('?foo=bar');
+        unmount();
+    });
+
+    it('should update multiple query parameters', () => {
+        const { result, unmount } = renderHook(() => useQueryParam({
+            foo: '',
+            baz: ''
+        }));
+        result.current[1]({
+            foo: 'bar',
+            baz: 'baz'
+        });
+        expect(location.search).toBe('?foo=bar&baz=baz');
+        unmount();
+    });
+
+    it('should accept function for updating', () => {
+        const cb = mockFn().mockReturnValue('bar');
+        const { result, unmount } = renderHook(() => useQueryParam('foo', ''));
+        result.current[1](cb);
+        expect(location.search).toBe('?foo=bar');
+        expect(cb).toBeCalledWith('');
+        unmount();
+    });
+
+    it('should accept function for updating multiple query parameters', () => {
+        const cb = mockFn().mockReturnValue({
+            foo: 'bar',
+            baz: 'baz'
+        });
+        const { result, unmount } = renderHook(() => useQueryParam({
+            foo: '',
+            baz: ''
+        }));
+        result.current[1](cb);
+        expect(location.search).toBe('?foo=bar&baz=baz');
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0][0]).toEqual({
+            foo: '',
+            baz: ''
+        });
+        unmount();
+    });
+
+    it('should not update query string when the parent view is going to unmount', async () => {
+        const cb = mockFn();
+        const Foo = registerView(() => {
+            const [, setParam] = useQueryParam('foo', '');
+            cb.mockReset().mockImplementation(setParam);
+            return (<div>foo</div>);
+        }, { view: 'foo' });
+        const Bar = registerView(() => {
+            useRouteParam('view');
+            return (<div>bar</div>);
+        }, { view: 'bar' });
+
+        const { unmount } = render(<div>{renderView(Foo, Bar)}</div>)
+        await app.navigate('/foo');
+
+        catchAsync(app.navigate('/bar'));
+        await delay();
+        cb('bar');
+        expect(app.path).toBe('/bar');
+        unmount();
+    });
+
+    it('should not create snapshot when value is set', () => {
+        const { result, unmount } = renderHook(() => useQueryParam('foo', ''));
+        const stateId = history.state;
+        const page = app.page;
+
+        result.current[1]('bar');
+        expect(location.search).toBe('?foo=bar');
+        expect(history.state).toBe(stateId);
+        expect(app.page).toBe(page);
+        unmount();
+    });
+
+    it('should create snapshot when snapshotOnUpdate is true', () => {
+        const { result, unmount } = renderHook(() => useQueryParam('foo', '', true));
+        const stateId = history.state;
+        const page = app.page;
+
+        result.current[1]('bar');
+        expect(location.search).toBe('?foo=bar');
+        expect(history.state).not.toBe(stateId);
+        expect(app.page).toBe(page);
+        unmount();
+    });
+
+    it('should cause component to re-render when query param changed', async () => {
+        const { result, waitForNextUpdate, unmount } = renderHook(() => useQueryParam('foo', ''));
+        app.navigate('?foo=bar');
+        await waitForNextUpdate();
+        expect(result.current[0]).toEqual('bar');
+        unmount();
+    });
+
+    it('should not cause component to re-render when mentioned query param did not changed', async () => {
+        const { result, unmount } = renderHook(() => useQueryParam('foo', ''));
+        app.navigate('?baz=baz');
+        await delay(100);
+        expect(result.all.length).toBe(1);
+        unmount();
+    });
+
+    it('should not cause component to re-render when the parent view is going to unmount', async () => {
+        const cb = mockFn();
+        const Foo = registerView(() => {
+            cb();
+            useQueryParam('foo', '');
+            return (<div>foo</div>);
+        }, { view: 'foo' });
+        const Bar = registerView(() => {
+            useRouteParam('view');
+            return (<div>bar</div>);
+        }, { view: 'bar' });
+
+        const { unmount } = render(<div>{renderView(Foo, Bar)}</div>)
+        await app.navigate('/foo');
+        await screen.findByText('foo');
+        expect(cb).toBeCalledTimes(1);
+
+        await app.navigate('/bar?foo=bar');
+        expect(cb).toBeCalledTimes(1);
+        unmount();
+    });
+
+    it('should restore previous values when navigated back', async () => {
+        const { result, waitForNextUpdate, unmount } = renderHook(() => useQueryParam('foo', '', true));
+        act(() => result.current[1]('bar'));
+        expect(location.search).toBe('?foo=bar');
+        expect(result.current[0]).toBe('bar');
+
+        await 0;
+        app.back();
+        await waitForNextUpdate();
+        expect(location.search).toBe('');
+        expect(result.current[0]).toBe('');
+        unmount();
+    });
+
+    it('should return correct value when supplied key has changed', async () => {
+        app.navigate('?foo=bar&baz=baz');
+
+        const { result, rerender, unmount } = renderHook(({ name }) => useQueryParam(name, 'xxx', true), {
+            initialProps: { name: 'foo' }
+        });
+        expect(result.current[0]).toBe('bar');
+        rerender({ name: 'baz' });
+        expect(result.current[0]).toBe('baz');
+        rerender({ name: 'xxx' });
+        expect(result.current[0]).toBe('xxx');
+        unmount();
+    });
+
+    it('should invoke callback with correct value and update query string correctly when supplied key has changed', async () => {
+        const cb = mockFn().mockReturnValue('baz');
+        const { result, rerender, unmount } = renderHook(({ name }) => useQueryParam(name, '', true), {
+            initialProps: { name: 'foo' }
+        });
+        rerender({ name: 'baz' });
+
+        act(() => result.current[1](cb));
+        expect(cb).toBeCalledWith('');
+        expect(location.search).toBe('?baz=baz');
+        unmount();
     });
 });
 

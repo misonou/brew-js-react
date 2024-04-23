@@ -1,7 +1,9 @@
-import { createElement, useEffect, useRef, useState } from "react";
-import { ViewStateProvider, useObservableProperty, useUpdateTrigger } from "zeta-dom-react";
-import { definePrototype, delay, each, extend, kv, setImmediateOnce, throwNotFunction, watch } from "zeta-dom/util";
+import { createElement, useEffect, useMemo, useRef, useState } from "react";
+import { ViewStateProvider, useMemoizedFunction, useObservableProperty, useUpdateTrigger } from "zeta-dom-react";
+import { catchAsync, definePrototype, delay, each, equal, extend, freeze, isFunction, isPlainObject, keys, kv, mapObject, throwNotFunction } from "zeta-dom/util";
 import { ZetaEventContainer } from "zeta-dom/events";
+import { getQueryParam, setQueryParam } from "brew-js/util/common";
+import { parsePath } from "brew-js/util/path";
 import { app } from "./app.js";
 import { useViewContext } from "./view.js";
 
@@ -117,6 +119,59 @@ export function useRouteState(key, defaultValue, snapshotOnUpdate) {
         updatePersistedValue(cur, key, state[0], snapshotOnUpdate);
     }
     return state;
+}
+
+export function useQueryParam(key, value, snapshotOnUpdate) {
+    if (isPlainObject(key)) {
+        snapshotOnUpdate = value;
+        value = key;
+        key = false;
+    }
+    var container = useViewContext();
+    var getParams = function () {
+        return mapObject(key === false ? value : kv(key, value), function (v, i) {
+            return getQueryParam(i, app.path) || v || '';
+        });
+    };
+    var state = useState([]);
+    useMemo(function () {
+        state[0].splice(0, 2, getParams());
+    }, [key]);
+    var current = state[0][0];
+    var trackChanges = function (values) {
+        if (!equal(values, current)) {
+            extend(current, values);
+            state[1]([current]);
+        }
+    };
+    var setParams = useMemoizedFunction(function (values) {
+        if (key !== false) {
+            values = kv(key, isFunction(values) ? values(current[key]) : values);
+        } else if (isFunction(values)) {
+            values = values(extend({}, current));
+        }
+        if (container.active) {
+            var url = parsePath(app.path);
+            var search = keys(values).reduce(function (v, i) {
+                return values[i] !== current[i] ? setQueryParam(i, values[i] || null, v) : v;
+            }, url.search);
+            if (search !== url.search) {
+                if (snapshotOnUpdate) {
+                    app.snapshot();
+                }
+                catchAsync(app.navigate(search + url.hash, true));
+                trackChanges(getParams());
+            }
+        }
+    });
+    useEffect(function () {
+        return app.watch('path', function () {
+            if (container.active) {
+                trackChanges(getParams());
+            }
+        });
+    }, [key]);
+    return [key !== false ? current[key] : (state[0][1] || (state[0][1] = freeze(extend({}, current)))), setParams];
 }
 
 export function ViewStateContainer(props) {

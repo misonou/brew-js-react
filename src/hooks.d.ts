@@ -36,3 +36,25 @@ export function useRouteState<T>(key: string | symbol, initialState: T | (() => 
  * Same as {@link React.useState}, but the state is persisted in route history.
  */
 export function useRouteState<T = undefined>(key: string | symbol): [T | undefined, React.Dispatch<React.SetStateAction<T | undefined>>];
+
+/**
+ * Returns value of the specified parameter in query string, and a function to update it.
+ *
+ * To remove parameter in query string, pass empty string to the update function.
+ *
+ * @param name Name of the parameter.
+ * @param defaultValue Default value when the specified parameter is not present in query string.
+ * @param snapshotOnUpdate Whether to create snapshot in browser's history when query parameter is updated. Default is `false`.
+ */
+export function useQueryParam(name: string, defaultValue: string, snapshotOnUpdate?: boolean): [string, React.Dispatch<React.SetStateAction<string>>];
+
+/**
+ * Returns values of multiple parameters in query string, and a function to update them.
+ *
+ * To remove parameter in query string, pass empty string for that parameter to the update function.
+ * The update function always performs partial update, meaning that unsupplied parameters are unchanged.
+ *
+ * @param dict A dictionary containing parameter names and associated default values.
+ * @param snapshotOnUpdate Whether to create snapshot in browser's history when query parameter is updated. Default is `false`.
+ */
+export function useQueryParam<T extends Zeta.Dictionary<string>>(dict: T, snapshotOnUpdate?: boolean): [Readonly<T>, React.Dispatch<React.SetStateAction<Partial<T>>>];
