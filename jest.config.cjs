@@ -10,11 +10,7 @@ const config = {
     "moduleNameMapper": {
         "^src/(.*)$": "<rootDir>/src/$1",
         "^react$": "<rootDir>/node_modules/react",
-        "^react-dom$": "<rootDir>/node_modules/react-dom",
-        "^brew-js/(.*)$": "<rootDir>/../brew-js/src/$1",
-        "^zeta-dom/(.*)$": "<rootDir>/../zeta-dom/src/$1",
-        "^zeta-dom-react$": "<rootDir>/../zeta-dom-react/src/index",
-        "^zeta-dom-react/(.*)$": "<rootDir>/../zeta-dom-react/src/$1"
+        "^react-dom$": "<rootDir>/node_modules/react-dom"
     },
     "clearMocks": true,
     "extensionsToTreatAsEsm": [
@@ -27,6 +23,15 @@ const config = {
     ]
 }
 
+if (process.env.CI !== 'true' && require('fs').existsSync('../zeta-dom')) {
+    config.moduleNameMapper = {
+        ...config.moduleNameMapper,
+        "^brew-js/(.*)$": "<rootDir>/../brew-js/src/$1",
+        "^zeta-dom/(.*)$": "<rootDir>/../zeta-dom/src/$1",
+        "^zeta-dom-react$": "<rootDir>/../zeta-dom-react/src/index",
+        "^zeta-dom-react/(.*)$": "<rootDir>/../zeta-dom-react/src/$1"
+    };
+}
 if (process.env.REACT_VERSION) {
     const runtimeDir = `<rootDir>/tests/runtime/react${process.env.REACT_VERSION}`;
     config.cacheDirectory = `${runtimeDir}/.cache`;
