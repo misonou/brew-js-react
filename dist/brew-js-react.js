@@ -1,4 +1,4 @@
-/*! brew-js-react v0.5.5 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.5.6 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("react"), require("react-dom"), require("brew-js"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -205,6 +205,7 @@ __webpack_require__.d(__webpack_exports__, {
   useLoadingStateMixin: () => (/* reexport */ useLoadingStateMixin),
   useMixin: () => (/* reexport */ useMixin),
   useMixinRef: () => (/* reexport */ useMixinRef),
+  useQueryParam: () => (/* reexport */ useQueryParam),
   useRouteParam: () => (/* reexport */ useRouteParam),
   useRouteState: () => (/* reexport */ useRouteState),
   useScrollIntoViewMixin: () => (/* reexport */ useScrollIntoViewMixin),
@@ -250,6 +251,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   makeArray = _lib$util.makeArray,
   makeAsync = _lib$util.makeAsync,
   map = _lib$util.map,
+  mapObject = _lib$util.mapObject,
   noop = _lib$util.noop,
   pick = _lib$util.pick,
   pipe = _lib$util.pipe,
@@ -295,7 +297,6 @@ var external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_ = __webpa
 ;// CONCATENATED MODULE: ./|umd|/brew-js/domAction.js
 
 var closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.closeFlyout,
-  isFlyoutOpen = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.isFlyoutOpen,
   openFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.openFlyout,
   toggleFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toggleFlyout;
 
@@ -402,6 +403,16 @@ var external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react
 
 var EventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
 
+;// CONCATENATED MODULE: ./|umd|/brew-js/util/common.js
+
+var getQueryParam = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.getQueryParam,
+  setQueryParam = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.setQueryParam;
+
+;// CONCATENATED MODULE: ./|umd|/brew-js/util/path.js
+
+var parsePath = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.parsePath,
+  removeQueryAndHash = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.removeQueryAndHash;
+
 ;// CONCATENATED MODULE: ./|umd|/brew-js/app.js
 
 /* harmony default export */ const app = ((/* unused pure expression or super */ null && (lib)));
@@ -432,10 +443,6 @@ brew_js_defaults.react = true;
 
 var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateIn,
   animateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateOut;
-
-;// CONCATENATED MODULE: ./|umd|/brew-js/util/path.js
-
-var removeQueryAndHash = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.removeQueryAndHash;
 
 ;// CONCATENATED MODULE: ./src/view.js
 
@@ -531,6 +538,8 @@ definePrototype(ErrorBoundary, external_commonjs_react_commonjs2_react_amd_react
           error: error
         }, true);
       });
+      // ensure promise sent to beforepageload event is resolved
+      self.props.onComponentLoaded();
     }
   },
   render: function render() {
@@ -599,7 +608,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
     if (V && (viewChanged || !(self.children || '')[0])) {
       // ensure the current path actually corresponds to the matched view
       // when some views are not included in the list of allowed views
-      var targetPath = resolvePath(V, getCurrentParams(V, true));
+      var targetPath = resolvePath(V, app_app.route);
       if (targetPath !== removeQueryAndHash(app_app.path)) {
         app_app.navigate(targetPath, true);
         return;
@@ -620,7 +629,8 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
             unmountView = function unmountView() {
               self.prevView = self.currentView;
               app_app.emit('pageleave', element, {
-                pathname: state.page.path
+                pathname: state.page.path,
+                view: V
               }, true);
               animateOut(element, 'show').then(function () {
                 self.prevView = undefined;
@@ -629,7 +639,8 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
             };
             animateIn(element, 'show', '[brew-view]', true);
             app_app.emit('pageenter', element, {
-              pathname: state.page.path
+              pathname: state.page.path,
+              view: V
             }, true);
           }
         });
@@ -670,7 +681,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
     return any(props.views, isViewMatched) || props.defaultView;
   }
 });
-function getCurrentParams(view, includeAll, params) {
+function getCurrentParams(view, params) {
   var state = routeMap.get(view);
   if (!state.maxParams) {
     var matchers = exclude(state.matchers, ['remainingSegments']);
@@ -701,7 +712,7 @@ function getCurrentParams(view, includeAll, params) {
       });
     }
   }
-  return pick(params || app_app.route, includeAll ? state.maxParams : state.minParams);
+  return extend(pick(app_app.route, state.minParams), params && pick(params, state.maxParams), state.params);
 }
 function sortViews(a, b) {
   return (routeMap.get(b) || {}).matchCount - (routeMap.get(a) || {}).matchCount;
@@ -732,11 +743,14 @@ function createViewComponent(factory) {
         return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(s["default"], viewProps);
       });
     }, !!promise)[1];
-    if (!promise || !state.loading) {
-      props.onComponentLoaded();
-      if (state.error) {
-        throw state.error;
+    var loaded = !promise || !state.loading;
+    external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect(function () {
+      if (loaded) {
+        setImmediate(props.onComponentLoaded);
       }
+    }, [loaded]);
+    if (state.error) {
+      throw state.error;
     }
     return children || state.value || /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment);
   };
@@ -803,12 +817,10 @@ function renderView() {
   });
 }
 function resolvePath(view, params) {
-  var state = routeMap.get(view);
-  if (!state) {
+  if (!routeMap.has(view)) {
     return '/';
   }
-  var newParams = extend(getCurrentParams(view), getCurrentParams(view, true, params || {}), state.params);
-  return app_app.route.getPath(newParams);
+  return app_app.route.getPath(getCurrentParams(view, params));
 }
 function linkTo(view, params) {
   return app_app.toHref(resolvePath(view, params));
@@ -821,6 +833,8 @@ function redirectTo(view, params, data) {
 }
 
 ;// CONCATENATED MODULE: ./src/hooks.js
+
+
 
 
 
@@ -931,6 +945,58 @@ function useRouteState(key, defaultValue, snapshotOnUpdate) {
     updatePersistedValue(cur, key, state[0], snapshotOnUpdate);
   }
   return state;
+}
+function useQueryParam(key, value, snapshotOnUpdate) {
+  if (isPlainObject(key)) {
+    snapshotOnUpdate = value;
+    value = key;
+    key = false;
+  }
+  var container = useViewContext();
+  var getParams = function getParams() {
+    return mapObject(key === false ? value : kv(key, value), function (v, i) {
+      return getQueryParam(i, app_app.path) || v || '';
+    });
+  };
+  var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)([]);
+  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useMemo)(function () {
+    state[0].splice(0, 2, getParams());
+  }, [key]);
+  var current = state[0][0];
+  var trackChanges = function trackChanges(values) {
+    if (!equal(values, current)) {
+      extend(current, values);
+      state[1]([current]);
+    }
+  };
+  var setParams = (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useMemoizedFunction)(function (values) {
+    if (key !== false) {
+      values = kv(key, isFunction(values) ? values(current[key]) : values);
+    } else if (isFunction(values)) {
+      values = values(extend({}, current));
+    }
+    if (container.active) {
+      var url = parsePath(app_app.path);
+      var search = util_keys(values).reduce(function (v, i) {
+        return values[i] !== current[i] ? setQueryParam(i, values[i] || null, v) : v;
+      }, url.search);
+      if (search !== url.search) {
+        if (snapshotOnUpdate) {
+          app_app.snapshot();
+        }
+        catchAsync(app_app.navigate(search + url.hash, true));
+        trackChanges(getParams());
+      }
+    }
+  });
+  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
+    return app_app.watch('path', function () {
+      if (container.active) {
+        trackChanges(getParams());
+      }
+    });
+  }, [key]);
+  return [key !== false ? current[key] : state[0][1] || (state[0][1] = freeze(extend({}, current))), setParams];
 }
 function ViewStateContainer(props) {
   var cache = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)({})[0];
@@ -1450,11 +1516,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     });
   },
   open: function open(value, source) {
-    var element = this.elements()[0];
-    if (!isFlyoutOpen(element)) {
-      valueMap.set(element, value);
-    }
-    return openFlyout(element, source, this.getOptions());
+    return openFlyout(this.elements()[0], value, source, this.getOptions());
   },
   close: function close(value) {
     return closeFlyout(this.elements()[0], value);
@@ -1477,6 +1539,17 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     var self = this;
     FlyoutMixinSuper.initElement.call(self, element, state);
     self.onDispose(app_app.on(element, {
+      flyoutshow: function flyoutshow(e) {
+        valueMap.set(element, e.data);
+        self.isFlyoutOpened = true;
+        self.visible = true;
+      },
+      flyoutclose: function flyoutclose() {
+        self.isFlyoutOpened = false;
+      },
+      flyouthide: function flyouthide() {
+        self.visible = false;
+      },
       animationstart: function animationstart() {
         self.animating = true;
       },
@@ -1484,15 +1557,6 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         self.animating = false;
       }
     }, true));
-  },
-  onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {
-    var self = this;
-    var isFlyoutOpened = isFlyoutOpen(element);
-    if (!isFlyoutOpened) {
-      valueMap["delete"](element);
-    }
-    self.visible = state.open;
-    self.isFlyoutOpened = isFlyoutOpened;
   }
 });
 ;// CONCATENATED MODULE: ./src/mixins/FocusStateMixin.js
