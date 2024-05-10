@@ -2,7 +2,10 @@ const { createBaseWebpackConfig, createUMDExternal, createUMDLibraryDefinition, 
 const paths = getPaths();
 
 module.exports = {
-    ...createBaseWebpackConfig(),
+    ...createBaseWebpackConfig({
+        hoistImports: ['react', 'zeta-dom-react'],
+        remapImports: ['zeta-dom', 'brew-js']
+    }),
     entry: {
         'brew-js-react': './src/entry.js',
         'brew-js-react.min': './src/entry.js',
@@ -22,6 +25,8 @@ module.exports = {
         'react-dom': createUMDExternal('react-dom', 'ReactDOM'),
         'jquery': createUMDExternal('jquery', 'jQuery'),
         'waterpipe': 'waterpipe',
+        'brew-js': createUMDExternal('brew-js', 'brew'),
+        'zeta-dom': createUMDExternal('zeta-dom', 'zeta'),
         'zeta-dom-react': createUMDExternal('zeta-dom-react', 'zeta.react')
     }
 };
