@@ -1,4 +1,4 @@
-import React from "react";
+import { Component, Fragment, createContext, createElement, useContext, useEffect } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom from "zeta-dom/dom";
 import { notifyAsync } from "zeta-dom/domLock";
@@ -17,7 +17,7 @@ const sortedViews = [];
 const emitter = new ZetaEventContainer();
 const rootContext = freeze(extend(new ViewContext(), { container: root }));
 const rootState = _(rootContext);
-const StateContext = React.createContext(rootContext);
+const StateContext = createContext(rootContext);
 
 var errorView;
 /** @type {Partial<Zeta.ZetaEventType<"beforepageload", Brew.RouterEventMap, Element>>} */
@@ -74,12 +74,12 @@ definePrototype(ViewContext, {
 });
 
 function ErrorBoundary() {
-    React.Component.apply(this, arguments);
+    Component.apply(this, arguments);
     this.state = {};
 }
 ErrorBoundary.contextType = StateContext;
 
-definePrototype(ErrorBoundary, React.Component, {
+definePrototype(ErrorBoundary, Component, {
     componentDidCatch: function (error) {
         var self = this;
         if (errorView && !self.state.error) {
@@ -103,9 +103,9 @@ definePrototype(ErrorBoundary, React.Component, {
         };
         var onComponentLoaded = self.props.onComponentLoaded;
         if (props.error) {
-            return React.createElement(errorView, { onComponentLoaded, viewProps: props });
+            return createElement(errorView, { onComponentLoaded, viewProps: props });
         }
-        return React.createElement(props.view, { onComponentLoaded, viewProps: self.props.viewProps });
+        return createElement(props.view, { onComponentLoaded, viewProps: self.props.viewProps });
     },
     reset: function () {
         this.setState({ error: null });
@@ -113,11 +113,11 @@ definePrototype(ErrorBoundary, React.Component, {
 });
 
 function ViewContainer() {
-    React.Component.apply(this, arguments);
+    Component.apply(this, arguments);
 }
 ViewContainer.contextType = StateContext;
 
-definePrototype(ViewContainer, React.Component, {
+definePrototype(ViewContainer, Component, {
     setActive: noop,
     componentDidMount: function () {
         var self = this;
@@ -145,7 +145,7 @@ definePrototype(ViewContainer, React.Component, {
             self.updateView();
         }
         (self.onRender || noop)();
-        return React.createElement(React.Fragment, null, self.prevView, self.currentView);
+        return createElement(Fragment, null, self.prevView, self.currentView);
     },
     updateView: function () {
         var self = this;
@@ -192,10 +192,10 @@ definePrototype(ViewContainer, React.Component, {
                 viewContext: state,
                 viewData: event.data || {}
             });
-            var view = React.createElement(StateContext.Provider, { key: routeMap.get(V).id, value: state },
-                React.createElement(ViewStateContainer, null,
-                    React.createElement('div', extend({}, self.props.rootProps, { ref: initElement, 'brew-view': '' }),
-                        React.createElement(ErrorBoundary, { onComponentLoaded, viewProps }))));
+            var view = createElement(StateContext.Provider, { key: routeMap.get(V).id, value: state },
+                createElement(ViewStateContainer, null,
+                    createElement('div', extend({}, self.props.rootProps, { ref: initElement, 'brew-view': '' }),
+                        createElement(ErrorBoundary, { onComponentLoaded, viewProps }))));
             extend(self, _(state), {
                 currentState: state,
                 currentView: view,
@@ -264,8 +264,8 @@ function matchViewParams(view, route) {
 function createViewComponent(factory) {
     var promise;
     throwNotFunction(factory);
-    if (factory.prototype instanceof React.Component) {
-        factory = React.createElement.bind(null, factory);
+    if (factory.prototype instanceof Component) {
+        factory = createElement.bind(null, factory);
     }
     return function fn(props) {
         var viewProps = props.viewProps;
@@ -277,11 +277,11 @@ function createViewComponent(factory) {
         }
         var state = useAsync(function () {
             return promise.then(function (s) {
-                return React.createElement(s.default, viewProps);
+                return createElement(s.default, viewProps);
             });
         }, !!promise)[1];
         var loaded = !promise || !state.loading;
-        React.useEffect(function () {
+        useEffect(function () {
             if (loaded) {
                 setImmediate(props.onComponentLoaded);
             }
@@ -289,12 +289,12 @@ function createViewComponent(factory) {
         if (state.error) {
             throw state.error;
         }
-        return children || state.value || React.createElement(React.Fragment);
+        return children || state.value || createElement(Fragment);
     };
 }
 
 export function useViewContext() {
-    return React.useContext(StateContext);
+    return useContext(StateContext);
 }
 
 export function isViewMatched(view) {
@@ -354,7 +354,7 @@ export function renderView() {
         }
     });
     views.sort(sortViews);
-    return React.createElement(ViewContainer, { rootProps, views, defaultView });
+    return createElement(ViewContainer, { rootProps, views, defaultView });
 }
 
 export function resolvePath(view, params) {
