@@ -32,8 +32,10 @@ if (process.env.CI !== 'true' && require('fs').existsSync('../zeta-dom')) {
         "^zeta-dom-react/(.*)$": "<rootDir>/../zeta-dom-react/src/$1"
     };
 }
-if (process.env.REACT_VERSION) {
-    const runtimeDir = `<rootDir>/tests/runtime/react${process.env.REACT_VERSION}`;
+
+const REACT_VERSION = parseInt(process.env.REACT_VERSION);
+if (REACT_VERSION) {
+    const runtimeDir = `<rootDir>/tests/runtime/react${REACT_VERSION}`;
     config.cacheDirectory = `${runtimeDir}/.cache`;
     config.moduleNameMapper = {
         ...config.moduleNameMapper,
@@ -45,7 +47,7 @@ if (process.env.REACT_VERSION) {
         "node_modules"
     ];
 }
-if (process.env.REACT_VERSION === '18') {
+if (REACT_VERSION >= 18) {
     config.moduleNameMapper = {
         ...config.moduleNameMapper,
         "@testing-library/react-hooks": "@misonou/test-utils/polyfill/react18/renderHook"
