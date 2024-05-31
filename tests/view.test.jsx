@@ -995,7 +995,9 @@ describe('ViewContext', () => {
         await app.navigate('/dummy/foo/sub');
         expect(cb).toBeCalledWith(expect.objectContaining({
             type: 'pagechange',
-            previousPage
+            page: app.page,
+            previousPage: previousPage,
+            navigationType: 'navigate'
         }), _);
         unmount();
     });
@@ -1009,7 +1011,9 @@ describe('ViewContext', () => {
         await app.navigate('/dummy/foo');
         expect(cb).toBeCalledWith(expect.objectContaining({
             type: 'pagechange',
-            previousPage
+            page: app.page,
+            previousPage: previousPage,
+            navigationType: 'navigate'
         }), _);
         unmount();
     });
@@ -1034,6 +1038,65 @@ describe('ViewContext', () => {
 
         expect(app.page).not.toBe(previousPage);
         expect(cb).not.toBeCalled();
+        unmount();
+    });
+
+    it('should fire pagechange event with correct navigation type', async () => {
+        const cb = mockFn();
+        const Foo = registerView(function ({ viewContext }) {
+            useEffect(() => {
+                return viewContext.on('pagechange', cb);
+            }, []);
+            return (<></>);
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>)
+        await app.navigate('/dummy/foo');
+        await app.navigate('/dummy/foo/sub');
+
+        const previousPage = app.page;
+        await app.back();
+
+        expect(cb).toHaveBeenLastCalledWith(expect.objectContaining({
+            type: 'pagechange',
+            page: app.page,
+            previousPage: previousPage,
+            navigationType: 'back_forward'
+        }), _);
+        unmount();
+    });
+
+    it('should defer navigation', async () => {
+        await app.navigate('/dummy/foo');
+
+        const pagechange = mockFn();
+        const resolve = mockFn();
+        const Foo = registerView(({ viewContext }) => {
+            useEffect(() => {
+                return viewContext.on('pagechange', function (e) {
+                    pagechange();
+                    e.waitFor(delay(100).then(() => {
+                        expect(resolve).not.toBeCalled();
+                        resolve('waitFor complete');
+                    }));
+                });
+            });
+            return <></>;
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>);
+        const promise = app.navigate('/dummy/foo/baz').then(() => {
+            resolve('navigate complete');
+        });
+
+        await waitFor(() => expect(pagechange).toBeCalled());
+        expect(resolve).not.toBeCalled();
+
+        await promise;
+        verifyCalls(resolve, [
+            ['waitFor complete'],
+            ['navigate complete']
+        ]);
         unmount();
     });
 

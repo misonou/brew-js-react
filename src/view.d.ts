@@ -10,7 +10,25 @@ export type ViewComponent<P> = React.FC<ViewProps<P>>;
 export type ViewContainerState = ViewContext;
 
 export interface PageChangeEvent extends Zeta.ZetaEventBase {
+    /**
+     * Gets information of the current page.
+     */
+    readonly page: Brew.PageInfo;
+    /**
+     * Gets information of the previous page.
+     */
     readonly previousPage: Brew.PageInfo;
+    /**
+     * Gets how user has triggered navigation.
+     * @see {Brew.RouterEvent.navigationType}
+     */
+    readonly navigationType: Brew.NavigationType;
+    /**
+     * Defers completion of navigation.
+     * @param args One or more promises.
+     * @returns Whether the supplied promises will be awaited.
+     */
+    waitFor(...args: Promise<any>[]): boolean;
 }
 
 export interface ViewContextEventMap {

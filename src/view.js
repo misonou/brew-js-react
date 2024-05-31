@@ -58,7 +58,12 @@ function ViewContext(view, page, parent) {
         setActive: defineObservableProperty(self, 'active', !!page, true)
     });
     watch(self, 'page', function (page, previousPage) {
-        emitter.emit('pagechange', self, { previousPage });
+        emitter.emit('pagechange', self, {
+            page: page,
+            previousPage: previousPage,
+            navigationType: event.navigationType,
+            waitFor: event.waitFor
+        });
     });
 }
 
