@@ -771,6 +771,96 @@ describe('renderView', () => {
         });
         unmount();
     });
+
+    it('should re-render view after pagechange event', async () => {
+        const cb = mockFn();
+        const Foo = registerView(({ viewContext, viewData }) => {
+            cb('render', viewContext.page.path, viewData);
+            useEffect(() => {
+                return viewContext.on('pagechange', () => cb('pagechange'));
+            }, []);
+            return <div>foo</div>;
+        }, { view: /./ });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>);
+        await screen.findByText('foo');
+        verifyCalls(cb, [
+            ['render', '/dummy', {}]
+        ]);
+        cb.mockClear();
+
+        // wait previous navigation settled
+        await delay();
+        await app.navigate('/dummy/bar');
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
+        verifyCalls(cb, [
+            ['pagechange'],
+            ['render', '/dummy/bar', {}]
+        ]);
+        cb.mockClear();
+
+        // wait previous navigation settled
+        await delay();
+        await app.navigate('/dummy/bar', null, { foo: 'bar' });
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
+        verifyCalls(cb, [
+            ['pagechange'],
+            ['render', '/dummy/bar', { foo: 'bar' }]
+        ]);
+        cb.mockClear();
+
+        // snapshot should not cause re-render
+        await app.snapshot();
+        expect(cb).not.toBeCalled();
+        unmount();
+    });
+
+    it('should re-render view after pagechange event for view registered by async import', async () => {
+        const cb = mockFn();
+        const Foo = registerView(async () => {
+            return {
+                default: ({ viewContext, viewData }) => {
+                    cb('render', viewContext.page.path, viewData);
+                    useEffect(() => {
+                        return viewContext.on('pagechange', () => cb('pagechange'));
+                    }, []);
+                    return <div>foo</div>;
+                }
+            };
+        }, { view: /./ });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>);
+        await screen.findByText('foo');
+        verifyCalls(cb, [
+            ['render', '/dummy', {}]
+        ]);
+        cb.mockClear();
+
+        // wait previous navigation settled
+        await delay();
+        await app.navigate('/dummy/bar');
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
+        verifyCalls(cb, [
+            ['pagechange'],
+            ['render', '/dummy/bar', {}]
+        ]);
+        cb.mockClear();
+
+        // wait previous navigation settled
+        await delay();
+        await app.navigate('/dummy/bar', null, { foo: 'bar' });
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
+        verifyCalls(cb, [
+            ['pagechange'],
+            ['render', '/dummy/bar', { foo: 'bar' }]
+        ]);
+        cb.mockClear();
+
+        // snapshot should not cause re-render
+        await app.snapshot();
+        expect(cb).not.toBeCalled();
+        unmount();
+    });
 });
 
 describe('linkTo', () => {

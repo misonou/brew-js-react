@@ -1,4 +1,4 @@
-import { Component, Fragment, createContext, createElement, useContext, useEffect } from "react";
+import { Component, Fragment, createContext, createElement, useContext, useEffect, useState } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom, { reportError } from "zeta-dom/dom";
 import { notifyAsync } from "zeta-dom/domLock";
@@ -192,11 +192,13 @@ definePrototype(ViewContainer, Component, {
                 });
                 notifyAsync(element, promise);
             });
-            var viewProps = freeze({
-                navigationType: event.navigationType,
-                viewContext: state,
-                viewData: event.data || {}
-            });
+            var viewProps = function () {
+                return freeze({
+                    navigationType: event.navigationType,
+                    viewContext: state,
+                    viewData: state.page.data || {}
+                });
+            };
             var view = createElement(StateContext.Provider, { key: routeMap.get(V).id, value: state },
                 createElement(ViewStateContainer, null,
                     createElement('div', extend({}, self.props.rootProps, { ref: initElement, 'brew-view': '' }),
@@ -273,19 +275,24 @@ function createViewComponent(factory) {
         factory = createElement.bind(null, factory);
     }
     return function fn(props) {
-        var viewProps = props.viewProps;
-        var children = !promise && factory(viewProps);
+        var viewContext = useContext(StateContext);
+        var viewProps = useState(props.viewProps);
+        var children = !promise && factory(viewProps[0]);
         if (isThenable(children)) {
             promise = children;
             children = null;
             catchAsync(promise);
         }
         var state = useAsync(function () {
-            return promise.then(function (s) {
-                return createElement(s.default, viewProps);
-            });
+            return promise;
         }, !!promise)[1];
         var loaded = !promise || !state.loading;
+        useEffect(function () {
+            // listen to property directly so that it is invoked after pagechange event handlers in actual component
+            return watch(viewContext, 'page', function () {
+                viewProps[1](props.viewProps);
+            });
+        }, []);
         useEffect(function () {
             if (loaded) {
                 setImmediate(props.onComponentLoaded);
@@ -294,7 +301,7 @@ function createViewComponent(factory) {
         if (state.error) {
             throw state.error;
         }
-        return children || state.value || createElement(Fragment);
+        return children || (state.value ? createElement(state.value.default, viewProps[0]) : null);
     };
 }
 
