@@ -318,6 +318,16 @@ describe('StatefulMixin#state', () => {
         expect(asFragment()).toMatchSnapshot();
         unmount();
     });
+
+    it('should return accessible state object on creation', () => {
+        new class TestMixin extends StatefulMixin {
+            constructor() {
+                super();
+                expect(this.state).toEqual({});
+            }
+        }
+        expect.assertions(1);
+    });
 });
 
 describe('StatefulMixin#mergeState', () => {

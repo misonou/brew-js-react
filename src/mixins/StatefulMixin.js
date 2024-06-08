@@ -16,6 +16,7 @@ definePrototype(MixinRefImpl, {
 export default function StatefulMixin() {
     Mixin.call(this);
     _(this, {
+        pending: {},
         elements: new Set(),
         states: new WeakMap(),
         flush: watch(this, false),
