@@ -817,6 +817,25 @@ describe('FlyoutToggleMixin', () => {
         unmount();
     });
 
+    it('should toggle flyout by focusing element', async () => {
+        const Component = function () {
+            const mixin = useFlyoutMixin();
+            return (<div {...Mixin.use(mixin)}><button {...Mixin.use(mixin.toggle.on('focus'))}>test</button></div>);
+        };
+        const { container, unmount, getByRole } = render(<Component />);
+        const div = container.firstChild;
+
+        // toggle is ready in next event cycle
+        await delay(0);
+        dom.focus(getByRole('button'));
+        expect(div).toHaveClassName('open');
+
+        dom.blur(getByRole('button'));
+        await delay(0);
+        expect(div).not.toHaveClassName('open');
+        unmount();
+    });
+
     it('should open flyout and pass value to onOpen handler', async () => {
         let mixin;
         const cb = mockFn();

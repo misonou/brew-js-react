@@ -9,7 +9,17 @@ export default function FlyoutToggleMixin(mixin) {
     this.flyoutMixin = mixin;
 }
 
+function triggerFlyoutAction(self, state, trigger, action, args) {
+    if ((state.trigger || 'click') === trigger) {
+        action.apply(self, args);
+    }
+}
+
 definePrototype(FlyoutToggleMixin, ClassNameMixin, {
+    on: function (trigger) {
+        this.state.trigger = trigger;
+        return this;
+    },
     open: function (value, source) {
         return this.flyoutMixin.open(value, source);
     },
@@ -22,8 +32,16 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
     initElement: function (element, state) {
         var self = this;
         FlyoutToggleMixinSuper.initElement.call(self, element, state);
-        self.onDispose(dom.on(element, 'click', function () {
-            self.toggle(element);
+        self.onDispose(dom.on(element, {
+            focusin: function () {
+                triggerFlyoutAction(self, state, 'focus', self.open, [null, dom.activeElement]);
+            },
+            focusout: function () {
+                triggerFlyoutAction(self, state, 'focus', self.close, []);
+            },
+            click: function () {
+                triggerFlyoutAction(self, state, 'click', self.toggle, [element]);
+            }
         }));
     }
 });

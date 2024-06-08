@@ -8,6 +8,17 @@ import FlyoutMixin from "./FlyoutMixin";
  */
 export default class FlyoutToggleMixin extends ClassNameMixin {
     /**
+     * Specifies the condition on when the flyout should toggle. It can be either:
+     *
+     * - `click`: flyout is toggled when applied element is clicked;
+     * - `focus`: flyout is opened or closed when applied element has gained or lost focus.
+     *
+     * Default behavior is `click`.
+     *
+     * @param trigger Condition of trigger.
+     */
+    on(trigger: 'focus' | 'click'): this;
+    /**
      * Opens the associated flyout.
      * @param state Value to be sent to listener added by {@link FlyoutMixin.onOpen}.
      * @param source Source element that triggered the flyout.
