@@ -1,5 +1,5 @@
 import { definePrototype, extend, makeArray, pick } from "zeta-dom/util";
-import { closeFlyout, openFlyout } from "brew-js/domAction";
+import { closeFlyout, openFlyout, toggleFlyout } from "brew-js/domAction";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
 import FlyoutToggleMixin from "./FlyoutToggleMixin.js";
@@ -61,6 +61,9 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     },
     close: function (value) {
         return closeFlyout(this.elements()[0], value);
+    },
+    toggleSelf: function (source) {
+        return toggleFlyout(this.elements()[0], source, this.getOptions());
     },
     onOpen: function (callback) {
         var element = this.elements()[0];

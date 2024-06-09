@@ -99,4 +99,10 @@ export default class FlyoutMixin extends ClassNameMixin {
      * @returns A promise that resolves after closing animation completes.
      */
     close(state?: any): Promise<void>;
+    /**
+     * Toggles the flyout.
+     * @param source Source element which triggered the flyout.
+     * @returns A promise that resolves when the flyout is being closed.
+     */
+    toggleSelf(source?: Element): Promise<any>;
 }

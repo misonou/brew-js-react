@@ -698,6 +698,27 @@ describe('FlyoutMixin', () => {
         unmount();
     });
 
+    it('should toggle flyout and return promise that resolves when flyout is closed', async () => {
+        let mixin;
+        const cb = mockFn();
+        const Component = function () {
+            mixin = useFlyoutMixin();
+            useEffect(() => mixin.onOpen(cb), [mixin]);
+            return (<div {...Mixin.use(mixin)}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const div = container.firstChild;
+
+        const promise = mixin.toggleSelf();
+        await delay(0);
+        expect(isFlyoutOpen(div)).toBe(true);
+
+        expect(mixin.toggleSelf()).toBe(promise);
+        await expect(promise).resolves.toBeUndefined();
+        expect(isFlyoutOpen(div)).toBe(false);
+        unmount();
+    });
+
     it('should set visible and invoke onVisibilityChanged handler at correct timing', async () => {
         let mixin;
         const Component = function () {
