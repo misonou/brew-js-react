@@ -1,4 +1,4 @@
-/*! brew-js-react v0.5.6 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.5.7 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("react"), require("react-dom"), require("brew-js"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -8,7 +8,7 @@
 		exports["brew-js-react"] = factory(require("zeta-dom"), require("react"), require("react-dom"), require("brew-js"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
 	else
 		root["brew"] = root["brew"] || {}, root["brew"]["react"] = factory(root["zeta"], root["React"], root["ReactDOM"], root["brew"], root["zeta"]["react"], root["waterpipe"], root["jQuery"]);
-})(self, (__WEBPACK_EXTERNAL_MODULE__231__, __WEBPACK_EXTERNAL_MODULE__12__, __WEBPACK_EXTERNAL_MODULE__311__, __WEBPACK_EXTERNAL_MODULE__760__, __WEBPACK_EXTERNAL_MODULE__402__, __WEBPACK_EXTERNAL_MODULE__87__, __WEBPACK_EXTERNAL_MODULE__942__) => {
+})(self, (__WEBPACK_EXTERNAL_MODULE__231__, __WEBPACK_EXTERNAL_MODULE__12__, __WEBPACK_EXTERNAL_MODULE__33__, __WEBPACK_EXTERNAL_MODULE__760__, __WEBPACK_EXTERNAL_MODULE__402__, __WEBPACK_EXTERNAL_MODULE__87__, __WEBPACK_EXTERNAL_MODULE__914__) => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -28,11 +28,11 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__760__;
 
 /***/ }),
 
-/***/ 942:
+/***/ 914:
 /***/ ((module) => {
 
 "use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__942__;
+module.exports = __WEBPACK_EXTERNAL_MODULE__914__;
 
 /***/ }),
 
@@ -44,11 +44,11 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__12__;
 
 /***/ }),
 
-/***/ 311:
+/***/ 33:
 /***/ ((module) => {
 
 "use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__311__;
+module.exports = __WEBPACK_EXTERNAL_MODULE__33__;
 
 /***/ }),
 
@@ -71,7 +71,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__402__;
 /***/ 621:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var ReactDOM = __webpack_require__(311);
+var ReactDOM = __webpack_require__(33);
 var ReactDOMClient;
 
 if (ReactDOM.createRoot) {
@@ -265,10 +265,22 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   watch = _lib$util.watch,
   watchable = _lib$util.watchable;
 
-// EXTERNAL MODULE: external {"commonjs":"react","commonjs2":"react","amd":"react","root":["React"]}
+// EXTERNAL MODULE: external {"commonjs":"react","commonjs2":"react","amd":"react","root":"React"}
 var external_commonjs_react_commonjs2_react_amd_react_root_React_ = __webpack_require__(12);
-// EXTERNAL MODULE: external {"commonjs":"react-dom","commonjs2":"react-dom","amd":"react-dom","root":["ReactDOM"]}
-var external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_ = __webpack_require__(311);
+;// CONCATENATED MODULE: ./|umd|/react.js
+
+var Component = external_commonjs_react_commonjs2_react_amd_react_root_React_.Component,
+  Fragment = external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment,
+  createContext = external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext,
+  createElement = external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement,
+  useContext = external_commonjs_react_commonjs2_react_amd_react_root_React_.useContext,
+  useEffect = external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect,
+  useMemo = external_commonjs_react_commonjs2_react_amd_react_root_React_.useMemo,
+  useRef = external_commonjs_react_commonjs2_react_amd_react_root_React_.useRef,
+  useState = external_commonjs_react_commonjs2_react_amd_react_root_React_.useState;
+
+// EXTERNAL MODULE: external {"commonjs":"react-dom","commonjs2":"react-dom","amd":"react-dom","root":"ReactDOM"}
+var external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_ = __webpack_require__(33);
 // EXTERNAL MODULE: ./node_modules/@misonou/react-dom-client/fallback.js
 var fallback = __webpack_require__(621);
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/domUtil.js
@@ -354,9 +366,9 @@ function createDialog(props) {
             return promise.then(_closeDialog);
           }
         });
-        var content = /*#__PURE__*/(0,external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement)(props.onRender, dialogProps);
+        var content = /*#__PURE__*/createElement(props.onRender, dialogProps);
         if (props.wrapper) {
-          content = /*#__PURE__*/(0,external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement)(props.wrapper, dialogProps, content);
+          content = /*#__PURE__*/createElement(props.wrapper, dialogProps, content);
         }
         reactRoot.render(content);
       }
@@ -377,12 +389,12 @@ function createDialog(props) {
  * @param {import("./dialog").DialogProps} props
  */
 function Dialog(props) {
-  var _props = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)({})[0];
-  var dialog = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
+  var _props = useState({})[0];
+  var dialog = useState(function () {
     return createDialog(_props);
   })[0];
   extend(_props, props);
-  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
+  useEffect(function () {
     var opened = containsOrEquals(zeta_dom_dom.root, dialog.root);
     if (either(opened, _props.isOpen)) {
       if (!opened) {
@@ -392,13 +404,23 @@ function Dialog(props) {
       }
     }
   }, [_props.isOpen]);
-  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
+  useEffect(function () {
     return dialog.close;
   }, [dialog]);
   return /*#__PURE__*/external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, dialog.root);
 }
 // EXTERNAL MODULE: external {"commonjs":"zeta-dom-react","commonjs2":"zeta-dom-react","amd":"zeta-dom-react","root":["zeta","react"]}
 var external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_ = __webpack_require__(402);
+;// CONCATENATED MODULE: ./|umd|/zeta-dom-react.js
+
+var ViewStateProvider = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.ViewStateProvider,
+  classNames = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.classNames,
+  useAsync = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useAsync,
+  useMemoizedFunction = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useMemoizedFunction,
+  useObservableProperty = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useObservableProperty,
+  useSingleton = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useSingleton,
+  useUpdateTrigger = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useUpdateTrigger;
+
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/events.js
 
 var EventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
@@ -465,7 +487,7 @@ var rootContext = freeze(extend(new ViewContext(), {
   container: root
 }));
 var rootState = _(rootContext);
-var StateContext = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext(rootContext);
+var StateContext = /*#__PURE__*/createContext(rootContext);
 var errorView;
 /** @type {Partial<Zeta.ZetaEventType<"beforepageload", Brew.RouterEventMap, Element>>} */
 var view_event = {};
@@ -504,7 +526,10 @@ function ViewContext(view, page, parent) {
   });
   watch(self, 'page', function (page, previousPage) {
     emitter.emit('pagechange', self, {
-      previousPage: previousPage
+      page: page,
+      previousPage: previousPage,
+      navigationType: view_event.navigationType,
+      waitFor: view_event.waitFor
     });
   });
 }
@@ -519,11 +544,11 @@ definePrototype(ViewContext, {
   }
 });
 function ErrorBoundary() {
-  external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(this, arguments);
+  Component.apply(this, arguments);
   this.state = {};
 }
 ErrorBoundary.contextType = StateContext;
-definePrototype(ErrorBoundary, external_commonjs_react_commonjs2_react_amd_react_root_React_.Component, {
+definePrototype(ErrorBoundary, Component, {
   componentDidCatch: function componentDidCatch(error) {
     var self = this;
     if (errorView && !self.state.error) {
@@ -551,12 +576,12 @@ definePrototype(ErrorBoundary, external_commonjs_react_commonjs2_react_amd_react
     };
     var onComponentLoaded = self.props.onComponentLoaded;
     if (props.error) {
-      return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(errorView, {
+      return /*#__PURE__*/createElement(errorView, {
         onComponentLoaded: onComponentLoaded,
         viewProps: props
       });
     }
-    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(props.view, {
+    return /*#__PURE__*/createElement(props.view, {
       onComponentLoaded: onComponentLoaded,
       viewProps: self.props.viewProps
     });
@@ -568,10 +593,10 @@ definePrototype(ErrorBoundary, external_commonjs_react_commonjs2_react_amd_react
   }
 });
 function ViewContainer() {
-  external_commonjs_react_commonjs2_react_amd_react_root_React_.Component.apply(this, arguments);
+  Component.apply(this, arguments);
 }
 ViewContainer.contextType = StateContext;
-definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react_root_React_.Component, {
+definePrototype(ViewContainer, Component, {
   setActive: noop,
   componentDidMount: function componentDidMount() {
     var self = this;
@@ -599,7 +624,7 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
       self.updateView();
     }
     (self.onRender || noop)();
-    return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment, null, self.prevView, self.currentView);
+    return /*#__PURE__*/createElement(Fragment, null, self.prevView, self.currentView);
   },
   updateView: function updateView() {
     var self = this;
@@ -651,13 +676,13 @@ definePrototype(ViewContainer, external_commonjs_react_commonjs2_react_amd_react
         viewContext: state,
         viewData: view_event.data || {}
       });
-      var view = /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(StateContext.Provider, {
+      var view = /*#__PURE__*/createElement(StateContext.Provider, {
         key: routeMap.get(V).id,
         value: state
-      }, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewStateContainer, null, /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement('div', extend({}, self.props.rootProps, {
+      }, /*#__PURE__*/createElement(ViewStateContainer, null, /*#__PURE__*/createElement('div', extend({}, self.props.rootProps, {
         ref: initElement,
         'brew-view': ''
-      }), /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ErrorBoundary, {
+      }), /*#__PURE__*/createElement(ErrorBoundary, {
         onComponentLoaded: onComponentLoaded,
         viewProps: viewProps
       }))));
@@ -727,8 +752,8 @@ function matchViewParams(view, route) {
 function createViewComponent(factory) {
   var promise;
   throwNotFunction(factory);
-  if (factory.prototype instanceof external_commonjs_react_commonjs2_react_amd_react_root_React_.Component) {
-    factory = external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement.bind(null, factory);
+  if (factory.prototype instanceof Component) {
+    factory = createElement.bind(null, factory);
   }
   return function fn(props) {
     var viewProps = props.viewProps;
@@ -738,13 +763,13 @@ function createViewComponent(factory) {
       children = null;
       catchAsync(promise);
     }
-    var state = (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useAsync)(function () {
+    var state = useAsync(function () {
       return promise.then(function (s) {
-        return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(s["default"], viewProps);
+        return /*#__PURE__*/createElement(s["default"], viewProps);
       });
     }, !!promise)[1];
     var loaded = !promise || !state.loading;
-    external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect(function () {
+    useEffect(function () {
       if (loaded) {
         setImmediate(props.onComponentLoaded);
       }
@@ -752,11 +777,11 @@ function createViewComponent(factory) {
     if (state.error) {
       throw state.error;
     }
-    return children || state.value || /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment);
+    return children || state.value || /*#__PURE__*/createElement(Fragment);
   };
 }
 function useViewContext() {
-  return external_commonjs_react_commonjs2_react_amd_react_root_React_.useContext(StateContext);
+  return useContext(StateContext);
 }
 function isViewMatched(view) {
   return matchViewParams(view, app_app.route);
@@ -810,7 +835,7 @@ function renderView() {
     }
   });
   views.sort(sortViews);
-  return /*#__PURE__*/external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement(ViewContainer, {
+  return /*#__PURE__*/createElement(ViewContainer, {
     rootProps: rootProps,
     views: views,
     defaultView: defaultView
@@ -888,7 +913,7 @@ function updateViewState(state, key, store) {
 }
 function useViewContextWithEffect(callback, deps) {
   var container = useViewContext();
-  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
+  useEffect(function () {
     return app_app.on('beforepageload popstate', function () {
       if (container.active) {
         callback(getCurrentStates());
@@ -901,7 +926,7 @@ function useAppReady() {
   return useAppReadyState().ready;
 }
 function useAppReadyState() {
-  var readyState = (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useObservableProperty)(app_app, 'readyState');
+  var readyState = useObservableProperty(app_app, 'readyState');
   return {
     ready: readyState === 'ready',
     error: readyState === 'error'
@@ -911,9 +936,9 @@ function useRouteParam(name, defaultValue) {
   var container = useViewContext();
   var params = container.page.params;
   var value = params[name] || '';
-  var ref = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useRef)(value);
-  var forceUpdate = (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useUpdateTrigger)();
-  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
+  var ref = useRef(value);
+  var forceUpdate = useUpdateTrigger();
+  useEffect(function () {
     var setValue = function setValue() {
       var current = container.page.params[name] || '';
       if (current !== ref.current) {
@@ -932,7 +957,7 @@ function useRouteParam(name, defaultValue) {
 }
 function useRouteState(key, defaultValue, snapshotOnUpdate) {
   var cur = getCurrentStates();
-  var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(cur && cur.has(key) ? cur.get(key) : defaultValue);
+  var state = useState(cur && cur.has(key) ? cur.get(key) : defaultValue);
   var container = useViewContextWithEffect(function (cur) {
     state[1](function (oldValue) {
       return cur.has(key) ? cur.get(key) : (cur.set(key, oldValue), oldValue);
@@ -958,8 +983,8 @@ function useQueryParam(key, value, snapshotOnUpdate) {
       return getQueryParam(i, app_app.path) || v || '';
     });
   };
-  var state = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)([]);
-  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useMemo)(function () {
+  var state = useState([]);
+  useMemo(function () {
     state[0].splice(0, 2, getParams());
   }, [key]);
   var current = state[0][0];
@@ -969,7 +994,7 @@ function useQueryParam(key, value, snapshotOnUpdate) {
       state[1]([current]);
     }
   };
-  var setParams = (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useMemoizedFunction)(function (values) {
+  var setParams = useMemoizedFunction(function (values) {
     if (key !== false) {
       values = kv(key, isFunction(values) ? values(current[key]) : values);
     } else if (isFunction(values)) {
@@ -989,7 +1014,7 @@ function useQueryParam(key, value, snapshotOnUpdate) {
       }
     }
   });
-  (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect)(function () {
+  useEffect(function () {
     return app_app.watch('path', function () {
       if (container.active) {
         trackChanges(getParams());
@@ -999,13 +1024,13 @@ function useQueryParam(key, value, snapshotOnUpdate) {
   return [key !== false ? current[key] : state[0][1] || (state[0][1] = freeze(extend({}, current))), setParams];
 }
 function ViewStateContainer(props) {
-  var cache = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)({})[0];
+  var cache = useState({})[0];
   var container = useViewContextWithEffect(function (cur) {
     each(cache, function (i, v) {
       updateViewState(v, v.key, cur);
     });
   }, []);
-  var provider = (0,external_commonjs_react_commonjs2_react_amd_react_root_React_.useState)(function () {
+  var provider = useState(function () {
     return {
       getState: function getState(uniqueId, key) {
         var state = cache[uniqueId];
@@ -1018,7 +1043,7 @@ function ViewStateContainer(props) {
       }
     };
   })[0];
-  return /*#__PURE__*/(0,external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement)(external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.ViewStateProvider, {
+  return /*#__PURE__*/createElement(ViewStateProvider, {
     value: provider
   }, props.children);
 }
@@ -1056,7 +1081,7 @@ function createCallback(translate) {
   });
 }
 function useLanguage() {
-  return (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useObservableProperty)(app_app, 'language');
+  return useObservableProperty(app_app, 'language');
 }
 function makeTranslation(resources, defaultLang) {
   var re = new RegExp('^(' + Object.keys(resources[defaultLang]).join('|') + ')\\.');
@@ -1178,7 +1203,7 @@ util_define(Mixin, {
     });
     extend(props, {
       ref: combineFn(refs),
-      className: external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.classNames.apply(null, args)
+      className: classNames.apply(null, args)
     });
     each(mixins, function (i, v) {
       v.next();
@@ -1207,6 +1232,7 @@ definePrototype(MixinRefImpl, {
 function StatefulMixin() {
   Mixin.call(this);
   StatefulMixin_(this, {
+    pending: {},
     elements: new Set(),
     states: new WeakMap(),
     flush: watch(this, false),
@@ -1373,8 +1399,8 @@ definePrototype(AnimateSequenceItemMixin, ClassNameMixin, {
     return [this.className].concat(AnimateSequenceItemMixinSuper.getClassNames.call(this));
   }
 });
-// EXTERNAL MODULE: external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":["jQuery"]}
-var external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_ = __webpack_require__(942);
+// EXTERNAL MODULE: external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":"jQuery"}
+var external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_ = __webpack_require__(914);
 ;// CONCATENATED MODULE: ./src/mixins/AnimateSequenceMixin.js
 
 
@@ -1438,24 +1464,43 @@ definePrototype(ClassNameToggleMixin, StatefulMixin, {
 
 
 
-
 var FlyoutToggleMixinSuper = ClassNameMixin.prototype;
 function FlyoutToggleMixin(mixin) {
   ClassNameMixin.call(this, ['target-opened']);
   this.flyoutMixin = mixin;
 }
+function triggerFlyoutAction(self, state, trigger, action, args) {
+  if ((state.trigger || 'click') === trigger) {
+    action.apply(self, args);
+  }
+}
 definePrototype(FlyoutToggleMixin, ClassNameMixin, {
+  on: function on(trigger) {
+    this.state.trigger = trigger;
+    return this;
+  },
   open: function open(value, source) {
     return this.flyoutMixin.open(value, source);
   },
   close: function close(value) {
     return this.flyoutMixin.close(value);
   },
+  toggle: function toggle(source) {
+    return this.flyoutMixin.toggleSelf(source);
+  },
   initElement: function initElement(element, state) {
     var self = this;
     FlyoutToggleMixinSuper.initElement.call(self, element, state);
-    self.onDispose(zeta_dom_dom.on(element, 'click', function () {
-      toggleFlyout(self.flyoutMixin.elements()[0], element, self.flyoutMixin.getOptions());
+    self.onDispose(zeta_dom_dom.on(element, {
+      focusin: function focusin() {
+        triggerFlyoutAction(self, state, 'focus', self.open, [null, zeta_dom_dom.activeElement]);
+      },
+      focusout: function focusout() {
+        triggerFlyoutAction(self, state, 'focus', self.close, []);
+      },
+      click: function click() {
+        triggerFlyoutAction(self, state, 'click', self.toggle, [element]);
+      }
     }));
   }
 });
@@ -1520,6 +1565,9 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
   },
   close: function close(value) {
     return closeFlyout(this.elements()[0], value);
+  },
+  toggleSelf: function toggleSelf(source) {
+    return toggleFlyout(this.elements()[0], source, this.getOptions());
   },
   onOpen: function onOpen(callback) {
     var element = this.elements()[0];
@@ -1756,7 +1804,7 @@ var useScrollableMixin = /*#__PURE__*/createUseFunction(ScrollableMixin);
 var useScrollIntoViewMixin = /*#__PURE__*/createUseFunction(ScrollIntoViewMixin);
 var useUnmanagedClassNameMixin = /*#__PURE__*/createUseFunction(UnmanagedClassNameMixin);
 function useMixin(ctor) {
-  return (0,external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useSingleton)(function () {
+  return useSingleton(function () {
     return new ctor();
   }).reset();
 }
