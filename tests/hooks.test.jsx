@@ -492,6 +492,19 @@ describe('useQueryParam', () => {
         unmount();
     });
 
+    it('should update current path correctly when new query string is empty', async () => {
+        await app.navigate('/foo');
+
+        const { result, unmount } = renderHook(() => useQueryParam('foo', ''));
+        result.current[1]('bar');
+        expect(app.path).toBe('/foo?foo=bar');
+
+        result.current[1]('');
+        await delay();
+        expect(app.path).toBe('/foo');
+        unmount();
+    });
+
     it('should restore previous values when navigated back', async () => {
         const { result, waitForNextUpdate, unmount } = renderHook(() => useQueryParam('foo', '', true));
         act(() => result.current[1]('bar'));

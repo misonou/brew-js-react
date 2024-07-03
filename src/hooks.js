@@ -151,7 +151,7 @@ export function useQueryParam(key, value, snapshotOnUpdate) {
                 if (snapshotOnUpdate) {
                     app.snapshot();
                 }
-                catchAsync(app.navigate(search + url.hash, true));
+                catchAsync(app.navigate((search || '?') + url.hash, true));
                 notifyChange(getParams());
             }
         }
