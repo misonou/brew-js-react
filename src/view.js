@@ -70,7 +70,7 @@ function ViewContext(view, page, parent) {
 definePrototype(ViewContext, {
     getChildren: function () {
         return map(_(this).children, function (v) {
-            return v.currentState;
+            return v.currentContext;
         });
     },
     on: function (event, handler) {
@@ -135,7 +135,7 @@ definePrototype(ViewContainer, Component, {
             arrRemove(parent, self);
             unwatch();
             setImmediate(function () {
-                if (self.unmountView && !self.currentState.active) {
+                if (self.unmountView && !self.currentContext.active) {
                     self.unmountView();
                 }
             });
@@ -168,26 +168,27 @@ definePrototype(ViewContainer, Component, {
         if (V && viewChanged) {
             (self.unmountView || noop)(true);
 
-            var state = new ViewContext(V, app.page, self.context);
+            var context = new ViewContext(V, app.page, self.context);
+            var state = routeMap.get(V);
             var onComponentLoaded;
             var promise = new Promise(function (resolve) {
                 onComponentLoaded = resolve;
             });
             var unmountView = onComponentLoaded;
             var initElement = executeOnce(function (element) {
-                state.container = element;
+                context.container = element;
                 promise.then(function () {
-                    if (self.currentState === state) {
+                    if (self.currentContext === context) {
                         unmountView = function () {
                             self.prevView = self.currentView;
-                            app.emit('pageleave', element, { pathname: state.page.path, view: V }, true);
+                            app.emit('pageleave', element, { pathname: context.page.path, view: V }, true);
                             animateOut(element, 'show').then(function () {
                                 self.prevView = undefined;
                                 self.forceUpdate();
                             });
                         };
                         animateIn(element, 'show', '[brew-view]', true);
-                        app.emit('pageenter', element, { pathname: state.page.path, view: V }, true);
+                        app.emit('pageenter', element, { pathname: context.page.path, view: V }, true);
                     }
                 });
                 notifyAsync(element, promise);
@@ -195,25 +196,25 @@ definePrototype(ViewContainer, Component, {
             var viewProps = function () {
                 return freeze({
                     navigationType: event.navigationType,
-                    viewContext: state,
-                    viewData: state.page.data || {}
+                    viewContext: context,
+                    viewData: context.page.data || {}
                 });
             };
-            var view = createElement(StateContext.Provider, { key: routeMap.get(V).id, value: state },
+            var view = createElement(StateContext.Provider, { key: state.id, value: context },
                 createElement(ViewStateContainer, null,
                     createElement('div', extend({}, self.props.rootProps, { ref: initElement, 'brew-view': '' }),
                         createElement(ErrorBoundary, { onComponentLoaded, viewProps }))));
-            extend(self, _(state), {
-                currentState: state,
+            extend(self, _(context), {
+                currentContext: context,
                 currentView: view,
                 currentViewComponent: V,
                 unmountView: executeOnce(function () {
                     self.setActive(false);
-                    routeMap.get(V).rendered--;
+                    state.rendered--;
                     unmountView();
                 })
             });
-            routeMap.get(V).rendered++;
+            state.rendered++;
             (event.waitFor || noop)(promise);
         }
         (self.setPage || noop)(app.page);
