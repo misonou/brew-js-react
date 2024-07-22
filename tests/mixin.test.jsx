@@ -976,7 +976,7 @@ describe('LoadingStateMixin', () => {
         const div = container.firstChild;
 
         const promise = delay(100);
-        dom.notifyAsync(div, promise);
+        await after(() => dom.notifyAsync(div, promise));
         expect(div).toHaveClassName('loading');
 
         rerender(<Component />);
@@ -999,7 +999,7 @@ describe('LoadingStateMixin', () => {
         const div = container.firstChild;
 
         const promise = delay(100);
-        dom.notifyAsync(div, promise);
+        await after(() => dom.notifyAsync(div, promise));
         expect(div).toHaveClassName('loading');
 
         await dom.cancelLock(div);
@@ -1023,9 +1023,9 @@ describe('LoadingStateMixin', () => {
 
         const promise1 = delay(100);
         const promise2 = delay(200);
-        dom.notifyAsync(div1, promise1);
+        await after(() => dom.notifyAsync(div1, promise1));
         expect(loadingState.loading).toBe(true);
-        dom.notifyAsync(div2, promise2);
+        await after(() => dom.notifyAsync(div2, promise2));
         expect(loadingState.loading).toBe(true);
 
         await promise1;

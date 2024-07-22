@@ -100,6 +100,7 @@ describe('createDialog', () => {
         await actAwaitSetImmediate(() => dialog.open());
 
         const result = dismiss();
+        await delay();
         expect(dialog.root).toHaveClassName('loading');
 
         await expect(result).rejects.toBe(42);
@@ -127,6 +128,7 @@ describe('createDialog', () => {
         await actAwaitSetImmediate(() => dialog.open());
 
         const result = dismiss();
+        await delay();
         expect(cb).toBeCalledTimes(1);
 
         await result;
