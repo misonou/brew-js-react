@@ -36,6 +36,10 @@ export interface FlyoutMixinOptions {
  */
 export default class FlyoutMixin extends ClassNameMixin {
     /**
+     * Gets the flyout element.
+     */
+    readonly element: Element | null;
+    /**
      * Gets whether the flyout is open.
      */
     readonly isFlyoutOpened: boolean;

@@ -15,6 +15,13 @@ export default function ScrollableMixin() {
 }
 
 definePrototype(ScrollableMixin, ClassNameMixin, {
+    get element() {
+        return this.elements()[0] || null;
+    },
+    get contentElement() {
+        var element = this.element;
+        return element && getDirectiveComponent(element).scrollable.scrollTarget;
+    },
     withOptions: function (options) {
         this.options = options;
         return this;
@@ -52,7 +59,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
 
 each('destroy enable disable setOptions setStickyPosition refresh scrollPadding stop scrollLeft scrollTop scrollBy scrollTo scrollByPage scrollToPage scrollToElement', function (i, v) {
     defineHiddenProperty(ScrollableMixin.prototype, v, function () {
-        var obj = getDirectiveComponent(this.elements()[0]);
+        var obj = getDirectiveComponent(this.element);
         return obj.scrollable[v].apply(null, arguments);
     });
 });

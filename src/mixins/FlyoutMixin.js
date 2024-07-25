@@ -25,6 +25,9 @@ export default function FlyoutMixin() {
 }
 
 definePrototype(FlyoutMixin, ClassNameMixin, {
+    get element() {
+        return this.elements()[0] || null;
+    },
     getOptions: function () {
         var self = this;
         var options = pick(self, ['closeOnBlur']);
@@ -57,19 +60,18 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         });
     },
     open: function (value, source) {
-        return openFlyout(this.elements()[0], value, source, this.getOptions());
+        return openFlyout(this.element, value, source, this.getOptions());
     },
     close: function (value) {
-        return closeFlyout(this.elements()[0], value);
+        return closeFlyout(this.element, value);
     },
     toggleSelf: function (source) {
-        return toggleFlyout(this.elements()[0], source, this.getOptions());
+        return toggleFlyout(this.element, source, this.getOptions());
     },
     onOpen: function (callback) {
-        var element = this.elements()[0];
         return this.onToggleState(function (opened) {
             if (opened) {
-                return callback(valueMap.get(element));
+                callback(valueMap.get(this.element));
             }
         });
     },

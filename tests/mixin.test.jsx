@@ -31,7 +31,9 @@ const customAnimateOut = mockFn(() => delay(10));
 addAnimateIn('custom-anim', customAnimateIn)
 addAnimateOut('custom-anim', customAnimateOut)
 
-initAppBeforeAll(() => { });
+initAppBeforeAll((app) => {
+    app.useScrollable();
+});
 
 describe('use', () => {
     it('should accept ref callback as first argument', () => {
@@ -622,6 +624,19 @@ describe('AnimateSequenceMixin', () => {
 });
 
 describe('FlyoutMixin', () => {
+    it('should return flyout element', async () => {
+        let mixin;
+        const Component = function () {
+            mixin = useFlyoutMixin();
+            return (<div {...Mixin.use(mixin)}>test</div>);
+        };
+        const { container, unmount } = render(<Component />);
+        expect(mixin.element).toBe(container.firstChild);
+
+        unmount();
+        expect(mixin.element).toBeNull();
+    });
+
     it('should set is-flyout attributes', async () => {
         const Component = function () {
             const mixin = useFlyoutMixin();
@@ -1111,6 +1126,28 @@ describe('ScrollIntoViewMixin', () => {
 });
 
 describe('ScrollableMixin', () => {
+    it('should return container and content element', async () => {
+        let mixin;
+        const Component = function () {
+            mixin = useScrollableMixin();
+            return (<div {...Mixin.use(mixin)}><div {...Mixin.use(mixin.target)}>test</div></div>);
+        };
+        const { container, unmount } = render(<Component />);
+        const outer = container.firstChild;
+        const inner = container.firstChild.firstChild;
+
+        // make jQuery :visible pseudo selector matches
+        jest.spyOn(outer, 'offsetWidth', 'get').mockReturnValue(10);
+        jest.spyOn(inner, 'offsetWidth', 'get').mockReturnValue(10);
+
+        expect(mixin.element).toBe(outer);
+        expect(mixin.contentElement).toBe(inner);
+
+        unmount();
+        expect(mixin.element).toBeNull();
+        expect(mixin.contentElement).toBeNull();
+    });
+
     it('should set scrollable attributes', async () => {
         const Component = function () {
             const mixin = useScrollableMixin();

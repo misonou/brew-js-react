@@ -53,6 +53,14 @@ export default class ScrollableMixin extends ClassNameMixin implements JQueryScr
      */
     readonly target: StaticAttributeMixin;
     /**
+     * Gets the element with scrollable plugin enabled.
+     */
+    readonly element: Element | null;
+    /**
+     * Gets the element which its scrolling position is currently controlled.
+     */
+    readonly contentElement: Element | null;
+    /**
      * Gets the index of the currently visible element matched by {@link ScrollableMixinOptions.pagedItemSelector} options.
      */
     readonly pageIndex: number;
