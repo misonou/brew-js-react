@@ -25,9 +25,9 @@ definePrototype(ClassNameMixin, StatefulMixin, {
         var self = this;
         state.classNames = fill(self.classNames, false);
         checkState(self, element, state);
-        watchOwnAttributes(element, 'class', function () {
+        state.onDispose(watchOwnAttributes(element, 'class', function () {
             checkState(self, element, state, true);
-        });
+        }).dispose);
     },
     onLayoutEffect: function (element, state) {
         setClass(element, state.classNames);

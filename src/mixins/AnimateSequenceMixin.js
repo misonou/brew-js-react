@@ -33,7 +33,7 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
         if (self.selector) {
             state.onDispose(watchElements(element, self.selector, function (addedNodes) {
                 $(addedNodes).attr('is-animate-sequence', '');
-            }));
+            }).dispose);
         }
     }
 });
