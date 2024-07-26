@@ -23,7 +23,7 @@ definePrototype(FocusStateMixin, StatefulMixin, {
                 callback(arg || target);
             }
         };
-        this.onDispose(dom.on(element, {
+        state.onDispose(dom.on(element, {
             focusin: function (e) {
                 state.focused = e.source;
                 setClass(element, 'focused', e.source);

@@ -21,14 +21,9 @@ export default function ClassNameMixin(classNames) {
 }
 
 definePrototype(ClassNameMixin, StatefulMixin, {
-    initState: function () {
-        return {
-            element: null,
-            classNames: fill(this.classNames, false)
-        };
-    },
     initElement: function (element, state) {
         var self = this;
+        state.classNames = fill(self.classNames, false);
         checkState(self, element, state);
         watchOwnAttributes(element, 'class', function () {
             checkState(self, element, state, true);

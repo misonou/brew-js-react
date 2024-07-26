@@ -328,6 +328,37 @@ describe('StatefulMixin#state', () => {
         }
         expect.assertions(1);
     });
+
+    it('should invoke dispose callback after element is unmounted', async () => {
+        const cbInit = mockFn();
+        const cbDispose = mockFn();
+        class TestMixin extends StatefulMixin {
+            initElement(element, state) {
+                cbInit(state);
+                state.onDispose(() => cbDispose(state));
+            }
+        }
+        const Component = function ({ count }) {
+            const mixin = useMixin(TestMixin);
+            return <>
+                {' '.repeat(count).split('').map((_, i) => (
+                    <div key={i} {...Mixin.use(mixin)}></div>
+                ))}
+            </>
+        };
+        const { rerender, unmount } = render(<Component count={2} />);
+        expect(cbInit).toBeCalledTimes(2);
+
+        rerender(<Component count={1} />);
+        await 0;
+        expect(cbDispose).toBeCalledTimes(1);
+
+        unmount();
+        await 0;
+        expect(cbDispose).toBeCalledTimes(2);
+        expect(cbDispose.mock.calls[0][0]).toBe(cbInit.mock.calls[1][0]);
+        expect(cbDispose.mock.calls[1][0]).toBe(cbInit.mock.calls[0][0]);
+    });
 });
 
 describe('StatefulMixin#mergeState', () => {

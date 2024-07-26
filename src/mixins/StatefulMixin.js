@@ -1,7 +1,26 @@
-import { combineFn, createPrivateStore, definePrototype, extend, keys, map, pipe, watch } from "zeta-dom/util";
+import { arrRemove, combineFn, createPrivateStore, definePrototype, each, extend, keys, setImmediateOnce, throwNotFunction, watch } from "zeta-dom/util";
 import Mixin from "./Mixin.js";
 
 const _ = createPrivateStore();
+const unmounted = new Set();
+
+function disposeUnmountedStates() {
+    each(unmounted, function (i, v) {
+        combineFn(_(v).splice(0))();
+    });
+    unmounted.clear();
+}
+
+function MixinState(parent, element) {
+    _(this, [parent.delete.bind(parent, element)]);
+    parent.set(element, this);
+}
+
+definePrototype(MixinState, {
+    onDispose: function (callback) {
+        _(this).push(throwNotFunction(callback));
+    }
+});
 
 function MixinRefImpl(mixin) {
     this.mixin = mixin;
@@ -17,8 +36,8 @@ export default function StatefulMixin() {
     Mixin.call(this);
     _(this, {
         pending: {},
-        elements: new Set(),
-        states: new WeakMap(),
+        elements: [],
+        states: new Map(),
         flush: watch(this, false),
         dispose: []
     });
@@ -44,34 +63,35 @@ definePrototype(StatefulMixin, Mixin, {
         var self = this;
         var obj = _(self);
         var newState = obj.pending;
-        var state;
+        var element, state;
         return function (current) {
             if (current) {
-                state = obj.states.get(current) || extend(self.initState(), newState);
-                if (state.element !== current) {
-                    state.element = current;
-                    self.initElement(current, state);
-                    obj.states.set(current, state);
+                element = current;
+                state = obj.states.get(element) || new MixinState(obj.states, element);
+                obj.elements.push(element);
+                if (!state.element) {
+                    self.initElement(element, extend(state, self.initState(), newState, { element }));
                 } else if (keys(newState)[0]) {
-                    self.mergeState(current, state, newState);
+                    self.mergeState(element, state, newState);
                 }
-                self.onLayoutEffect(current, state);
-                obj.elements.add(current);
+                self.onLayoutEffect(element, state);
+                unmounted.delete(state);
             } else if (state) {
-                var prev = state.element;
-                self.onBeforeUpdate(prev, state);
-                obj.elements.delete(prev);
+                unmounted.add(state);
+                self.onBeforeUpdate(element, state);
+                arrRemove(obj.elements, element);
             }
+            setImmediateOnce(disposeUnmountedStates);
         };
     },
     elements: function () {
-        return map(_(this).elements, pipe);
+        return _(this).elements.slice();
     },
     onDispose: function (callback) {
         _(this).dispose.push(callback);
     },
     initState: function () {
-        return { element: null };
+        return {};
     },
     initElement: function (element, state) {
     },
@@ -87,9 +107,12 @@ definePrototype(StatefulMixin, Mixin, {
     },
     dispose: function () {
         var state = _(this);
+        each(state.states, function (i, v) {
+            unmounted.add(v);
+        });
+        setImmediateOnce(disposeUnmountedStates);
         combineFn(state.dispose.splice(0))();
         state.flush();
-        state.states = {};
         state.pending = {};
     }
 });

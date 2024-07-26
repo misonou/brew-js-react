@@ -36,7 +36,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
     initElement: function (element, state) {
         var self = this;
         ScrollableMixinSuper.initElement.call(self, element, state);
-        self.onDispose(app.on(element, {
+        state.onDispose(app.on(element, {
             scrollIndexChange: function (e) {
                 self.pageIndex = e.newIndex;
             },

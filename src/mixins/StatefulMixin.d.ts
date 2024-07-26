@@ -9,6 +9,12 @@ export interface MixinState {
      * Additional state.
      */
     [x: string]: any;
+
+    /**
+     * Registers callback to clean up resources when the element is unmounted.
+     * @param callback A callback.
+     */
+    onDispose(callback: Zeta.UnregisterCallback): void;
 }
 
 export interface MixinRef<T extends StatefulMixin = StatefulMixin> {
@@ -29,7 +35,7 @@ export default abstract class StatefulMixin<T extends MixinState = MixinState> e
      * By default, existing values on the actual state object will be overwritten in subsequent update.
      * To handle changes, overrides the {@link StatefulMixin.mergeState} method.
      */
-    protected get state(): Exclude<Partial<T>, 'element'>;
+    protected get state(): Exclude<Partial<T>, 'element' | 'onDispose'>;
 
     /**
      * Gets an array of mounted elements which this mixin has been applied.
@@ -37,12 +43,14 @@ export default abstract class StatefulMixin<T extends MixinState = MixinState> e
     elements(): HTMLElement[];
     /**
      * Registers callback to clean up resources when the host component is unmounted.
+     * For individual element, use {@link MixinState.onDispose}.
      * @param callback A callback.
      */
     onDispose(callback: Zeta.UnregisterCallback): void;
 
     /**
      * Override this method to create state object with initial values.
+     * @deprecated Initialize state in {@link StatefulMixin.initElement} instead.
      */
     protected initState(): T;
     /**

@@ -16,7 +16,7 @@ definePrototype(LoadingStateMixin, ClassNameMixin, {
         var self = this;
         LoadingStateMixinSuper.initElement.call(self, element, state);
         getDirectiveComponent(element).enableLoadingClass = true;
-        self.onDispose(subscribeAsync(element, function (loading) {
+        state.onDispose(subscribeAsync(element, function (loading) {
             self.loading = loading || !!any(self.elements(), function (v) {
                 return v !== element && getClass(v, 'loading') === true;
             });

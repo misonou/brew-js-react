@@ -32,7 +32,7 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
     initElement: function (element, state) {
         var self = this;
         FlyoutToggleMixinSuper.initElement.call(self, element, state);
-        self.onDispose(dom.on(element, {
+        state.onDispose(dom.on(element, {
             focusin: function () {
                 triggerFlyoutAction(self, state, 'focus', self.open, [null, dom.activeElement]);
             },

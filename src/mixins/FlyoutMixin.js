@@ -82,7 +82,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     initElement: function (element, state) {
         var self = this;
         FlyoutMixinSuper.initElement.call(self, element, state);
-        self.onDispose(app.on(element, {
+        state.onDispose(app.on(element, {
             flyoutshow: function (e) {
                 valueMap.set(element, e.data);
                 self.isFlyoutOpened = true;

@@ -31,7 +31,7 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
         var self = this;
         AnimateSequenceMixinSuper.initElement.call(self, element, state);
         if (self.selector) {
-            self.onDispose(watchElements(element, self.selector, function (addedNodes) {
+            state.onDispose(watchElements(element, self.selector, function (addedNodes) {
                 $(addedNodes).attr('is-animate-sequence', '');
             }));
         }
