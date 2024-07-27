@@ -1,4 +1,4 @@
-import { definePrototype, extend, makeArray, pick } from "zeta-dom/util";
+import { definePrototype, extend, makeArray, pick, throws } from "zeta-dom/util";
 import { closeFlyout, openFlyout, toggleFlyout } from "brew-js/domAction";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
@@ -83,6 +83,9 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     },
     initElement: function (element, state) {
         var self = this;
+        if (self.elements()[1]) {
+            throws('FlyoutMixin only supports single element');
+        }
         FlyoutMixinSuper.initElement.call(self, element, state);
         state.onDispose(app.on(element, {
             flyoutshow: function (e) {

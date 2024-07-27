@@ -1,4 +1,4 @@
-import { defineHiddenProperty, definePrototype, each, extend } from "zeta-dom/util";
+import { defineHiddenProperty, definePrototype, each, extend, throws } from "zeta-dom/util";
 import { getDirectiveComponent } from "brew-js/directive";
 import { app } from "../app.js";
 import Mixin from "./Mixin.js";
@@ -42,6 +42,9 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
     },
     initElement: function (element, state) {
         var self = this;
+        if (self.elements()[1]) {
+            throws('ScrollableMixin only supports single element');
+        }
         ScrollableMixinSuper.initElement.call(self, element, state);
         state.onDispose(app.on(element, {
             scrollIndexChange: function (e) {

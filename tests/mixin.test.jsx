@@ -624,6 +624,19 @@ describe('AnimateSequenceMixin', () => {
 });
 
 describe('FlyoutMixin', () => {
+    it('should throw if it is applied to multiple elements', async () => {
+        const Component = function () {
+            const mixin = useFlyoutMixin();
+            return (<>
+                <div {...Mixin.use(mixin)}>foo</div>
+                <div {...Mixin.use(mixin)}>foo</div>
+            </>);
+        };
+        expect(() => {
+            render(<Component />);
+        }).toThrowError();
+    });
+
     it('should return flyout element', async () => {
         let mixin;
         const Component = function () {
@@ -1126,6 +1139,19 @@ describe('ScrollIntoViewMixin', () => {
 });
 
 describe('ScrollableMixin', () => {
+    it('should throw if it is applied to multiple elements', async () => {
+        const Component = function () {
+            const mixin = useScrollableMixin();
+            return (<>
+                <div {...Mixin.use(mixin)}>foo</div>
+                <div {...Mixin.use(mixin)}>foo</div>
+            </>);
+        };
+        expect(() => {
+            render(<Component />);
+        }).toThrowError();
+    });
+
     it('should return container and content element', async () => {
         let mixin;
         const Component = function () {
