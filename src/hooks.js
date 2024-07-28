@@ -137,6 +137,7 @@ export function useQueryParam(key, value, snapshotOnUpdate) {
         return equal(current, params) || !(ref.current = params);
     });
     var setParams = useMemoizedFunction(function (values) {
+        var current = ref.current;
         if (key !== false) {
             values = kv(key, isFunction(values) ? values(current[key]) : values);
         } else if (isFunction(values)) {
