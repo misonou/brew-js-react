@@ -1,4 +1,4 @@
-/*! brew-js-react v0.5.7 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.6.0 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("react"), require("react-dom"), require("brew-js"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -249,12 +249,10 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   util_keys = _lib$util.keys,
   kv = _lib$util.kv,
   makeArray = _lib$util.makeArray,
-  makeAsync = _lib$util.makeAsync,
   map = _lib$util.map,
   mapObject = _lib$util.mapObject,
   noop = _lib$util.noop,
   pick = _lib$util.pick,
-  pipe = _lib$util.pipe,
   randomId = _lib$util.randomId,
   resolve = _lib$util.resolve,
   resolveAll = _lib$util.resolveAll,
@@ -262,6 +260,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   setImmediateOnce = _lib$util.setImmediateOnce,
   single = _lib$util.single,
   throwNotFunction = _lib$util.throwNotFunction,
+  _throws = _lib$util["throws"],
   watch = _lib$util.watch,
   watchable = _lib$util.watchable;
 
@@ -296,12 +295,15 @@ var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
 
 var dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
 /* harmony default export */ const zeta_dom_dom = (dom);
+var reportError = dom.reportError;
+
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/domLock.js
 
 var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
   lock = _lib$dom.lock,
   notifyAsync = _lib$dom.notifyAsync,
   preventLeave = _lib$dom.preventLeave,
+  runAsync = _lib$dom.runAsync,
   subscribeAsync = _lib$dom.subscribeAsync;
 
 // EXTERNAL MODULE: external {"commonjs":"brew-js","commonjs2":"brew-js","amd":"brew-js","root":"brew"}
@@ -328,7 +330,7 @@ var closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_b
 function createDialog(props) {
   var root = document.createElement('div');
   var reactRoot = fallback.createRoot(root);
-  var _closeDialog = closeFlyout.bind(0, root);
+  var closeDialog = closeFlyout.bind(0, root);
   var promise;
   zeta_dom_dom.on(root, {
     flyoutshow: function flyoutshow() {
@@ -347,7 +349,7 @@ function createDialog(props) {
   subscribeAsync(root, true);
   return {
     root: root,
-    close: _closeDialog,
+    close: closeDialog,
     open: function open() {
       if (promise) {
         return promise;
@@ -360,11 +362,9 @@ function createDialog(props) {
       }
       if (props.onRender) {
         var dialogProps = extend({}, props, {
-          closeDialog: function closeDialog(value) {
-            var promise = makeAsync(props.onCommit || pipe)(value);
-            notifyAsync(zeta_dom_dom.activeElement, promise);
-            return promise.then(_closeDialog);
-          }
+          closeDialog: props.onCommit ? function (value) {
+            return runAsync(zeta_dom_dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
+          } : closeDialog
         });
         var content = /*#__PURE__*/createElement(props.onRender, dialogProps);
         if (props.wrapper) {
@@ -419,7 +419,7 @@ var ViewStateProvider = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_reac
   useMemoizedFunction = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useMemoizedFunction,
   useObservableProperty = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useObservableProperty,
   useSingleton = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useSingleton,
-  useUpdateTrigger = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useUpdateTrigger;
+  useValueTrigger = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useValueTrigger;
 
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/events.js
 
@@ -536,7 +536,7 @@ function ViewContext(view, page, parent) {
 definePrototype(ViewContext, {
   getChildren: function getChildren() {
     return map(_(this).children, function (v) {
-      return v.currentState;
+      return v.currentContext;
     });
   },
   on: function on(event, handler) {
@@ -559,9 +559,7 @@ definePrototype(ErrorBoundary, Component, {
       // emit error in next tick as ref callback may yet to be invoked
       // if error is thrown synchronously in first render
       setImmediate(function () {
-        zeta_dom_dom.emit('error', self.context.container, {
-          error: error
-        }, true);
+        reportError(error, self.context.container);
       });
       // ensure promise sent to beforepageload event is resolved
       self.props.onComponentLoaded();
@@ -609,7 +607,7 @@ definePrototype(ViewContainer, Component, {
       arrRemove(parent, self);
       unwatch();
       setImmediate(function () {
-        if (self.unmountView && !self.currentState.active) {
+        if (self.unmountView && !self.currentContext.active) {
           self.unmountView();
         }
       });
@@ -641,20 +639,21 @@ definePrototype(ViewContainer, Component, {
     }
     if (V && viewChanged) {
       (self.unmountView || noop)(true);
-      var state = new ViewContext(V, app_app.page, self.context);
+      var context = new ViewContext(V, app_app.page, self.context);
+      var state = routeMap.get(V);
       var onComponentLoaded;
       var promise = new Promise(function (resolve) {
         onComponentLoaded = resolve;
       });
       var unmountView = onComponentLoaded;
       var initElement = executeOnce(function (element) {
-        state.container = element;
+        context.container = element;
         promise.then(function () {
-          if (self.currentState === state) {
+          if (self.currentContext === context) {
             unmountView = function unmountView() {
               self.prevView = self.currentView;
               app_app.emit('pageleave', element, {
-                pathname: state.page.path,
+                pathname: context.page.path,
                 view: V
               }, true);
               animateOut(element, 'show').then(function () {
@@ -664,21 +663,23 @@ definePrototype(ViewContainer, Component, {
             };
             animateIn(element, 'show', '[brew-view]', true);
             app_app.emit('pageenter', element, {
-              pathname: state.page.path,
+              pathname: context.page.path,
               view: V
             }, true);
           }
         });
         notifyAsync(element, promise);
       });
-      var viewProps = freeze({
-        navigationType: view_event.navigationType,
-        viewContext: state,
-        viewData: view_event.data || {}
-      });
+      var viewProps = function viewProps() {
+        return freeze({
+          navigationType: view_event.navigationType,
+          viewContext: context,
+          viewData: context.page.data || {}
+        });
+      };
       var view = /*#__PURE__*/createElement(StateContext.Provider, {
-        key: routeMap.get(V).id,
-        value: state
+        key: state.id,
+        value: context
       }, /*#__PURE__*/createElement(ViewStateContainer, null, /*#__PURE__*/createElement('div', extend({}, self.props.rootProps, {
         ref: initElement,
         'brew-view': ''
@@ -686,17 +687,17 @@ definePrototype(ViewContainer, Component, {
         onComponentLoaded: onComponentLoaded,
         viewProps: viewProps
       }))));
-      extend(self, _(state), {
-        currentState: state,
+      extend(self, _(context), {
+        currentContext: context,
         currentView: view,
         currentViewComponent: V,
         unmountView: executeOnce(function () {
           self.setActive(false);
-          routeMap.get(V).rendered--;
+          state.rendered--;
           unmountView();
         })
       });
-      routeMap.get(V).rendered++;
+      state.rendered++;
       (view_event.waitFor || noop)(promise);
     }
     (self.setPage || noop)(app_app.page);
@@ -756,19 +757,24 @@ function createViewComponent(factory) {
     factory = createElement.bind(null, factory);
   }
   return function fn(props) {
-    var viewProps = props.viewProps;
-    var children = !promise && factory(viewProps);
+    var viewContext = useContext(StateContext);
+    var viewProps = useState(props.viewProps);
+    var children = !promise && factory(viewProps[0]);
     if (isThenable(children)) {
       promise = children;
       children = null;
       catchAsync(promise);
     }
     var state = useAsync(function () {
-      return promise.then(function (s) {
-        return /*#__PURE__*/createElement(s["default"], viewProps);
-      });
+      return promise;
     }, !!promise)[1];
     var loaded = !promise || !state.loading;
+    useEffect(function () {
+      // listen to property directly so that it is invoked after pagechange event handlers in actual component
+      return watch(viewContext, 'page', function () {
+        viewProps[1](props.viewProps);
+      });
+    }, []);
     useEffect(function () {
       if (loaded) {
         setImmediate(props.onComponentLoaded);
@@ -777,7 +783,7 @@ function createViewComponent(factory) {
     if (state.error) {
       throw state.error;
     }
-    return children || state.value || /*#__PURE__*/createElement(Fragment);
+    return children || (state.value ? /*#__PURE__*/createElement(state.value["default"], viewProps[0]) : null);
   };
 }
 function useViewContext() {
@@ -936,20 +942,15 @@ function useRouteParam(name, defaultValue) {
   var container = useViewContext();
   var params = container.page.params;
   var value = params[name] || '';
-  var ref = useRef(value);
-  var forceUpdate = useUpdateTrigger();
+  var notifyChange = useValueTrigger(value);
   useEffect(function () {
     var setValue = function setValue() {
-      var current = container.page.params[name] || '';
-      if (current !== ref.current) {
-        forceUpdate();
-      }
+      notifyChange(container.page.params[name] || '');
     };
     // route parameter might be changed after state initialization and before useEffect hook is called
     setValue();
     return container.on('pagechange', setValue);
   }, [name]);
-  ref.current = value;
   if (defaultValue && container.active && (!value || name === 'remainingSegments' && value === '/')) {
     app_app.navigate(app_app.route.getPath(extend({}, params, kv(name, defaultValue))), true);
   }
@@ -979,22 +980,20 @@ function useQueryParam(key, value, snapshotOnUpdate) {
   }
   var container = useViewContext();
   var getParams = function getParams() {
-    return mapObject(key === false ? value : kv(key, value), function (v, i) {
+    return freeze(mapObject(key === false ? value : kv(key, value), function (v, i) {
       return getQueryParam(i, app_app.path) || v || '';
-    });
+    }));
   };
-  var state = useState([]);
+  var ref = useRef({});
   useMemo(function () {
-    state[0].splice(0, 2, getParams());
+    ref.current = getParams();
   }, [key]);
-  var current = state[0][0];
-  var trackChanges = function trackChanges(values) {
-    if (!equal(values, current)) {
-      extend(current, values);
-      state[1]([current]);
-    }
-  };
+  var current = ref.current;
+  var notifyChange = useValueTrigger(current, function (current, params) {
+    return equal(current, params) || !(ref.current = params);
+  });
   var setParams = useMemoizedFunction(function (values) {
+    var current = ref.current;
     if (key !== false) {
       values = kv(key, isFunction(values) ? values(current[key]) : values);
     } else if (isFunction(values)) {
@@ -1009,19 +1008,19 @@ function useQueryParam(key, value, snapshotOnUpdate) {
         if (snapshotOnUpdate) {
           app_app.snapshot();
         }
-        catchAsync(app_app.navigate(search + url.hash, true));
-        trackChanges(getParams());
+        catchAsync(app_app.navigate((search || '?') + url.hash, true));
+        notifyChange(getParams());
       }
     }
   });
   useEffect(function () {
     return app_app.watch('path', function () {
       if (container.active) {
-        trackChanges(getParams());
+        notifyChange(getParams());
       }
     });
   }, [key]);
-  return [key !== false ? current[key] : state[0][1] || (state[0][1] = freeze(extend({}, current))), setParams];
+  return [key !== false ? current[key] : current, setParams];
 }
 function ViewStateContainer(props) {
   var cache = useState({})[0];
@@ -1221,6 +1220,22 @@ var observe_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
 
 
 var StatefulMixin_ = createPrivateStore();
+var unmounted = new Set();
+function disposeUnmountedStates() {
+  each(unmounted, function (i, v) {
+    combineFn(StatefulMixin_(v).splice(0))();
+  });
+  unmounted.clear();
+}
+function MixinState(parent, element) {
+  StatefulMixin_(this, [parent["delete"].bind(parent, element)]);
+  parent.set(element, this);
+}
+definePrototype(MixinState, {
+  onDispose: function onDispose(callback) {
+    StatefulMixin_(this).push(throwNotFunction(callback));
+  }
+});
 function MixinRefImpl(mixin) {
   this.mixin = mixin;
 }
@@ -1233,8 +1248,8 @@ function StatefulMixin() {
   Mixin.call(this);
   StatefulMixin_(this, {
     pending: {},
-    elements: new Set(),
-    states: new WeakMap(),
+    elements: [],
+    states: new Map(),
     flush: watch(this, false),
     dispose: []
   });
@@ -1259,36 +1274,37 @@ definePrototype(StatefulMixin, Mixin, {
     var self = this;
     var obj = StatefulMixin_(self);
     var newState = obj.pending;
-    var state;
+    var element, state;
     return function (current) {
       if (current) {
-        state = obj.states.get(current) || extend(self.initState(), newState);
-        if (state.element !== current) {
-          state.element = current;
-          self.initElement(current, state);
-          obj.states.set(current, state);
+        element = current;
+        state = obj.states.get(element) || new MixinState(obj.states, element);
+        obj.elements.push(element);
+        if (!state.element) {
+          self.initElement(element, extend(state, self.initState(), newState, {
+            element: element
+          }));
         } else if (util_keys(newState)[0]) {
-          self.mergeState(current, state, newState);
+          self.mergeState(element, state, newState);
         }
-        self.onLayoutEffect(current, state);
-        obj.elements.add(current);
+        self.onLayoutEffect(element, state);
+        unmounted["delete"](state);
       } else if (state) {
-        var prev = state.element;
-        self.onBeforeUpdate(prev, state);
-        obj.elements["delete"](prev);
+        unmounted.add(state);
+        self.onBeforeUpdate(element, state);
+        arrRemove(obj.elements, element);
       }
+      setImmediateOnce(disposeUnmountedStates);
     };
   },
   elements: function elements() {
-    return map(StatefulMixin_(this).elements, pipe);
+    return StatefulMixin_(this).elements.slice();
   },
   onDispose: function onDispose(callback) {
     StatefulMixin_(this).dispose.push(callback);
   },
   initState: function initState() {
-    return {
-      element: null
-    };
+    return {};
   },
   initElement: function initElement(element, state) {},
   mergeState: function mergeState(element, state, newState) {
@@ -1301,9 +1317,12 @@ definePrototype(StatefulMixin, Mixin, {
   },
   dispose: function dispose() {
     var state = StatefulMixin_(this);
+    each(state.states, function (i, v) {
+      unmounted.add(v);
+    });
+    setImmediateOnce(disposeUnmountedStates);
     combineFn(state.dispose.splice(0))();
     state.flush();
-    state.states = {};
     state.pending = {};
   }
 });
@@ -1328,18 +1347,13 @@ function ClassNameMixin(classNames) {
   this.classNames = classNames || [];
 }
 definePrototype(ClassNameMixin, StatefulMixin, {
-  initState: function initState() {
-    return {
-      element: null,
-      classNames: fill(this.classNames, false)
-    };
-  },
   initElement: function initElement(element, state) {
     var self = this;
+    state.classNames = fill(self.classNames, false);
     checkState(self, element, state);
-    watchOwnAttributes(element, 'class', function () {
+    state.onDispose(watchOwnAttributes(element, 'class', function () {
       checkState(self, element, state, true);
-    });
+    }).dispose);
   },
   onLayoutEffect: function onLayoutEffect(element, state) {
     setClass(element, state.classNames);
@@ -1432,9 +1446,9 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
     var self = this;
     AnimateSequenceMixinSuper.initElement.call(self, element, state);
     if (self.selector) {
-      self.onDispose(watchElements(element, self.selector, function (addedNodes) {
+      state.onDispose(watchElements(element, self.selector, function (addedNodes) {
         external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_(addedNodes).attr('is-animate-sequence', '');
-      }));
+      }).dispose);
     }
   }
 });
@@ -1491,7 +1505,7 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
   initElement: function initElement(element, state) {
     var self = this;
     FlyoutToggleMixinSuper.initElement.call(self, element, state);
-    self.onDispose(zeta_dom_dom.on(element, {
+    state.onDispose(zeta_dom_dom.on(element, {
       focusin: function focusin() {
         triggerFlyoutAction(self, state, 'focus', self.open, [null, zeta_dom_dom.activeElement]);
       },
@@ -1529,6 +1543,9 @@ function FlyoutMixin() {
   });
 }
 definePrototype(FlyoutMixin, ClassNameMixin, {
+  get element() {
+    return this.elements()[0] || null;
+  },
   getOptions: function getOptions() {
     var self = this;
     var options = pick(self, ['closeOnBlur']);
@@ -1561,19 +1578,18 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     });
   },
   open: function open(value, source) {
-    return openFlyout(this.elements()[0], value, source, this.getOptions());
+    return openFlyout(this.element, value, source, this.getOptions());
   },
   close: function close(value) {
-    return closeFlyout(this.elements()[0], value);
+    return closeFlyout(this.element, value);
   },
   toggleSelf: function toggleSelf(source) {
-    return toggleFlyout(this.elements()[0], source, this.getOptions());
+    return toggleFlyout(this.element, source, this.getOptions());
   },
   onOpen: function onOpen(callback) {
-    var element = this.elements()[0];
     return this.onToggleState(function (opened) {
       if (opened) {
-        return callback(valueMap.get(element));
+        callback(valueMap.get(this.element));
       }
     });
   },
@@ -1585,8 +1601,11 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
   },
   initElement: function initElement(element, state) {
     var self = this;
+    if (self.elements()[1]) {
+      _throws('FlyoutMixin only supports single element');
+    }
     FlyoutMixinSuper.initElement.call(self, element, state);
-    self.onDispose(app_app.on(element, {
+    state.onDispose(app_app.on(element, {
       flyoutshow: function flyoutshow(e) {
         valueMap.set(element, e.data);
         self.isFlyoutOpened = true;
@@ -1630,7 +1649,7 @@ definePrototype(FocusStateMixin, StatefulMixin, {
         callback(arg || target);
       }
     };
-    this.onDispose(zeta_dom_dom.on(element, {
+    state.onDispose(zeta_dom_dom.on(element, {
       focusin: function focusin(e) {
         state.focused = e.source;
         setClass(element, 'focused', e.source);
@@ -1669,7 +1688,7 @@ definePrototype(LoadingStateMixin, ClassNameMixin, {
     var self = this;
     LoadingStateMixinSuper.initElement.call(self, element, state);
     getDirectiveComponent(element).enableLoadingClass = true;
-    self.onDispose(subscribeAsync(element, function (loading) {
+    state.onDispose(subscribeAsync(element, function (loading) {
       self.loading = loading || !!any(self.elements(), function (v) {
         return v !== element && getClass(v, 'loading') === true;
       });
@@ -1691,6 +1710,13 @@ function ScrollableMixin() {
   self.scrolling = false;
 }
 definePrototype(ScrollableMixin, ClassNameMixin, {
+  get element() {
+    return this.elements()[0] || null;
+  },
+  get contentElement() {
+    var element = this.element;
+    return element && getDirectiveComponent(element).scrollable.scrollTarget;
+  },
   withOptions: function withOptions(options) {
     this.options = options;
     return this;
@@ -1711,8 +1737,11 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
   },
   initElement: function initElement(element, state) {
     var self = this;
+    if (self.elements()[1]) {
+      _throws('ScrollableMixin only supports single element');
+    }
     ScrollableMixinSuper.initElement.call(self, element, state);
-    self.onDispose(app_app.on(element, {
+    state.onDispose(app_app.on(element, {
       scrollIndexChange: function scrollIndexChange(e) {
         self.pageIndex = e.newIndex;
       },
@@ -1727,7 +1756,7 @@ definePrototype(ScrollableMixin, ClassNameMixin, {
 });
 each('destroy enable disable setOptions setStickyPosition refresh scrollPadding stop scrollLeft scrollTop scrollBy scrollTo scrollByPage scrollToPage scrollToElement', function (i, v) {
   defineHiddenProperty(ScrollableMixin.prototype, v, function () {
-    var obj = getDirectiveComponent(this.elements()[0]);
+    var obj = getDirectiveComponent(this.element);
     return obj.scrollable[v].apply(null, arguments);
   });
 });
