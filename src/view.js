@@ -28,23 +28,16 @@ onAppInit(function () {
         rootState.setPage(app.page);
         rootState.setActive(true);
         event = e;
-        e.waitFor(new Promise(function (resolve) {
-            (function updateViewRecursive(next) {
-                if (!next[0]) {
-                    return resolve();
-                }
-                resolveAll(map(next, function (v) {
-                    return new Promise(function (resolve) {
-                        v.onRender = resolve;
-                        v.forceUpdate();
-                    });
-                })).then(function () {
-                    updateViewRecursive(map(next, function (v) {
-                        return v.children;
-                    }));
-                });
-            })(rootState.children);
-        }));
+        (function updateViewRecursive(next) {
+            each(next.children, function (i, v) {
+                e.waitFor(new Promise(function (resolve) {
+                    v.onRender = resolve;
+                    v.forceUpdate();
+                }).then(function () {
+                    updateViewRecursive(v);
+                }));
+            });
+        })(rootState);
     });
 });
 
