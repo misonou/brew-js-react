@@ -1,4 +1,4 @@
-import { createElement, useEffect, useState } from "react";
+import { createElement, StrictMode, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import ReactDOMClient from "@misonou/react-dom-client";
 import { either, extend, noop, pick, resolve } from "zeta-dom/util";
@@ -55,7 +55,7 @@ export function createDialog(props) {
                 if (props.wrapper) {
                     content = createElement(props.wrapper, dialogProps, content);
                 }
-                reactRoot.render(content);
+                reactRoot.render(createElement(StrictMode, null, content));
             }
             promise = resolve().then(function () {
                 return openFlyout(root, null, pick(props, ['focus']));
