@@ -4,6 +4,8 @@ import Mixin from "./Mixin";
 import { AnimationEffect } from "./AnimateMixin";
 import { useFlyoutMixin } from "../mixin";
 
+export type HintedType<T> = T | {} | number | string | boolean | symbol | bigint | null | undefined;
+
 export interface FlyoutMixinOptions {
     /**
      * Whether flyout is modal.
@@ -34,7 +36,7 @@ export interface FlyoutMixinOptions {
  *
  * Mixin should be created using {@link useFlyoutMixin} and applied to element by {@link Mixin.use}.
  */
-export default class FlyoutMixin extends ClassNameMixin {
+export default class FlyoutMixin<S = any, R = any> extends ClassNameMixin {
     /**
      * Gets the flyout element.
      */
@@ -56,7 +58,7 @@ export default class FlyoutMixin extends ClassNameMixin {
      * Gets a {@link FlyoutToggleMixin} object that when applied to an element,
      * clicking that element will toggle the flyout.
      */
-    readonly toggle: FlyoutToggleMixin;
+    readonly toggle: FlyoutToggleMixin<S, R>;
     /**
      * Whether flyout content, or what element, by specifying CSS selector, will be initially focused.
      * Default is `true` if source element is not an text input element.
@@ -77,7 +79,7 @@ export default class FlyoutMixin extends ClassNameMixin {
      * Adds a listener to handle the opening of the flyout.
      * @param callback Callback to be called, receiving value passed to {@link FlyoutMixin.open}.
      */
-    onOpen(callback: (state: any) => void): Zeta.UnregisterCallback;
+    onOpen(callback: (state: HintedType<S>) => void): Zeta.UnregisterCallback;
     /**
      * Adds a listener to monitor the opening and closing of the flyout.
      * It differs from {@link FlyoutMixin.onVisibilityChanged} that the callback is called immediately when the flyout is being closed.
@@ -96,17 +98,17 @@ export default class FlyoutMixin extends ClassNameMixin {
      * @param source Source element that triggered the flyout.
      * @returns A promise that resolves when the flyout is being closed.
      */
-    open(state?: any, source?: Element): Promise<any>;
+    open(state?: S, source?: Element): Promise<HintedType<R>>;
     /**
      * Closes the flyout.
      * @param state Value to be sent to the promise returned by {@link FlyoutMixin.open}.
      * @returns A promise that resolves after closing animation completes.
      */
-    close(state?: any): Promise<void>;
+    close(state?: R): Promise<void>;
     /**
      * Toggles the flyout.
      * @param source Source element which triggered the flyout.
      * @returns A promise that resolves when the flyout is being closed.
      */
-    toggleSelf(source?: Element): Promise<any>;
+    toggleSelf(source?: Element): Promise<HintedType<R>>;
 }

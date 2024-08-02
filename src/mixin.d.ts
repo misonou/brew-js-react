@@ -56,7 +56,7 @@ export function useScrollIntoViewMixin(): ScrollIntoViewMixin;
  * Returns a mixin that provides methods controlling the applied element as a flyout.
  * @param options A dictionary specifying options.
  */
-export function useFlyoutMixin(options?: FlyoutMixinOptions): FlyoutMixin;
+export function useFlyoutMixin<S = any, R = any>(options?: FlyoutMixinOptions): FlyoutMixin<S, R>;
 
 /**
  * Returns a mixin that enables intro and/or outro animation for applied elements.
