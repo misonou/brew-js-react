@@ -41,7 +41,6 @@ export function createDialog(props) {
             }
             root.className = props.className || '';
             document.body.appendChild(root);
-            dom.retainFocus(dom.activeElement, root);
             if (props.modal) {
                 root.setAttribute('is-modal', '');
             }
@@ -58,6 +57,7 @@ export function createDialog(props) {
                 reactRoot.render(createElement(StrictMode, null, content));
             }
             promise = resolve().then(function () {
+                dom.retainFocus(dom.activeElement, root);
                 return openFlyout(root, null, pick(props, ['focus']));
             });
             if (props.preventLeave) {
