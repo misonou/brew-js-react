@@ -26,8 +26,8 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
     close: function (value) {
         return this.flyoutMixin.close(value);
     },
-    toggle: function (source) {
-        return this.flyoutMixin.toggleSelf(source);
+    toggle: function (flag, source) {
+        return this.flyoutMixin.toggleSelf(flag, source);
     },
     initElement: function (element, state) {
         var self = this;

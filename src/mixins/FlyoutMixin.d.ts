@@ -111,4 +111,11 @@ export default class FlyoutMixin<S = any, R = any> extends ClassNameMixin {
      * @returns A promise that resolves when the flyout is being closed.
      */
     toggleSelf(source?: Element): Promise<HintedType<R>>;
+    /**
+     * Toggles the flyout.
+     * @param flag Whether the flyout should be open or closed.
+     * @param source Source element which triggered the flyout.
+     * @returns A promise that resolves when the flyout is being closed.
+     */
+    toggleSelf(flag: boolean, source?: Element): Promise<HintedType<R>>;
 }

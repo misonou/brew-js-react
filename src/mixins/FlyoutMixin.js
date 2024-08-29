@@ -1,11 +1,19 @@
-import { definePrototype, extend, makeArray, pick, throws } from "zeta-dom/util";
-import { closeFlyout, openFlyout, toggleFlyout } from "brew-js/domAction";
+import { definePrototype, extend, makeArray, pick, resolve, throws } from "zeta-dom/util";
+import { closeFlyout, isFlyoutOpen, openFlyout, toggleFlyout } from "brew-js/domAction";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
 import FlyoutToggleMixin from "./FlyoutToggleMixin.js";
 
 const FlyoutMixinSuper = ClassNameMixin.prototype;
 const valueMap = new WeakMap();
+
+function toggleSelf(self, flag, value, source) {
+    if (!flag && !isFlyoutOpen(self.element)) {
+        return resolve();
+    }
+    var options = self.getOptions();
+    return flag ? openFlyout(self.element, value, source, options) : toggleFlyout(self.element, source, options);
+}
 
 export default function FlyoutMixin() {
     var self = this;
@@ -60,13 +68,17 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
         });
     },
     open: function (value, source) {
-        return openFlyout(this.element, value, source, this.getOptions());
+        return toggleSelf(this, true, value, source);
     },
     close: function (value) {
         return closeFlyout(this.element, value);
     },
-    toggleSelf: function (source) {
-        return toggleFlyout(this.element, source, this.getOptions());
+    toggleSelf: function (flag, source) {
+        if (typeof flag !== 'boolean') {
+            source = flag;
+            flag = !isFlyoutOpen(this.element);
+        }
+        return toggleSelf(this, flag, undefined, source);
     },
     onOpen: function (callback) {
         return this.onToggleState(function (opened) {
