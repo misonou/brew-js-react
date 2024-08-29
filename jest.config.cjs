@@ -10,7 +10,8 @@ const config = {
     "moduleNameMapper": {
         "^src/(.*)$": "<rootDir>/src/$1",
         "^react$": "<rootDir>/node_modules/react",
-        "^react-dom$": "<rootDir>/node_modules/react-dom"
+        "^react-dom$": "<rootDir>/node_modules/react-dom",
+        "^react-dom/client$": "<rootDir>/node_modules/react-dom/client"
     },
     "clearMocks": true,
     "extensionsToTreatAsEsm": [
@@ -40,7 +41,8 @@ if (REACT_VERSION) {
     config.moduleNameMapper = {
         ...config.moduleNameMapper,
         "^react$": `${runtimeDir}/node_modules/react`,
-        "^react-dom$": `${runtimeDir}/node_modules/react-dom`
+        "^react-dom$": `${runtimeDir}/node_modules/react-dom`,
+        "^react-dom/client$": `${runtimeDir}/node_modules/react-dom/client`
     };
     config.moduleDirectories = [
         `${runtimeDir}/node_modules`,
