@@ -1,4 +1,4 @@
-/*! brew-js-react v0.6.0 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.6.1 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("react"), require("react-dom"), require("brew-js"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -270,6 +270,7 @@ var external_commonjs_react_commonjs2_react_amd_react_root_React_ = __webpack_re
 
 var Component = external_commonjs_react_commonjs2_react_amd_react_root_React_.Component,
   Fragment = external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment,
+  StrictMode = external_commonjs_react_commonjs2_react_amd_react_root_React_.StrictMode,
   createContext = external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext,
   createElement = external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement,
   useContext = external_commonjs_react_commonjs2_react_amd_react_root_React_.useContext,
@@ -311,6 +312,7 @@ var external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_ = __webpa
 ;// CONCATENATED MODULE: ./|umd|/brew-js/domAction.js
 
 var closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.closeFlyout,
+  isFlyoutOpen = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.isFlyoutOpen,
   openFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.openFlyout,
   toggleFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toggleFlyout;
 
@@ -356,7 +358,6 @@ function createDialog(props) {
       }
       root.className = props.className || '';
       document.body.appendChild(root);
-      zeta_dom_dom.retainFocus(zeta_dom_dom.activeElement, root);
       if (props.modal) {
         root.setAttribute('is-modal', '');
       }
@@ -370,9 +371,10 @@ function createDialog(props) {
         if (props.wrapper) {
           content = /*#__PURE__*/createElement(props.wrapper, dialogProps, content);
         }
-        reactRoot.render(content);
+        reactRoot.render( /*#__PURE__*/createElement(StrictMode, null, content));
       }
       promise = resolve().then(function () {
+        zeta_dom_dom.retainFocus(zeta_dom_dom.activeElement, root);
         return openFlyout(root, null, pick(props, ['focus']));
       });
       if (props.preventLeave) {
@@ -496,23 +498,16 @@ onAppInit(function () {
     rootState.setPage(app_app.page);
     rootState.setActive(true);
     view_event = e;
-    e.waitFor(new Promise(function (resolve) {
-      (function updateViewRecursive(next) {
-        if (!next[0]) {
-          return resolve();
-        }
-        resolveAll(map(next, function (v) {
-          return new Promise(function (resolve) {
-            v.onRender = resolve;
-            v.forceUpdate();
-          });
-        })).then(function () {
-          updateViewRecursive(map(next, function (v) {
-            return v.children;
-          }));
-        });
-      })(rootState.children);
-    }));
+    (function updateViewRecursive(next) {
+      each(next.children, function (i, v) {
+        e.waitFor(new Promise(function (resolve) {
+          v.onRender = resolve;
+          v.forceUpdate();
+        }).then(function () {
+          updateViewRecursive(v);
+        }));
+      });
+    })(rootState);
   });
 });
 function ViewContext(view, page, parent) {
@@ -1499,8 +1494,8 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
   close: function close(value) {
     return this.flyoutMixin.close(value);
   },
-  toggle: function toggle(source) {
-    return this.flyoutMixin.toggleSelf(source);
+  toggle: function toggle(flag, source) {
+    return this.flyoutMixin.toggleSelf(flag, source);
   },
   initElement: function initElement(element, state) {
     var self = this;
@@ -1526,6 +1521,13 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
 
 var FlyoutMixinSuper = ClassNameMixin.prototype;
 var valueMap = new WeakMap();
+function _toggleSelf(self, flag, value, source) {
+  if (!flag && !isFlyoutOpen(self.element)) {
+    return resolve();
+  }
+  var options = self.getOptions();
+  return flag ? openFlyout(self.element, value, source, options) : toggleFlyout(self.element, source, options);
+}
 function FlyoutMixin() {
   var self = this;
   ClassNameMixin.call(self, ['open', 'closing', 'visible', 'tweening-in', 'tweening-out']);
@@ -1578,13 +1580,17 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     });
   },
   open: function open(value, source) {
-    return openFlyout(this.element, value, source, this.getOptions());
+    return _toggleSelf(this, true, value, source);
   },
   close: function close(value) {
     return closeFlyout(this.element, value);
   },
-  toggleSelf: function toggleSelf(source) {
-    return toggleFlyout(this.element, source, this.getOptions());
+  toggleSelf: function toggleSelf(flag, source) {
+    if (typeof flag !== 'boolean') {
+      source = flag;
+      flag = !isFlyoutOpen(this.element);
+    }
+    return _toggleSelf(this, flag, undefined, source);
   },
   onOpen: function onOpen(callback) {
     return this.onToggleState(function (opened) {
