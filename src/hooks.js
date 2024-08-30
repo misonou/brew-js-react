@@ -1,5 +1,5 @@
 import { createElement, useEffect, useMemo, useRef, useState } from "react";
-import { ViewStateProvider, useMemoizedFunction, useObservableProperty, useValueTrigger } from "zeta-dom-react";
+import { ViewStateProvider, useEagerState, useMemoizedFunction, useObservableProperty, useValueTrigger } from "zeta-dom-react";
 import { catchAsync, definePrototype, delay, each, equal, extend, freeze, isFunction, isPlainObject, keys, kv, mapObject, throwNotFunction } from "zeta-dom/util";
 import { ZetaEventContainer } from "zeta-dom/events";
 import { getQueryParam, setQueryParam } from "brew-js/util/common";
@@ -101,7 +101,7 @@ export function useRouteParam(name, defaultValue) {
 
 export function useRouteState(key, defaultValue, snapshotOnUpdate) {
     var cur = getCurrentStates();
-    var state = useState(cur && cur.has(key) ? cur.get(key) : defaultValue);
+    var state = useEagerState(cur && cur.has(key) ? cur.get(key) : defaultValue);
     var container = useViewContextWithEffect(function (cur) {
         state[1](function (oldValue) {
             return cur.has(key) ? cur.get(key) : (cur.set(key, oldValue), oldValue);
