@@ -1,3 +1,5 @@
+export type SetQueryParamAction<T> = Partial<T> | ((prev: Readonly<T>) => Partial<T>);
+
 export const ViewStateContainer: React.FC;
 
 /**
@@ -57,4 +59,4 @@ export function useQueryParam(name: string, defaultValue: string, snapshotOnUpda
  * @param dict A dictionary containing parameter names and associated default values.
  * @param snapshotOnUpdate Whether to create snapshot in browser's history when query parameter is updated. Default is `false`.
  */
-export function useQueryParam<T extends Zeta.Dictionary<string>>(dict: T, snapshotOnUpdate?: boolean): [Readonly<T>, React.Dispatch<React.SetStateAction<Partial<T>>>];
+export function useQueryParam<T extends Zeta.Dictionary<string>>(dict: T, snapshotOnUpdate?: boolean): [Readonly<T>, React.Dispatch<SetQueryParamAction<T>>];
