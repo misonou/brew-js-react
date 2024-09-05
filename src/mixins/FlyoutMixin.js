@@ -38,7 +38,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     },
     getOptions: function () {
         var self = this;
-        var options = pick(self, ['closeOnBlur']);
+        var options = pick(self, ['closeOnBlur', 'containment']);
         if (self.initialFocus !== undefined) {
             options.focus = self.initialFocus;
         }

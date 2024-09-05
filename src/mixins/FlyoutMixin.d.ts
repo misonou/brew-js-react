@@ -29,6 +29,14 @@ export interface FlyoutMixinOptions {
      * Default is `true` if flyout is not dismissible by swipe gesture.
      */
     closeOnBlur?: boolean;
+    /**
+     * Specifies that the flyout should remain its state unless user is interacting
+     * within the specified element.
+     *
+     * This options is used in conjunction with {@link FlyoutMixinOptions.closeOnBlur}.
+     * If a CSS selector is given, it will select the closest ancestor from the flyout element.
+     */
+    containment?: string;
 }
 
 /**

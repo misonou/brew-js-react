@@ -884,6 +884,45 @@ describe('FlyoutMixin', () => {
         expect(isFlyoutOpen(flyout)).toBe(true);
         unmount();
     });
+
+    it('should not have flyout closed upon focus leaving when focus is lost to out-of-scope element', async () => {
+        let mixin;
+        const Component = function () {
+            mixin = useFlyoutMixin({ containment: '.parent' });
+            return (
+                <div>
+                    <div id="parent1" className="parent">
+                        <div id="flyout" {...Mixin.use(mixin)}></div>
+                        <div id="child"></div>
+                    </div>
+                    <div id="parent2" className="parent"></div>
+                </div>
+            );
+        };
+        const { unmount } = render(<Component />);
+        const flyout = mixin.elements()[0];
+        const parent2 = document.getElementById('parent2');
+        const child = document.getElementById('child');
+
+        await after(() => void mixin.open());
+        expect(dom.activeElement).toBe(flyout);
+
+        dom.focus(parent2);
+        expect(dom.activeElement).toBe(parent2);
+        await delay(10);
+        expect(flyout).toHaveClassName('open');
+
+        dom.focus(flyout);
+        expect(dom.activeElement).toBe(flyout);
+        await delay(10);
+        expect(flyout).toHaveClassName('open');
+
+        dom.focus(child);
+        expect(dom.activeElement).toBe(child);
+        await delay(10);
+        expect(flyout).not.toHaveClassName('open');
+        unmount();
+    });
 });
 
 describe('FlyoutToggleMixin', () => {
