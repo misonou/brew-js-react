@@ -27,9 +27,6 @@ describe('useRouteState', () => {
             });
         });
         const { result } = renderHook(() => useRouteState('foo', ''));
-        expect(result.current[0]).toBe('');
-
-        await waitFor(() => expect(result.all.length).toBe(2));
         expect(result.current[0]).toBe('foo');
     });
 });

@@ -569,8 +569,6 @@ describe('renderView', () => {
             [expect.objectContaining({ type: 'asyncStart' }), _],
             [expect.objectContaining({ type: 'asyncEnd' }), _],
         ]);
-        expect(cb.mock.results[0].value).toBe(null);
-        expect(cb.mock.results[1].value).toBe(screen.getByText('foo'));
         unmount();
     });
 

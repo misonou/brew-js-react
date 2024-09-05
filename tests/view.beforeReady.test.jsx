@@ -32,6 +32,6 @@ describe('renderView', () => {
         const Foo = registerView(() => <div>foo</div>, { view: 'foo' });
         const Bar = registerView(() => <div>bar</div>, { view: 'bar' });
         render(<div>{renderView(Foo, Bar)}</div>);
-        await expect(watchOnce(app, 'path')).resolves.toBe('/bar');
+        expect(app.path).toBe('/bar');
     });
 });
