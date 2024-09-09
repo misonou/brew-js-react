@@ -8,7 +8,11 @@ export var app;
 const appInitCallabcks = [];
 
 export function onAppInit(callback) {
-    appInitCallabcks.push(throwNotFunction(callback));
+    if (app) {
+        callback(app);
+    } else {
+        appInitCallabcks.push(throwNotFunction(callback));
+    }
 }
 
 install('react', function (app_) {

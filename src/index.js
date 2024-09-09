@@ -1,3 +1,4 @@
+import { } from "./app.js";
 import brew from "brew-js/app";
 export default brew;
 
