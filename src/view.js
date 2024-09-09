@@ -39,6 +39,7 @@ onAppInit(function () {
             });
         })(rootState);
     });
+    rootState.setPage(app.page);
 });
 
 function ViewContext(view, page, parent) {

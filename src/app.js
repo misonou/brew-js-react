@@ -1,5 +1,5 @@
 import { combineFn, throwNotFunction } from "zeta-dom/util";
-import { install } from "brew-js/app";
+import { addExtension, install } from "brew-js/app";
 import defaults from "brew-js/defaults";
 
 /** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
@@ -15,10 +15,10 @@ export function onAppInit(callback) {
     }
 }
 
-install('react', function (app_) {
-    // @ts-ignore: type inference issue
+const extension = addExtension(true, 'react2', ['?router', '?i18n'], function (app_) {
     app = app_;
     combineFn(appInitCallabcks)(app);
 });
 
+install('react', extension);
 defaults.react = true;
