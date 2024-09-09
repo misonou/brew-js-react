@@ -1,4 +1,4 @@
-/*! brew-js-react v0.6.1 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.6.2 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("react"), require("react-dom"), require("brew-js"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -418,6 +418,7 @@ var external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react
 var ViewStateProvider = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.ViewStateProvider,
   classNames = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.classNames,
   useAsync = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useAsync,
+  useEagerState = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useEagerState,
   useMemoizedFunction = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useMemoizedFunction,
   useObservableProperty = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useObservableProperty,
   useSingleton = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useSingleton,
@@ -953,7 +954,7 @@ function useRouteParam(name, defaultValue) {
 }
 function useRouteState(key, defaultValue, snapshotOnUpdate) {
   var cur = getCurrentStates();
-  var state = useState(cur && cur.has(key) ? cur.get(key) : defaultValue);
+  var state = useEagerState(cur && cur.has(key) ? cur.get(key) : defaultValue);
   var container = useViewContextWithEffect(function (cur) {
     state[1](function (oldValue) {
       return cur.has(key) ? cur.get(key) : (cur.set(key, oldValue), oldValue);
@@ -1550,7 +1551,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
   },
   getOptions: function getOptions() {
     var self = this;
-    var options = pick(self, ['closeOnBlur']);
+    var options = pick(self, ['closeOnBlur', 'containment']);
     if (self.initialFocus !== undefined) {
       options.focus = self.initialFocus;
     }
