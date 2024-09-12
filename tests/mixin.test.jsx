@@ -3,7 +3,7 @@ import { jest } from "@jest/globals";
 import { act, render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { addAnimateIn, addAnimateOut, animateIn } from "brew-js/anim";
-import { isFlyoutOpen, openFlyout } from "brew-js/domAction";
+import { closeFlyout, isFlyoutOpen, openFlyout } from "brew-js/domAction";
 import dom from "zeta-dom/dom";
 import { delay, extend, watch } from "zeta-dom/util";
 import { classNames, useUpdateTrigger } from "zeta-dom-react";
@@ -922,6 +922,71 @@ describe('FlyoutMixin', () => {
         await delay(10);
         expect(flyout).not.toHaveClassName('open');
         unmount();
+    });
+
+    it('should invoke effect supplied to whenVisible', async () => {
+        const effectCleanup = mockFn();
+        const effect = mockFn(() => effectCleanup);
+        const Component = function () {
+            const mixin = useFlyoutMixin();
+            useEffect(() => mixin.whenVisible(effect), []);
+            return (<div data-testid="flyout" {...Mixin.use(mixin.withEffects('fade-in'))} custom-anim="">test</div>);
+        };
+        const { unmount } = render(<Component />);
+        const flyout = screen.getByTestId('flyout');
+
+        openFlyout(flyout);
+        await delay(0);
+        expect(effect).toBeCalledTimes(1);
+        expect(effectCleanup).not.toBeCalled();
+
+        closeFlyout(flyout);
+        await delay(0);
+        expect(customAnimateOut).toBeCalled();
+        expect(effectCleanup).not.toBeCalled();
+
+        await customAnimateOut.mock.results[0].value;
+        await delay(0);
+        expect(effectCleanup).toBeCalledTimes(1);
+
+        unmount();
+        expect(effectCleanup).toBeCalledTimes(1);
+    });
+
+    it('should invoke effect supplied to whenVisible immediately when flyout is already open', async () => {
+        const effectCleanup = mockFn();
+        const effect = mockFn(() => effectCleanup);
+        const Component = function ({ attachEffect }) {
+            const mixin = useFlyoutMixin();
+            useEffect(() => void mixin.open(), []);
+            useEffect(() => {
+                if (attachEffect) {
+                    return mixin.whenVisible(effect);
+                }
+            }, [attachEffect]);
+            return (<div data-testid="flyout" {...Mixin.use(mixin)}>test</div>);
+        };
+        const { rerender, unmount } = render(<Component />);
+        await delay(0);
+        expect(effect).not.toBeCalled();
+
+        rerender(<Component attachEffect />);
+        expect(effect).toBeCalledTimes(1);
+        unmount();
+    });
+
+    it('should invoke effect cleanup supplied to whenVisible when flyout is unmounted', async () => {
+        const effectCleanup = mockFn();
+        const effect = mockFn(() => effectCleanup);
+        const Component = function () {
+            const mixin = useFlyoutMixin();
+            useEffect(() => void mixin.open(), []);
+            useEffect(() => mixin.whenVisible(effect), []);
+            return (<div data-testid="flyout" {...Mixin.use(mixin)}>test</div>);
+        };
+        const { unmount } = render(<Component />);
+        unmount();
+        expect(effectCleanup).toBeCalledTimes(1);
     });
 });
 

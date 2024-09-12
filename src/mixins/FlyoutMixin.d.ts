@@ -101,6 +101,11 @@ export default class FlyoutMixin<S = any, R = any> extends ClassNameMixin {
      */
     onVisibilityChanged(callback: (state: boolean) => void): Zeta.UnregisterCallback;
     /**
+     * Activates effects when flyout becomes visible.
+     * @param effect Imperative function that can return a cleanup function.
+     */
+    whenVisible(effect: React.EffectCallback): Zeta.UnregisterCallback;
+    /**
      * Opens the flyout.
      * @param state Value to be sent to listener added by {@link FlyoutMixin.onOpen}.
      * @param source Source element that triggered the flyout.

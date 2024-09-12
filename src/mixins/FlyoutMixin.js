@@ -1,4 +1,4 @@
-import { definePrototype, extend, makeArray, pick, resolve, throws } from "zeta-dom/util";
+import { combineFn, definePrototype, extend, isFunction, makeArray, noop, pick, resolve, throws } from "zeta-dom/util";
 import { closeFlyout, isFlyoutOpen, openFlyout, toggleFlyout } from "brew-js/domAction";
 import { app } from "../app.js";
 import ClassNameMixin from "./ClassNameMixin.js";
@@ -92,6 +92,13 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     },
     onVisibilityChanged: function (callback) {
         return this.watch('visible', callback);
+    },
+    whenVisible: function (effect) {
+        var dispose = [];
+        dispose[0] = this.watch('visible', function (visible) {
+            dispose[1] = (visible ? isFunction(effect()) : dispose[1] && void dispose[1]()) || noop;
+        }, true);
+        return combineFn(dispose);
     },
     initElement: function (element, state) {
         var self = this;
