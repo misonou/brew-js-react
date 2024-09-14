@@ -4,6 +4,7 @@ import { useRouteState } from "./hooks";
 
 export type ViewComponentRootProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 export type ViewComponent<P> = React.FC<ViewProps<P>>;
+export type ViewParamMatchers = Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>;
 /**
  * @deprecated Alias of {@link ViewContext}
  */
@@ -108,21 +109,14 @@ export function useViewContext(): ViewContext;
  */
 export function useViewContainerState(): ViewContainerState;
 
-/**
- * Registers view component with specific route paramters.
- * Route parameters will be matched against current route state by {@link renderView}.
- * @param factory A callback that returns a promise resolving a React component, typically using async `import`.
- * @param params A dictionary containing route parameters.
- */
-export function registerView<P>(factory: () => Promise<{ default: React.ComponentType<P> }>, params: Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>): ViewComponent<P extends ViewProps<infer S> ? S : {}>;
 
 /**
  * Registers view component with specific route paramters.
  * Route parameters will be matched against current route state by {@link renderView}.
- * @param component A React component.
+ * @param component A React component, or a callback that returns a promise resolving a React component, typically using async `import`.
  * @param params A dictionary containing route parameters.
  */
-export function registerView<P>(component: React.ComponentType<P>, params: Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>): ViewComponent<P extends ViewProps<infer S> ? S : {}>;
+export function registerView<P = ViewProps>(component: React.ComponentType<P> | (() => Promise<{ default: React.ComponentType<P>; }>), params: ViewParamMatchers): ViewComponent<P extends ViewProps<infer S> ? S : {}>;
 
 /**
  * Registers a default error view to be displayed when view component failed to render.
