@@ -442,6 +442,18 @@ describe('renderView', () => {
         unmount();
     });
 
+    it('should render view component after view container is mounted', async () => {
+        const Foo = registerView(({ viewContext }) => {
+            expect(viewContext.container).toBeTruthy();
+            return <div>foo</div>;
+        }, { view: 'foo' });
+        const { unmount } = render(<div>{renderView(Foo)}</div>);
+
+        await waitForPageLoad();
+        expect.assertions(1);
+        unmount();
+    });
+
     it('should catch and emit importing error', async () => {
         const error = new Error();
         const BarError = registerView(async () => {
@@ -577,6 +589,14 @@ describe('renderView', () => {
     });
 
     it('should notify asynchronous operation on view container', async () => {
+        const Foo = registerView(async () => {
+            await delay(10);
+            return {
+                default: () => {
+                    return <div>foo</div>;
+                }
+            };
+        }, { view: 'foo' });
         const cb = mockFn(() => screen.queryByText('foo'));
         const container = document.createElement('div');
         body.appendChild(container);
@@ -590,6 +610,21 @@ describe('renderView', () => {
             [expect.objectContaining({ type: 'asyncStart' }), _],
             [expect.objectContaining({ type: 'asyncEnd' }), _],
         ]);
+        unmount();
+    });
+
+    it('should not trigger async event if component is not async import', async () => {
+        const Foo = registerView(() => <div>foo</div>, { view: 'foo' });
+        const cb = mockFn();
+        const container = document.createElement('div');
+        body.appendChild(container);
+        dom.on(container, 'asyncStart', cb);
+        dom.on(container, 'asyncEnd', cb);
+        subscribeAsync(container);
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>, { container });
+        await waitForPageLoad();
+        expect(cb).not.toBeCalled();
         unmount();
     });
 
@@ -1213,11 +1248,11 @@ describe('ViewContext', () => {
         let context;
         const Foo = registerView(({ viewContext }) => {
             context = viewContext;
-            return <></>;
+            return <div>foo</div>;
         }, { view: 'foo' });
 
         const { unmount } = render(<div>{renderView(Foo)}</div>);
-        await delay();
+        await screen.findByText('foo');
 
         expect(context.active).toBe(true);
         unmount();

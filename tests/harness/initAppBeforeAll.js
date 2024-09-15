@@ -24,5 +24,9 @@ export default function initAppBeforeAll(callback) {
 
 export async function waitForPageLoad() {
     await delay();
-    return waitFor(() => expect(loading).toBeFalsy());
+    return waitFor(() => {
+        if (loading) {
+            throw new Error();
+        }
+    });
 }

@@ -1,9 +1,8 @@
 import { Component, Fragment, createContext, createElement, useContext, useEffect, useState } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom, { reportError } from "zeta-dom/dom";
-import { notifyAsync } from "zeta-dom/domLock";
 import { ZetaEventContainer } from "zeta-dom/events";
-import { any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isArray, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
+import { any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isArray, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
 import { animateIn, animateOut } from "brew-js/anim";
 import { removeQueryAndHash } from "brew-js/util/path";
 import { app, onAppInit } from "./app.js";
@@ -84,17 +83,19 @@ definePrototype(ErrorBoundary, Component, {
         if (errorView && !self.state.error) {
             self.setState({ error });
         } else {
-            // emit error in next tick as ref callback may yet to be invoked
-            // if error is thrown synchronously in first render
-            setImmediate(function () {
-                reportError(error, self.context.container);
-            });
             // ensure promise sent to beforepageload event is resolved
             self.props.onComponentLoaded();
+            reportError(error, self.context.container);
         }
     },
     render: function () {
         var self = this;
+        if (!self.context.container) {
+            setImmediate(function () {
+                self.forceUpdate();
+            });
+            return null;
+        }
         var props = {
             view: self.context.view,
             error: self.state.error,
@@ -186,7 +187,6 @@ definePrototype(ViewContainer, Component, {
                         app.emit('pageenter', element, { pathname: context.page.path, view: V }, true);
                     }
                 });
-                notifyAsync(element, promise);
             });
             var viewProps = function () {
                 return freeze({
@@ -284,6 +284,7 @@ function createViewComponent(factory) {
         }, !!promise)[1];
         var loaded = !promise || !state.loading;
         useEffect(function () {
+            state.elementRef(viewContext.container);
             // listen to property directly so that it is invoked after pagechange event handlers in actual component
             return watch(viewContext, 'page', function () {
                 viewProps[1](props.viewProps);
