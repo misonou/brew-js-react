@@ -1,5 +1,5 @@
 import { Component, Fragment, createContext, createElement, useContext, useEffect } from "react";
-import { useAsync } from "zeta-dom-react";
+import { createAsyncScope, useAsync } from "zeta-dom-react";
 import dom, { reportError } from "zeta-dom/dom";
 import { ZetaEventContainer } from "zeta-dom/events";
 import { any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isArray, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
@@ -104,6 +104,7 @@ definePrototype(ErrorBoundary, Component, {
             return null;
         }
         var error = self.state.error;
+        var scope = self.scope || (self.scope = createAsyncScope(context.container));
         var childProps = {
             onLoad: self.props.onLoad,
             onError: self.componentDidCatch.bind(self),
@@ -112,12 +113,13 @@ definePrototype(ErrorBoundary, Component, {
                 error: error,
                 reset: self.reset.bind(self)
             } : {
+                errorHandler: scope.errorHandler,
                 navigationType: event.navigationType,
                 viewContext: context,
                 viewData: context.page.data || {}
             }
         };
-        return createElement(error ? errorView : context.view, childProps);
+        return createElement(scope.Provider, null, createElement(error ? errorView : context.view, childProps));
     },
     reset: function () {
         this.setState({ error: null });
@@ -275,7 +277,6 @@ function createViewComponent(factory) {
         factory = createElement.bind(null, factory);
     }
     return function fn(props) {
-        var viewContext = useContext(StateContext);
         var children = promise || factory(props.viewProps);
         if (isThenable(children)) {
             promise = children;
@@ -284,18 +285,15 @@ function createViewComponent(factory) {
             useEffect(props.onLoad, []);
             return children;
         }
-        var state = useAsync(function () {
+        var component = useAsync(function () {
             return promise.then(null, props.onError);
-        })[1];
+        })[0];
         useEffect(function () {
-            state.elementRef(viewContext.container);
-        }, []);
-        useEffect(function () {
-            if (state.value) {
+            if (component) {
                 props.onLoad();
             }
-        }, [state.value]);
-        return state.value ? createElement(state.value.default, props.viewProps) : null;
+        }, [component]);
+        return component ? createElement(component.default, props.viewProps) : null;
     };
 }
 

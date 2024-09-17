@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
-import { useObservableProperty, useViewState } from "zeta-dom-react";
+import { useAsync, useObservableProperty, useViewState } from "zeta-dom-react";
 import { isViewMatched, isViewRendered, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext } from "src/view";
 import { body, delay, mockFn, verifyCalls, _, cleanup, root } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
@@ -913,6 +913,21 @@ describe('renderView', () => {
         // snapshot should not cause re-render
         await app.snapshot();
         expect(cb).not.toBeCalled();
+        unmount();
+    });
+
+    it('should pass error handler that catch async error', async () => {
+        const cb = mockFn();
+        const Foo = registerView(function Component({ errorHandler }) {
+            useEffect(() => {
+                return errorHandler.catch(cb);
+            }, []);
+            useAsync(() => Promise.reject(new Error()));
+            return <div>foo</div>;
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>);
+        await waitFor(() => expect(cb).toBeCalledTimes(1));
         unmount();
     });
 });

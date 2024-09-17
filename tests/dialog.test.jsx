@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { act, render, screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { locked, subscribeAsync } from "zeta-dom/domLock";
 import { removeNode } from "zeta-dom/domUtil";
@@ -7,6 +7,7 @@ import { after, delay, mockFn, verifyCalls } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
+import { useAsync } from "zeta-dom-react";
 
 const createDialogMock = mockFn(createDialog);
 const { actAndReturn, actAwaitSetImmediate } = composeAct(act);
@@ -200,6 +201,21 @@ describe('createDialog', () => {
         });
         actAndReturn(() => dialog.open());
         expect(screen.getByTestId('child').parentElement).toBe(screen.getByTestId('parent'));
+    });
+
+    it('should pass error handler that catch async error', async () => {
+        const cb = mockFn(() => true);
+        const dialog = createDialogMock({
+            onRender: function Component({ errorHandler }) {
+                useEffect(() => {
+                    return errorHandler.catch(cb);
+                }, []);
+                useAsync(() => Promise.reject(new Error()));
+                return <span>text</span>;
+            }
+        });
+        await actAwaitSetImmediate(() => dialog.open());
+        expect(cb).toBeCalledTimes(1);
     });
 });
 

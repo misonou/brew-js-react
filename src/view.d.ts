@@ -1,5 +1,6 @@
 /// <reference path="./brew.d.ts" />
 
+import { ErrorHandler } from "zeta-dom-react";
 import { useRouteState } from "./hooks";
 
 export type ViewComponentRootProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
@@ -85,6 +86,10 @@ export interface ViewProps<S = {}> {
      * @see {@link Brew.RouterEvent.navigationType}
      */
     readonly navigationType: Brew.NavigationType;
+    /**
+     * Gets an {@link ErrorHandler} object that catches errors emitted from current view.
+     */
+    readonly errorHandler: ErrorHandler;
 }
 
 export interface ErrorViewProps {

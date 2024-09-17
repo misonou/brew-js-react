@@ -1,3 +1,5 @@
+import { ErrorHandler } from "zeta-dom-react";
+
 export type DialogCloseCallback<T> = (value?: T) => Promise<void>;
 
 export interface DialogState<T> {
@@ -76,6 +78,10 @@ export interface DialogBaseProps<T, V = T> {
 }
 
 export interface DialogRenderComponentProps<T, V = T> extends DialogBaseProps<T, V> {
+    /**
+     * Gets an {@link ErrorHandler} object that catches errors emitted from rendered content.
+     */
+    errorHandler: ErrorHandler;
     /**
      * Commits the dialog, with optional result value.
      *

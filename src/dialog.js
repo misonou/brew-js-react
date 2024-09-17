@@ -1,6 +1,7 @@
 import { createElement, StrictMode, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import ReactDOMClient from "@misonou/react-dom-client";
+import { createAsyncScope } from "zeta-dom-react";
 import { either, extend, noop, pick, resolve } from "zeta-dom/util";
 import { containsOrEquals, removeNode } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
@@ -13,6 +14,7 @@ import { closeFlyout, openFlyout } from "brew-js/domAction";
 export function createDialog(props) {
     var root = document.createElement('div');
     var reactRoot = ReactDOMClient.createRoot(root);
+    var scope = createAsyncScope(root);
     var closeDialog = closeFlyout.bind(0, root);
     var promise;
 
@@ -46,6 +48,7 @@ export function createDialog(props) {
             }
             if (props.onRender) {
                 var dialogProps = extend({}, props, {
+                    errorHandler: scope.errorHandler,
                     closeDialog: props.onCommit ? function (value) {
                         return runAsync(dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
                     } : closeDialog
@@ -54,7 +57,7 @@ export function createDialog(props) {
                 if (props.wrapper) {
                     content = createElement(props.wrapper, dialogProps, content);
                 }
-                reactRoot.render(createElement(StrictMode, null, content));
+                reactRoot.render(createElement(StrictMode, null, createElement(scope.Provider, null, content)));
             }
             promise = resolve().then(function () {
                 dom.retainFocus(dom.activeElement, root);
