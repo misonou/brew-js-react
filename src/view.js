@@ -101,10 +101,11 @@ definePrototype(ErrorBoundary, Component, {
             reset: self.reset.bind(self)
         };
         var onComponentLoaded = self.props.onComponentLoaded;
+        var onError = self.componentDidCatch.bind(self);
         if (props.error) {
-            return createElement(errorView, { onComponentLoaded, viewProps: props });
+            return createElement(errorView, { onComponentLoaded, onError, viewProps: props });
         }
-        return createElement(props.view, { onComponentLoaded, viewProps: self.props.viewProps });
+        return createElement(props.view, { onComponentLoaded, onError, viewProps: self.props.viewProps });
     },
     reset: function () {
         this.setState({ error: null });
@@ -279,7 +280,7 @@ function createViewComponent(factory) {
             catchAsync(promise);
         }
         var state = useAsync(function () {
-            return promise;
+            return promise.then(null, props.onError);
         }, !!promise)[1];
         var loaded = !promise || !state.loading;
         useEffect(function () {
@@ -293,9 +294,6 @@ function createViewComponent(factory) {
                 setImmediate(props.onComponentLoaded);
             }
         }, [loaded]);
-        if (state.error) {
-            throw state.error;
-        }
         return children || (state.value ? createElement(state.value.default, viewProps[0]) : null);
     };
 }

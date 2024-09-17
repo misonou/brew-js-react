@@ -444,16 +444,20 @@ describe('renderView', () => {
 
     it('should catch and emit importing error', async () => {
         const error = new Error();
-        const cb = mockFn();
         const BarError = registerView(async () => {
             throw error;
         }, { view: 'bar' });
         const { container, unmount } = render(<div>{renderView(BarError)}</div>);
+
+        const cb = mockFn();
         dom.on(container, 'error', cb);
+        dom.on(root, 'error', cb);
 
         await waitForPageLoad();
-        expect(cb).toBeCalledTimes(1);
-        expect(cb.mock.calls[0][0].error).toBe(error);
+        verifyCalls(cb, [
+            [expect.objectContaining({ error, currentTarget: container }), _],
+            [expect.objectContaining({ error, currentTarget: root }), _],
+        ]);
         unmount();
     });
 
@@ -466,13 +470,18 @@ describe('renderView', () => {
                 }
             }
         }, { view: 'bar' });
-        const { container } = render(<div>{renderView(BarError)}</div>);
+        const { container, unmount } = render(<div>{renderView(BarError)}</div>);
 
         const cb = mockFn();
         dom.on(container, 'error', cb);
+        dom.on(root, 'error', cb);
+
         await waitForPageLoad();
-        expect(cb).toBeCalledTimes(1);
-        expect(cb.mock.calls[0][0].error).toBe(error);
+        verifyCalls(cb, [
+            [expect.objectContaining({ error, currentTarget: container }), _],
+            [expect.objectContaining({ error, currentTarget: root }), _],
+        ]);
+        unmount();
     });
 
     it('should catch and emit rendering error for view component registered without import', async () => {
@@ -484,14 +493,19 @@ describe('renderView', () => {
             }
             return (<div>bar</div>);
         }, { view: 'bar' });
-        const { container } = render(<div>{renderView(BarError)}</div>);
+        const { container, unmount } = render(<div>{renderView(BarError)}</div>);
         await screen.findByText('bar');
 
         const cb = mockFn();
         dom.on(container, 'error', cb);
+        dom.on(root, 'error', cb);
+
         await actAwaitSetImmediate(() => setError(new Error()));
-        expect(cb).toBeCalledTimes(1);
-        expect(cb.mock.calls[0][0].error).toBe(error);
+        verifyCalls(cb, [
+            [expect.objectContaining({ error, currentTarget: container }), _],
+            [expect.objectContaining({ error, currentTarget: root }), _],
+        ]);
+        unmount();
     });
 
     it('should catch and render error view', async () => {
@@ -517,6 +531,8 @@ describe('renderView', () => {
         const error = new Error();
         const cb = mockFn();
         dom.on(container, 'error', cb);
+        dom.on(root, 'error', cb);
+
         await actAwaitSetImmediate(() => obj.error = error);
         await screen.findByText('error');
         expect(cb).not.toBeCalled();
@@ -543,16 +559,21 @@ describe('renderView', () => {
         const BarError = registerView(async () => {
             throw new Error();
         }, { view: 'bar' });
-        const { container, asFragment } = render(<div>{renderView(BarError)}</div>);
+        const { container, asFragment, unmount } = render(<div>{renderView(BarError)}</div>);
         await screen.findByText('error');
 
         const error = new Error();
         const cb = mockFn();
         dom.on(container, 'error', cb);
+        dom.on(root, 'error', cb);
+
         await actAwaitSetImmediate(() => obj.error = error);
-        expect(cb).toBeCalledTimes(1);
-        expect(cb.mock.calls[0][0].error).toBe(error);
+        verifyCalls(cb, [
+            [expect.objectContaining({ error, currentTarget: container }), _],
+            [expect.objectContaining({ error, currentTarget: root }), _],
+        ]);
         expect(asFragment()).toMatchSnapshot();
+        unmount();
     });
 
     it('should notify asynchronous operation on view container', async () => {
