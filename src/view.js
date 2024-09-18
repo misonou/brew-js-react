@@ -1,4 +1,4 @@
-import { Component, Fragment, createContext, createElement, useContext, useEffect, useState } from "react";
+import { Component, Fragment, createContext, createElement, useContext, useEffect } from "react";
 import { useAsync } from "zeta-dom-react";
 import dom, { reportError } from "zeta-dom/dom";
 import { ZetaEventContainer } from "zeta-dom/events";
@@ -78,35 +78,46 @@ function ErrorBoundary() {
 ErrorBoundary.contextType = StateContext;
 
 definePrototype(ErrorBoundary, Component, {
+    componentDidMount: function () {
+        var self = this;
+        self.componentWillUnmount = watch(self.context, 'page', function () {
+            self.forceUpdate();
+        });
+    },
     componentDidCatch: function (error) {
         var self = this;
         if (errorView && !self.state.error) {
             self.setState({ error });
         } else {
             // ensure promise sent to beforepageload event is resolved
-            self.props.onComponentLoaded();
+            self.props.onLoad();
             reportError(error, self.context.container);
         }
     },
     render: function () {
         var self = this;
-        if (!self.context.container) {
+        var context = self.context;
+        if (!context.container) {
             setImmediate(function () {
                 self.forceUpdate();
             });
             return null;
         }
-        var props = {
-            view: self.context.view,
-            error: self.state.error,
-            reset: self.reset.bind(self)
+        var error = self.state.error;
+        var childProps = {
+            onLoad: self.props.onLoad,
+            onError: self.componentDidCatch.bind(self),
+            viewProps: error ? {
+                view: context.view,
+                error: error,
+                reset: self.reset.bind(self)
+            } : {
+                navigationType: event.navigationType,
+                viewContext: context,
+                viewData: context.page.data || {}
+            }
         };
-        var onComponentLoaded = self.props.onComponentLoaded;
-        var onError = self.componentDidCatch.bind(self);
-        if (props.error) {
-            return createElement(errorView, { onComponentLoaded, onError, viewProps: props });
-        }
-        return createElement(props.view, { onComponentLoaded, onError, viewProps: self.props.viewProps });
+        return createElement(error ? errorView : context.view, childProps);
     },
     reset: function () {
         this.setState({ error: null });
@@ -166,11 +177,11 @@ definePrototype(ViewContainer, Component, {
 
             var context = new ViewContext(V, app.page, self.context);
             var state = routeMap.get(V);
-            var onComponentLoaded;
+            var onLoad;
             var promise = new Promise(function (resolve) {
-                onComponentLoaded = resolve;
+                onLoad = resolve;
             });
-            var unmountView = onComponentLoaded;
+            var unmountView = onLoad;
             var initElement = executeOnce(function (element) {
                 context.container = element;
                 promise.then(function () {
@@ -188,17 +199,10 @@ definePrototype(ViewContainer, Component, {
                     }
                 });
             });
-            var viewProps = function () {
-                return freeze({
-                    navigationType: event.navigationType,
-                    viewContext: context,
-                    viewData: context.page.data || {}
-                });
-            };
             var view = createElement(StateContext.Provider, { key: state.id, value: context },
                 createElement(ViewStateContainer, null,
                     createElement('div', extend({}, self.props.rootProps, { ref: initElement, 'brew-view': '' }),
-                        createElement(ErrorBoundary, { onComponentLoaded, viewProps }))));
+                        createElement(ErrorBoundary, { onLoad }))));
             extend(self, _(context), {
                 currentContext: context,
                 currentView: view,
@@ -272,30 +276,26 @@ function createViewComponent(factory) {
     }
     return function fn(props) {
         var viewContext = useContext(StateContext);
-        var viewProps = useState(props.viewProps);
-        var children = !promise && factory(viewProps[0]);
+        var children = promise || factory(props.viewProps);
         if (isThenable(children)) {
             promise = children;
-            children = null;
             catchAsync(promise);
+        } else {
+            useEffect(props.onLoad, []);
+            return children;
         }
         var state = useAsync(function () {
             return promise.then(null, props.onError);
-        }, !!promise)[1];
-        var loaded = !promise || !state.loading;
+        })[1];
         useEffect(function () {
             state.elementRef(viewContext.container);
-            // listen to property directly so that it is invoked after pagechange event handlers in actual component
-            return watch(viewContext, 'page', function () {
-                viewProps[1](props.viewProps);
-            });
         }, []);
         useEffect(function () {
-            if (loaded) {
-                setImmediate(props.onComponentLoaded);
+            if (state.value) {
+                props.onLoad();
             }
-        }, [loaded]);
-        return children || (state.value ? createElement(state.value.default, viewProps[0]) : null);
+        }, [state.value]);
+        return state.value ? createElement(state.value.default, props.viewProps) : null;
     };
 }
 
