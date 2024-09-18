@@ -1,14 +1,14 @@
-/*! brew-js-react v0.6.2 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.6.3 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("zeta-dom"), require("react"), require("react-dom"), require("brew-js"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
+		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew-js-react", ["zeta-dom", "react", "react-dom", "brew-js", "zeta-dom-react", "waterpipe", "jquery"], factory);
+		define("brew-js-react", ["zeta-dom", "brew-js", "react", "react-dom", "zeta-dom-react", "waterpipe", "jquery"], factory);
 	else if(typeof exports === 'object')
-		exports["brew-js-react"] = factory(require("zeta-dom"), require("react"), require("react-dom"), require("brew-js"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
+		exports["brew-js-react"] = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
 	else
-		root["brew"] = root["brew"] || {}, root["brew"]["react"] = factory(root["zeta"], root["React"], root["ReactDOM"], root["brew"], root["zeta"]["react"], root["waterpipe"], root["jQuery"]);
-})(self, (__WEBPACK_EXTERNAL_MODULE__231__, __WEBPACK_EXTERNAL_MODULE__12__, __WEBPACK_EXTERNAL_MODULE__33__, __WEBPACK_EXTERNAL_MODULE__760__, __WEBPACK_EXTERNAL_MODULE__402__, __WEBPACK_EXTERNAL_MODULE__87__, __WEBPACK_EXTERNAL_MODULE__914__) => {
+		root["brew"] = root["brew"] || {}, root["brew"]["react"] = factory(root["zeta"], root["brew"], root["React"], root["ReactDOM"], root["zeta"]["react"], root["waterpipe"], root["jQuery"]);
+})(self, (__WEBPACK_EXTERNAL_MODULE__231__, __WEBPACK_EXTERNAL_MODULE__760__, __WEBPACK_EXTERNAL_MODULE__12__, __WEBPACK_EXTERNAL_MODULE__33__, __WEBPACK_EXTERNAL_MODULE__402__, __WEBPACK_EXTERNAL_MODULE__87__, __WEBPACK_EXTERNAL_MODULE__914__) => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -255,7 +255,6 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   pick = _lib$util.pick,
   randomId = _lib$util.randomId,
   resolve = _lib$util.resolve,
-  resolveAll = _lib$util.resolveAll,
   setImmediate = _lib$util.setImmediate,
   setImmediateOnce = _lib$util.setImmediateOnce,
   single = _lib$util.single,
@@ -264,6 +263,39 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   watch = _lib$util.watch,
   watchable = _lib$util.watchable;
 
+// EXTERNAL MODULE: external {"commonjs":"brew-js","commonjs2":"brew-js","amd":"brew-js","root":"brew"}
+var external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_ = __webpack_require__(760);
+;// CONCATENATED MODULE: ./|umd|/brew-js/app.js
+
+/* harmony default export */ const app = ((/* unused pure expression or super */ null && (lib)));
+var addExtension = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addExtension,
+  install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.install;
+
+;// CONCATENATED MODULE: ./|umd|/brew-js/defaults.js
+
+var defaults = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.defaults;
+/* harmony default export */ const brew_js_defaults = (defaults);
+;// CONCATENATED MODULE: ./src/app.js
+
+
+
+
+/** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
+var app_app;
+var appInitCallabcks = [];
+function onAppInit(callback) {
+  if (app_app) {
+    callback(app_app);
+  } else {
+    appInitCallabcks.push(throwNotFunction(callback));
+  }
+}
+var extension = addExtension(true, 'react2', ['?router', '?i18n'], function (app_) {
+  app_app = app_;
+  combineFn(appInitCallabcks)(app_app);
+});
+install('react', extension);
+brew_js_defaults.react = true;
 // EXTERNAL MODULE: external {"commonjs":"react","commonjs2":"react","amd":"react","root":"React"}
 var external_commonjs_react_commonjs2_react_amd_react_root_React_ = __webpack_require__(12);
 ;// CONCATENATED MODULE: ./|umd|/react.js
@@ -302,13 +334,10 @@ var reportError = dom.reportError;
 
 var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
   lock = _lib$dom.lock,
-  notifyAsync = _lib$dom.notifyAsync,
   preventLeave = _lib$dom.preventLeave,
   runAsync = _lib$dom.runAsync,
   subscribeAsync = _lib$dom.subscribeAsync;
 
-// EXTERNAL MODULE: external {"commonjs":"brew-js","commonjs2":"brew-js","amd":"brew-js","root":"brew"}
-var external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_ = __webpack_require__(760);
 ;// CONCATENATED MODULE: ./|umd|/brew-js/domAction.js
 
 var closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.closeFlyout,
@@ -438,39 +467,12 @@ var getQueryParam = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root
 var parsePath = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.parsePath,
   removeQueryAndHash = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.removeQueryAndHash;
 
-;// CONCATENATED MODULE: ./|umd|/brew-js/app.js
-
-/* harmony default export */ const app = ((/* unused pure expression or super */ null && (lib)));
-var install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.install;
-
-;// CONCATENATED MODULE: ./|umd|/brew-js/defaults.js
-
-var defaults = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.defaults;
-/* harmony default export */ const brew_js_defaults = (defaults);
-;// CONCATENATED MODULE: ./src/app.js
-
-
-
-
-/** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
-var app_app;
-var appInitCallabcks = [];
-function onAppInit(callback) {
-  appInitCallabcks.push(throwNotFunction(callback));
-}
-install('react', function (app_) {
-  // @ts-ignore: type inference issue
-  app_app = app_;
-  combineFn(appInitCallabcks)(app_app);
-});
-brew_js_defaults.react = true;
 ;// CONCATENATED MODULE: ./|umd|/brew-js/anim.js
 
 var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateIn,
   animateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateOut;
 
 ;// CONCATENATED MODULE: ./src/view.js
-
 
 
 
@@ -510,6 +512,7 @@ onAppInit(function () {
       });
     })(rootState);
   });
+  rootState.setPage(app_app.page);
 });
 function ViewContext(view, page, parent) {
   var self = this;
@@ -552,31 +555,36 @@ definePrototype(ErrorBoundary, Component, {
         error: error
       });
     } else {
-      // emit error in next tick as ref callback may yet to be invoked
-      // if error is thrown synchronously in first render
-      setImmediate(function () {
-        reportError(error, self.context.container);
-      });
       // ensure promise sent to beforepageload event is resolved
       self.props.onComponentLoaded();
+      reportError(error, self.context.container);
     }
   },
   render: function render() {
     var self = this;
+    if (!self.context.container) {
+      setImmediate(function () {
+        self.forceUpdate();
+      });
+      return null;
+    }
     var props = {
       view: self.context.view,
       error: self.state.error,
       reset: self.reset.bind(self)
     };
     var onComponentLoaded = self.props.onComponentLoaded;
+    var onError = self.componentDidCatch.bind(self);
     if (props.error) {
       return /*#__PURE__*/createElement(errorView, {
         onComponentLoaded: onComponentLoaded,
+        onError: onError,
         viewProps: props
       });
     }
     return /*#__PURE__*/createElement(props.view, {
       onComponentLoaded: onComponentLoaded,
+      onError: onError,
       viewProps: self.props.viewProps
     });
   },
@@ -664,7 +672,6 @@ definePrototype(ViewContainer, Component, {
             }, true);
           }
         });
-        notifyAsync(element, promise);
       });
       var viewProps = function viewProps() {
         return freeze({
@@ -762,10 +769,11 @@ function createViewComponent(factory) {
       catchAsync(promise);
     }
     var state = useAsync(function () {
-      return promise;
+      return promise.then(null, props.onError);
     }, !!promise)[1];
     var loaded = !promise || !state.loading;
     useEffect(function () {
+      state.elementRef(viewContext.container);
       // listen to property directly so that it is invoked after pagechange event handlers in actual component
       return watch(viewContext, 'page', function () {
         viewProps[1](props.viewProps);
@@ -776,9 +784,6 @@ function createViewComponent(factory) {
         setImmediate(props.onComponentLoaded);
       }
     }, [loaded]);
-    if (state.error) {
-      throw state.error;
-    }
     return children || (state.value ? /*#__PURE__*/createElement(state.value["default"], viewProps[0]) : null);
   };
 }
@@ -1606,6 +1611,13 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
   onVisibilityChanged: function onVisibilityChanged(callback) {
     return this.watch('visible', callback);
   },
+  whenVisible: function whenVisible(effect) {
+    var dispose = [];
+    dispose[0] = this.watch('visible', function (visible) {
+      dispose[1] = (visible ? isFunction(effect()) : dispose[1] && void dispose[1]()) || noop;
+    }, true);
+    return combineFn(dispose);
+  },
   initElement: function initElement(element, state) {
     var self = this;
     if (self.elements()[1]) {
@@ -1849,6 +1861,7 @@ function useMixinRef(mixin) {
 }
 
 ;// CONCATENATED MODULE: ./src/index.js
+
 
 /* harmony default export */ const src = ((/* unused pure expression or super */ null && (brew)));
 
