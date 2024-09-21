@@ -83,12 +83,25 @@ export interface DialogRenderComponentProps<T, V = T> extends DialogBaseProps<T,
      */
     errorHandler: ErrorHandler;
     /**
-     * Commits the dialog, with optional result value.
+     * Commits the dialog with result value.
+     *
+     * When {@link DialogBaseProps.onCommit} is specified, it is invoked with the value passed in.
+     * Dialog will be closed when async operation is completed, or remain open if the operation failed.
+     *
+     * @deprecated Use {@link DialogRenderComponentProps.commitDialog} or {@link DialogRenderComponentProps.dismissDialog} for appropriate cases.
+     */
+    closeDialog: (value?: V) => Promise<void>;
+    /**
+     * Commits the dialog with result value.
      *
      * When {@link DialogBaseProps.onCommit} is specified, it is invoked with the value passed in.
      * Dialog will be closed when async operation is completed, or remain open if the operation failed.
      */
-    closeDialog: (value?: V) => Promise<void>;
+    commitDialog: (value?: V) => Promise<void>;
+    /**
+     * Closes the dialog without invoking {@link DialogBaseProps.onCommit}.
+     */
+    dismissDialog: () => Promise<void>;
 }
 
 export interface DialogOptions<T, V = T> extends DialogBaseProps<T, V> {

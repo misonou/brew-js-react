@@ -141,6 +141,24 @@ describe('createDialog', () => {
         expect(cb.mock.instances[1]).toBe(dialog.root);
     });
 
+    it('should dismiss dialog without invoking onCommit when dismissDialog is called', async () => {
+        const dismiss = mockFn();
+        const onCommit = mockFn(() => true);
+        const dialog = createDialogMock({
+            onCommit: onCommit,
+            onRender: function Component({ dismissDialog }) {
+                dismiss.mockImplementationOnce(dismissDialog);
+                return <span>text</span>;
+            }
+        });
+        const promise = dialog.open();
+        await actAwaitSetImmediate(() => promise);
+
+        dismiss();
+        await expect(promise).resolves.toBeUndefined();
+        expect(onCommit).not.toBeCalled();
+    });
+
     it('should set dialog as modal when modal is true', async () => {
         const cb = mockFn();
         const dialog = createDialogMock({

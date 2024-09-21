@@ -47,11 +47,14 @@ export function createDialog(props) {
                 root.setAttribute('is-modal', '');
             }
             if (props.onRender) {
+                var commitDialog = props.onCommit ? function (value) {
+                    return runAsync(dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
+                } : closeDialog;
                 var dialogProps = extend({}, props, {
                     errorHandler: scope.errorHandler,
-                    closeDialog: props.onCommit ? function (value) {
-                        return runAsync(dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
-                    } : closeDialog
+                    closeDialog: commitDialog,
+                    commitDialog: commitDialog,
+                    dismissDialog: closeDialog
                 });
                 var content = createElement(props.onRender, dialogProps);
                 if (props.wrapper) {
