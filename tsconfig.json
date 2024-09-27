@@ -1,0 +1,12 @@
+{
+    "extends": "./jsconfig",
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "jsx": "react-jsx",
+        "types": [
+            "brew-js",
+            "zeta-dom",
+            "zeta-dom-react"
+        ]
+    }
+}
