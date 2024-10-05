@@ -588,6 +588,29 @@ describe('renderView', () => {
         unmount();
     });
 
+    it('should reset from error view on page change', async () => {
+        let error, setError;
+        const BarError = registerView(() => {
+            [error, setError] = useState(null);
+            if (error) {
+                throw error;
+            }
+            return (<div>bar</div>);
+        }, { view: 'bar' });
+        const { unmount } = render(<div>{renderView(BarError)}</div>);
+        await screen.findByText('bar');
+
+        registerErrorView(() => {
+            return (<div>error</div>);
+        });
+        await actAwaitSetImmediate(() => setError(new Error()));
+        await screen.findByText('error');
+
+        await expect(app.navigate('/dummy/bar/baz')).resolves.toMatchObject({ navigated: true });
+        await screen.findByText('bar');
+        unmount();
+    });
+
     it('should notify asynchronous operation on view container', async () => {
         const Foo = registerView(async () => {
             await delay(10);

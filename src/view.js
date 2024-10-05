@@ -81,6 +81,7 @@ definePrototype(ErrorBoundary, Component, {
     componentDidMount: function () {
         var self = this;
         self.componentWillUnmount = watch(self.context, 'page', function () {
+            self.state.error = null;
             self.forceUpdate();
         });
     },
