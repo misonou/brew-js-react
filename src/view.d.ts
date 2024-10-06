@@ -11,6 +11,12 @@ export type ViewParamMatchers = Zeta.Dictionary<null | string | RegExp | ((value
  */
 export type ViewContainerState = ViewContext;
 
+/**
+ * Tuple containing route parameters, query string and hash (fragment).
+ * All entries are optional.
+ */
+export type ParamsWithURLParts = [routeParams?: Zeta.Dictionary<string>, query?: string | Zeta.Dictionary<string> | URLSearchParams, hash?: string];
+
 export interface PageChangeEvent extends Zeta.ZetaEventBase {
     /**
      * Gets information of the current page.
@@ -206,9 +212,18 @@ export function renderView(props: ViewComponentRootProps, ...args: ViewComponent
  * This is used by methods such as {@link linkTo} and {@link navigateTo}.
  *
  * @param view A view component created by {@link registerView}.
- * @param params Extra route parameters that supplements or overrides current route parameters.
+ * @param params Extra route parameters that supplements or overrides current route parameters, or a tuple containing such route parameters as well as query string and hash.
+ *
+ * @example
+ * Here are some examples to produce path with query string or hash:
+ * ```javascript
+ * resolvePath(MyView, [{ id: 1 }, '?filter=foo', '#hash']);
+ * resolvePath(MyView, [, , '#hash']); // any entries in the tuple can be omitted
+ * resolvePath(MyView, [, { filter: 'foo' }]); // object for query string
+ * resolvePath(MyView, [, new URLSearchParams({ filter: 'foo' })]); // URLSearchParams for query string
+ * ```
  */
-export function resolvePath(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): string;
+export function resolvePath(view: ViewComponent<any>, params?: Zeta.Dictionary<string> | ParamsWithURLParts): string;
 
 /**
  * Returns a link usable in `href` attribute or method such as `window.open`
@@ -220,25 +235,25 @@ export function resolvePath(view: ViewComponent<any>, params?: Zeta.Dictionary<s
  * navigation through link is disabled in such case.
  *
  * @param view A view component created by {@link registerView}.
- * @param params Extra route parameters that supplements or overrides current route parameters.
+ * @param params Extra route parameters that supplements or overrides current route parameters, or a tuple containing such route parameters as well as query string and hash.
  * @see {@link resolvePath}.
  */
-export function linkTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string>): string;
+export function linkTo(view: ViewComponent<any>, params?: Zeta.Dictionary<string> | ParamsWithURLParts): string;
 
 /**
  * Navigates to path that will render the specified view.
  * @param view A view component created by {@link registerView}.
- * @param params Extra route parameters that supplements or overrides current route parameters.
+ * @param params Extra route parameters that supplements or overrides current route parameters, or a tuple containing such route parameters as well as query string and hash.
  * @param data Additional data to be passed to view component, analogous to making form post to server rendering page.
  * @see {@link resolvePath}.
  */
-export function navigateTo<T>(view: ViewComponent<T>, params?: Zeta.Dictionary<string> | null, data?: T): Promise<Brew.NavigateResult>;
+export function navigateTo<T>(view: ViewComponent<T>, params?: Zeta.Dictionary<string> | ParamsWithURLParts | null, data?: T): Promise<Brew.NavigateResult>;
 
 /**
  * Navigates to path that will render the specified view, replacing current state in browser history.
  * @param view A view component created by {@link registerView}.
- * @param params Extra route parameters that supplements or overrides current route parameters.
+ * @param params Extra route parameters that supplements or overrides current route parameters, or a tuple containing such route parameters as well as query string and hash.
  * @param data Additional data to be passed to view component, analogous to making form post to server rendering page.
  * @see {@link resolvePath}.
  */
-export function redirectTo<T>(view: ViewComponent<T>, params?: Zeta.Dictionary<string> | null, data?: T): Promise<Brew.NavigateResult>;
+export function redirectTo<T>(view: ViewComponent<T>, params?: Zeta.Dictionary<string> | ParamsWithURLParts | null, data?: T): Promise<Brew.NavigateResult>;

@@ -967,6 +967,27 @@ describe('linkTo', () => {
         expect(linkTo(Var1, { var2: 'xxx' })).toBe('/var1');
     });
 
+    it('should accept array containing params, query and hash', () => {
+        expect(linkTo(Baz, [{ baz: 'baz' }, '?q=value'])).toBe('/dummy/foo/baz?q=value');
+        expect(linkTo(Baz, [{ baz: 'baz' }, 'q=value'])).toBe('/dummy/foo/baz?q=value');
+        expect(linkTo(Baz, [{ baz: 'baz' }, , '#hash'])).toBe('/dummy/foo/baz#hash');
+        expect(linkTo(Baz, [{ baz: 'baz' }, , 'hash'])).toBe('/dummy/foo/baz#hash');
+        expect(linkTo(Baz, [{ baz: 'baz' }, '', 'hash'])).toBe('/dummy/foo/baz#hash');
+        expect(linkTo(Baz, [{ baz: 'baz' }, 'q=value', 'hash'])).toBe('/dummy/foo/baz?q=value#hash');
+        expect(linkTo(Baz, [{ baz: 'baz' }, 'q=value', ''])).toBe('/dummy/foo/baz?q=value');
+
+        expect(linkTo(BarBaz, [, '?q=value'])).toBe('/dummy/bar/baz?q=value');
+        expect(linkTo(BarBaz, [, 'q=value'])).toBe('/dummy/bar/baz?q=value');
+        expect(linkTo(BarBaz, [, , '#hash'])).toBe('/dummy/bar/baz#hash');
+        expect(linkTo(BarBaz, [, , 'hash'])).toBe('/dummy/bar/baz#hash');
+        expect(linkTo(BarBaz, [, '', 'hash'])).toBe('/dummy/bar/baz#hash');
+        expect(linkTo(BarBaz, [, 'q=value', 'hash'])).toBe('/dummy/bar/baz?q=value#hash');
+        expect(linkTo(BarBaz, [, 'q=value', ''])).toBe('/dummy/bar/baz?q=value');
+
+        expect(linkTo(BarBaz, [, { q: 'value' }])).toBe('/dummy/bar/baz?q=value');
+        expect(linkTo(BarBaz, [, new URLSearchParams({ q: 'value' })])).toBe('/dummy/bar/baz?q=value');
+    });
+
     it('should return minimum path matching the specified view', async () => {
         await app.navigate('/dummy/foo/baz');
         expect(linkTo(Foo)).toBe('/dummy/foo');
@@ -1008,6 +1029,11 @@ describe('navigateTo', () => {
         }));
     });
 
+    it('should accept query and hash', async () => {
+        await navigateTo(Baz, [{ baz: 'baz' }, 'q=value', 'hash']);
+        expect(app.path).toBe('/dummy/foo/baz?q=value#hash');
+    });
+
     it('should pass data to view component', async () => {
         const BarTest = registerView(function Component({ viewData }) {
             return <div data-testid="test">{viewData.text}</div>;
@@ -1034,6 +1060,11 @@ describe('redirectTo', () => {
             path: '/dummy/foo/baz'
         }));
         expect(app.previousPath).toBe(previousPath);
+    });
+
+    it('should accept query and hash', async () => {
+        await redirectTo(Baz, [{ baz: 'baz' }, 'q=value', 'hash']);
+        expect(app.path).toBe('/dummy/foo/baz?q=value#hash');
     });
 
     it('should pass data to view component', async () => {

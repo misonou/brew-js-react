@@ -27,7 +27,7 @@
   "repository": "github:misonou/brew-js-react",
   "dependencies": {
     "@misonou/react-dom-client": "^1.1.1",
-    "brew-js": ">=0.6.11",
+    "brew-js": ">=0.6.12",
     "waterpipe": "^2.5.0",
     "zeta-dom": ">=0.5.1",
     "zeta-dom-react": ">=0.5.11"

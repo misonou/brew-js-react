@@ -2,8 +2,9 @@ import { Component, Fragment, createContext, createElement, useContext, useEffec
 import { createAsyncScope, useAsync } from "zeta-dom-react";
 import dom, { reportError } from "zeta-dom/dom";
 import { ZetaEventContainer } from "zeta-dom/events";
-import { any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isArray, isFunction, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
+import { any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, each, exclude, executeOnce, extend, freeze, grep, isArray, isFunction, isPlainObject, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
 import { animateIn, animateOut } from "brew-js/anim";
+import { toQueryString } from "brew-js/util/common";
 import { removeQueryAndHash } from "brew-js/util/path";
 import { app, onAppInit } from "./app.js";
 import { ViewStateContainer } from "./hooks.js";
@@ -227,6 +228,10 @@ definePrototype(ViewContainer, Component, {
     }
 });
 
+function normalizePart(value, part) {
+    return isUndefinedOrNull(value) || value === '' || value === part ? '' : value[0] === part ? value : part + value;
+}
+
 function getCurrentParams(view, params) {
     var state = routeMap.get(view);
     if (!state.maxParams) {
@@ -363,10 +368,12 @@ export function renderView() {
 }
 
 export function resolvePath(view, params) {
-    if (!routeMap.has(view)) {
-        return '/';
+    var suffix = '';
+    if (isArray(params)) {
+        suffix = normalizePart(isPlainObject(params[1]) ? toQueryString(params[1]) : params[1], '?') + normalizePart(params[2], '#');
+        params = params[0];
     }
-    return app.route.getPath(getCurrentParams(view, params));
+    return (routeMap.has(view) ? app.route.getPath(getCurrentParams(view, params)) : '/') + suffix;
 }
 
 export function linkTo(view, params) {
