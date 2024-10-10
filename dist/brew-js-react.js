@@ -1,4 +1,4 @@
-/*! brew-js-react v0.6.3 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.6.4 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -315,6 +315,20 @@ var Component = external_commonjs_react_commonjs2_react_amd_react_root_React_.Co
 var external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_ = __webpack_require__(33);
 // EXTERNAL MODULE: ./node_modules/@misonou/react-dom-client/fallback.js
 var fallback = __webpack_require__(621);
+// EXTERNAL MODULE: external {"commonjs":"zeta-dom-react","commonjs2":"zeta-dom-react","amd":"zeta-dom-react","root":["zeta","react"]}
+var external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_ = __webpack_require__(402);
+;// CONCATENATED MODULE: ./|umd|/zeta-dom-react.js
+
+var ViewStateProvider = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.ViewStateProvider,
+  classNames = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.classNames,
+  createAsyncScope = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.createAsyncScope,
+  useAsync = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useAsync,
+  useEagerState = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useEagerState,
+  useMemoizedFunction = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useMemoizedFunction,
+  useObservableProperty = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useObservableProperty,
+  useSingleton = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useSingleton,
+  useValueTrigger = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useValueTrigger;
+
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/domUtil.js
 
 var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
@@ -355,12 +369,14 @@ var closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_b
 
 
 
+
 /**
  * @param {Partial<import("./dialog").DialogOptions<any>>} props
  */
 function createDialog(props) {
   var root = document.createElement('div');
   var reactRoot = fallback.createRoot(root);
+  var scope = createAsyncScope(root);
   var closeDialog = closeFlyout.bind(0, root);
   var promise;
   zeta_dom_dom.on(root, {
@@ -391,16 +407,20 @@ function createDialog(props) {
         root.setAttribute('is-modal', '');
       }
       if (props.onRender) {
+        var commitDialog = props.onCommit ? function (value) {
+          return runAsync(zeta_dom_dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
+        } : closeDialog;
         var dialogProps = extend({}, props, {
-          closeDialog: props.onCommit ? function (value) {
-            return runAsync(zeta_dom_dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
-          } : closeDialog
+          errorHandler: scope.errorHandler,
+          closeDialog: commitDialog,
+          commitDialog: commitDialog,
+          dismissDialog: closeDialog
         });
         var content = /*#__PURE__*/createElement(props.onRender, dialogProps);
         if (props.wrapper) {
           content = /*#__PURE__*/createElement(props.wrapper, dialogProps, content);
         }
-        reactRoot.render( /*#__PURE__*/createElement(StrictMode, null, content));
+        reactRoot.render( /*#__PURE__*/createElement(StrictMode, null, /*#__PURE__*/createElement(scope.Provider, null, content)));
       }
       promise = resolve().then(function () {
         zeta_dom_dom.retainFocus(zeta_dom_dom.activeElement, root);
@@ -440,19 +460,6 @@ function Dialog(props) {
   }, [dialog]);
   return /*#__PURE__*/external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, dialog.root);
 }
-// EXTERNAL MODULE: external {"commonjs":"zeta-dom-react","commonjs2":"zeta-dom-react","amd":"zeta-dom-react","root":["zeta","react"]}
-var external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_ = __webpack_require__(402);
-;// CONCATENATED MODULE: ./|umd|/zeta-dom-react.js
-
-var ViewStateProvider = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.ViewStateProvider,
-  classNames = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.classNames,
-  useAsync = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useAsync,
-  useEagerState = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useEagerState,
-  useMemoizedFunction = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useMemoizedFunction,
-  useObservableProperty = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useObservableProperty,
-  useSingleton = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useSingleton,
-  useValueTrigger = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useValueTrigger;
-
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/events.js
 
 var EventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
@@ -460,7 +467,8 @@ var EventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_
 ;// CONCATENATED MODULE: ./|umd|/brew-js/util/common.js
 
 var getQueryParam = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.getQueryParam,
-  setQueryParam = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.setQueryParam;
+  setQueryParam = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.setQueryParam,
+  toQueryString = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toQueryString;
 
 ;// CONCATENATED MODULE: ./|umd|/brew-js/util/path.js
 
@@ -473,6 +481,7 @@ var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_bre
   animateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateOut;
 
 ;// CONCATENATED MODULE: ./src/view.js
+
 
 
 
@@ -548,6 +557,13 @@ function ErrorBoundary() {
 }
 ErrorBoundary.contextType = StateContext;
 definePrototype(ErrorBoundary, Component, {
+  componentDidMount: function componentDidMount() {
+    var self = this;
+    self.componentWillUnmount = watch(self.context, 'page', function () {
+      self.state.error = null;
+      self.forceUpdate();
+    });
+  },
   componentDidCatch: function componentDidCatch(error) {
     var self = this;
     if (errorView && !self.state.error) {
@@ -556,37 +572,36 @@ definePrototype(ErrorBoundary, Component, {
       });
     } else {
       // ensure promise sent to beforepageload event is resolved
-      self.props.onComponentLoaded();
+      self.props.onLoad();
       reportError(error, self.context.container);
     }
   },
   render: function render() {
     var self = this;
-    if (!self.context.container) {
+    var context = self.context;
+    if (!context.container) {
       setImmediate(function () {
         self.forceUpdate();
       });
       return null;
     }
-    var props = {
-      view: self.context.view,
-      error: self.state.error,
-      reset: self.reset.bind(self)
+    var error = self.state.error;
+    var scope = self.scope || (self.scope = createAsyncScope(context.container));
+    var childProps = {
+      onLoad: self.props.onLoad,
+      onError: self.componentDidCatch.bind(self),
+      viewProps: error ? {
+        view: context.view,
+        error: error,
+        reset: self.reset.bind(self)
+      } : {
+        errorHandler: scope.errorHandler,
+        navigationType: view_event.navigationType,
+        viewContext: context,
+        viewData: context.page.data || {}
+      }
     };
-    var onComponentLoaded = self.props.onComponentLoaded;
-    var onError = self.componentDidCatch.bind(self);
-    if (props.error) {
-      return /*#__PURE__*/createElement(errorView, {
-        onComponentLoaded: onComponentLoaded,
-        onError: onError,
-        viewProps: props
-      });
-    }
-    return /*#__PURE__*/createElement(props.view, {
-      onComponentLoaded: onComponentLoaded,
-      onError: onError,
-      viewProps: self.props.viewProps
-    });
+    return /*#__PURE__*/createElement(scope.Provider, null, /*#__PURE__*/createElement(error ? errorView : context.view, childProps));
   },
   reset: function reset() {
     this.setState({
@@ -645,11 +660,11 @@ definePrototype(ViewContainer, Component, {
       (self.unmountView || noop)(true);
       var context = new ViewContext(V, app_app.page, self.context);
       var state = routeMap.get(V);
-      var onComponentLoaded;
+      var onLoad;
       var promise = new Promise(function (resolve) {
-        onComponentLoaded = resolve;
+        onLoad = resolve;
       });
-      var unmountView = onComponentLoaded;
+      var unmountView = onLoad;
       var initElement = executeOnce(function (element) {
         context.container = element;
         promise.then(function () {
@@ -673,13 +688,6 @@ definePrototype(ViewContainer, Component, {
           }
         });
       });
-      var viewProps = function viewProps() {
-        return freeze({
-          navigationType: view_event.navigationType,
-          viewContext: context,
-          viewData: context.page.data || {}
-        });
-      };
       var view = /*#__PURE__*/createElement(StateContext.Provider, {
         key: state.id,
         value: context
@@ -687,8 +695,7 @@ definePrototype(ViewContainer, Component, {
         ref: initElement,
         'brew-view': ''
       }), /*#__PURE__*/createElement(ErrorBoundary, {
-        onComponentLoaded: onComponentLoaded,
-        viewProps: viewProps
+        onLoad: onLoad
       }))));
       extend(self, _(context), {
         currentContext: context,
@@ -710,6 +717,9 @@ definePrototype(ViewContainer, Component, {
     return any(props.views, isViewMatched) || props.defaultView;
   }
 });
+function normalizePart(value, part) {
+  return isUndefinedOrNull(value) || value === '' || value === part ? '' : value[0] === part ? value : part + value;
+}
 function getCurrentParams(view, params) {
   var state = routeMap.get(view);
   if (!state.maxParams) {
@@ -760,31 +770,23 @@ function createViewComponent(factory) {
     factory = createElement.bind(null, factory);
   }
   return function fn(props) {
-    var viewContext = useContext(StateContext);
-    var viewProps = useState(props.viewProps);
-    var children = !promise && factory(viewProps[0]);
+    var children = promise || factory(props.viewProps);
     if (isThenable(children)) {
       promise = children;
-      children = null;
       catchAsync(promise);
+    } else {
+      useEffect(props.onLoad, []);
+      return children;
     }
-    var state = useAsync(function () {
+    var component = useAsync(function () {
       return promise.then(null, props.onError);
-    }, !!promise)[1];
-    var loaded = !promise || !state.loading;
+    })[0];
     useEffect(function () {
-      state.elementRef(viewContext.container);
-      // listen to property directly so that it is invoked after pagechange event handlers in actual component
-      return watch(viewContext, 'page', function () {
-        viewProps[1](props.viewProps);
-      });
-    }, []);
-    useEffect(function () {
-      if (loaded) {
-        setImmediate(props.onComponentLoaded);
+      if (component) {
+        props.onLoad();
       }
-    }, [loaded]);
-    return children || (state.value ? /*#__PURE__*/createElement(state.value["default"], viewProps[0]) : null);
+    }, [component]);
+    return component ? /*#__PURE__*/createElement(component["default"], props.viewProps) : null;
   };
 }
 function useViewContext() {
@@ -849,10 +851,12 @@ function renderView() {
   });
 }
 function resolvePath(view, params) {
-  if (!routeMap.has(view)) {
-    return '/';
+  var suffix = '';
+  if (isArray(params)) {
+    suffix = normalizePart(isPlainObject(params[1]) ? toQueryString(params[1]) : params[1], '?') + normalizePart(params[2], '#');
+    params = params[0];
   }
-  return app_app.route.getPath(getCurrentParams(view, params));
+  return (routeMap.has(view) ? app_app.route.getPath(getCurrentParams(view, params)) : '/') + suffix;
 }
 function linkTo(view, params) {
   return app_app.toHref(resolvePath(view, params));
