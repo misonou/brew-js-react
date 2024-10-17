@@ -645,6 +645,25 @@ describe('renderView', () => {
         unmount();
     });
 
+    it('should render error view when requested', async () => {
+        const setErrorView = mockFn();
+        const errorView = (props) => {
+            return <div data-testid="error">error: {props.error.message}</div>
+        };
+        const Foo = registerView(({ viewContext }) => {
+            setErrorView.mockImplementation((v, e) => viewContext.setErrorView(v, e));
+            return <div>foo</div>;
+        }, { view: 'foo' });
+
+        const { asFragment, unmount } = render(<div>{renderView(Foo)}</div>);
+        await screen.findByText('foo');
+
+        expect(setErrorView(errorView, new Error('bar'))).toBe(true);
+        await screen.findByTestId('error');
+        expect(asFragment()).toMatchSnapshot();
+        unmount();
+    });
+
     it('should reset from error view on page change', async () => {
         let error, setError;
         const BarError = registerView(() => {

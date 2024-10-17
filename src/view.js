@@ -67,14 +67,19 @@ definePrototype(ViewContext, {
             return v.currentContext;
         });
     },
+    setErrorView: function (errorView, error) {
+        var wrapper = _(this).wrapper;
+        return wrapper && errorView && !wrapper.setState({ error, errorView });
+    },
     on: function (event, handler) {
         return emitter.add(this, event, handler);
     }
 });
 
-function ErrorBoundary() {
-    Component.apply(this, arguments);
+function ErrorBoundary(props) {
+    Component.call(this, props);
     this.state = {};
+    _(props.context).wrapper = this;
 }
 
 definePrototype(ErrorBoundary, Component, {
@@ -107,7 +112,7 @@ definePrototype(ErrorBoundary, Component, {
         var scope = self.scope || (self.scope = createAsyncScope(context.container));
         if (errorView) {
             self.props.onLoad();
-            return createElement(scope.Provider, null, createElement(errorView, {
+            return createElement(scope.Provider, null, createElement(self.state.errorView, {
                 view: context.view,
                 error: self.state.error,
                 reset: self.reset.bind(self)

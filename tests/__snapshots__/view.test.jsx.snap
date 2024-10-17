@@ -169,6 +169,22 @@ exports[`renderView should render class component registered without import 1`] 
 </DocumentFragment>
 `;
 
+exports[`renderView should render error view when requested 1`] = `
+<DocumentFragment>
+  <div>
+    <div
+      brew-view=""
+    >
+      <div
+        data-testid="error"
+      >
+        error: bar
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`renderView should render functional component registered without import 1`] = `
 <DocumentFragment>
   <div>

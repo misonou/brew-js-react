@@ -73,6 +73,14 @@ export interface ViewContext extends Zeta.ZetaEventDispatcher<ViewContextEventMa
      * Gets view contexts rendered under this view container.
      */
     getChildren(): ViewContext[];
+
+    /**
+     * Replaces rendered content with error information.
+     * @param errorView A React component.
+     * @param error Value, typically an `Error` object, to be passed to error view as {@link ErrorViewProps.error}.
+     * @returns Returns `true` when error view is triggered; or `undefined` when called on root context.
+     */
+    setErrorView<T>(errorView: React.ComponentType<ErrorViewProps<T>>, error: T): true | undefined;
 }
 
 export interface ViewProps<S = {}> {
@@ -98,7 +106,7 @@ export interface ViewProps<S = {}> {
     readonly errorHandler: ErrorHandler;
 }
 
-export interface ErrorViewProps {
+export interface ErrorViewProps<T = any> {
     /**
      * Gets the original view component in which error has thrown.
      */
@@ -106,7 +114,7 @@ export interface ErrorViewProps {
     /**
      * Gets the error thrown from the original view component.
      */
-    error: any;
+    error: T;
     /**
      * Re-renders the original view component with initial state.
      */
