@@ -17,7 +17,7 @@ export type ViewContainerState = ViewContext;
  */
 export type ParamsWithURLParts = [routeParams?: Zeta.Dictionary<string>, query?: string | Zeta.Dictionary<string> | URLSearchParams, hash?: string];
 
-export interface PageChangeEvent extends Zeta.ZetaEventBase {
+export interface PageChangeEvent extends Zeta.ZetaEventBase<ViewContext> {
     /**
      * Gets information of the current page.
      */
