@@ -341,6 +341,20 @@ describe('renderView', () => {
         expect(asFragment()).toMatchSnapshot();
     });
 
+    it('should render loader while first view component is being loaded', async () => {
+        const FooDelay = registerView(async () => {
+            await delay(100);
+            return { default: () => <div>foo</div> };
+        }, { view: 'foo' });
+        const { asFragment, unmount } = render(<div>{renderView({ loader: <div>loading</div> }, FooDelay)}</div>);
+        await screen.findByText('loading');
+        expect(asFragment()).toMatchSnapshot();
+
+        await screen.findByText('foo');
+        expect(asFragment()).toMatchSnapshot();
+        unmount();
+    });
+
     it('should match views with more params first', async () => {
         await app.navigate('/dummy/foo/baz');
         const { asFragment } = render(<div>{renderView(Foo, Bar, Baz)}</div>)

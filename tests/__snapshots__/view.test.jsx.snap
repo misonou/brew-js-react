@@ -199,6 +199,34 @@ exports[`renderView should render functional component registered without import
 </DocumentFragment>
 `;
 
+exports[`renderView should render loader while first view component is being loaded 1`] = `
+<DocumentFragment>
+  <div>
+    <div
+      brew-view=""
+    >
+      <div>
+        loading
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`renderView should render loader while first view component is being loaded 2`] = `
+<DocumentFragment>
+  <div>
+    <div
+      brew-view=""
+    >
+      <div>
+        foo
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`renderView should render matched view 1`] = `
 <DocumentFragment>
   <div>

@@ -3,7 +3,6 @@
 import { ErrorHandler } from "zeta-dom-react";
 import { useRouteState } from "./hooks";
 
-export type ViewComponentRootProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 export type ViewComponent<P> = React.FC<ViewProps<P>>;
 export type ViewParamMatchers = Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>;
 /**
@@ -119,6 +118,13 @@ export interface ErrorViewProps<T = any> {
      * Re-renders the original view component with initial state.
      */
     reset(): void;
+}
+
+export interface ViewComponentRootProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+    /**
+     * Specifies initial loader if the first matched view is lazy-loaded.
+     */
+    loader?: React.ReactNode;
 }
 
 export function useViewContext(): ViewContext;

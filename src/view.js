@@ -193,8 +193,10 @@ definePrototype(ViewContainer, Component, {
         }
         event.waitFor(new Promise(function (resolve) {
             var context = new ViewContext(V, app.page, self.context);
+            var rootProps = self.props.rootProps;
             var initElement = executeOnce(function (element) {
                 defineOwnProperty(context, 'container', element, true);
+                self.currentContext = self.currentContext || context;
             });
             var onLoad = executeOnce(function () {
                 var element = context.container;
@@ -221,8 +223,8 @@ definePrototype(ViewContainer, Component, {
             self.abort = resolve;
             self.views[2] = createElement(StateContext.Provider, { key: state.id, value: context },
                 createElement(ViewStateContainer, null,
-                    createElement('div', extend({}, self.props.rootProps, { ref: initElement, 'brew-view': '' }),
-                        createElement(ErrorBoundary, { onLoad, context }))));
+                    createElement('div', extend(exclude(rootProps, 'loader'), { ref: initElement, 'brew-view': '' }),
+                        createElement(ErrorBoundary, { onLoad, context, self, loader: rootProps.loader }))));
         }));
     },
     getViewComponent: function () {
@@ -304,7 +306,7 @@ function createViewComponent(factory) {
         if (component) {
             props.onLoad();
         }
-        return component ? createElement(component.default, props.viewProps) : null;
+        return component ? createElement(component.default, props.viewProps) : (props.self.currentContext === props.context && props.loader) || null;
     };
 }
 
