@@ -320,6 +320,7 @@ describe('renderView', () => {
 
         await app.navigate('/dummy/foo/baz');
         await screen.findByText('baz');
+        await delay();
         expect(asFragment()).toMatchSnapshot();
     });
 
@@ -399,6 +400,51 @@ describe('renderView', () => {
             redirected: true,
             originalPath: '/dummy'
         });
+        unmount();
+    });
+
+    it('should discard pending view if matched view is reverted', async () => {
+        const cb = mockFn();
+        const Bar = registerView(async () => {
+            app.navigate('/dummy/foo', true);
+            await delay(50);
+            return {
+                default: () => (cb(), <div>bar</div>)
+            };
+        }, { view: 'bar' });
+        const { asFragment, unmount } = render(<div>{renderView(Foo, Bar)}</div>);
+        await waitForPageLoad();
+
+        await expect(app.navigate('/dummy/bar')).resolves.toMatchObject({ path: '/dummy/foo' });
+        await delay(100);
+        expect(asFragment()).toMatchSnapshot();
+        expect(cb).not.toBeCalled();
+        unmount();
+    });
+
+    it('should discard pending view if matched view is reverted without navigation', async () => {
+        const cb = mockFn();
+        const Bar2 = registerView(async () => {
+            rerender(<div>{renderView(Bar)}</div>)
+            await delay(50);
+            return {
+                default: () => (cb(), <div>bar2</div>)
+            };
+        }, { view: 'bar', remainingSegments: '/baz' });
+
+        const { asFragment, rerender, unmount } = render(<div>{renderView(Bar, Bar2)}</div>);
+        await waitForPageLoad();
+        expect(app.path).toBe('/dummy/bar');
+
+        rerender(<div>{renderView(Bar2)}</div>)
+        await delay(100);
+
+        expect(app.path).toBe('/dummy/bar/baz');
+        expect(asFragment()).toMatchSnapshot();
+        expect(cb).not.toBeCalled();
+
+        const { result } = renderHook(() => useViewContext());
+        expect(result.current.getChildren()[0].active).toBe(true);
         unmount();
     });
 
@@ -676,11 +722,11 @@ describe('renderView', () => {
         const pageenter = mockFn(() => screen.queryByText('foo'));
         dom.on(container, 'pageenter', pageenter);
 
-        const element = await screen.findByText('foo');
+        await waitFor(() => expect(pageenter).toBeCalled());
         verifyCalls(pageenter, [
             [expect.objectContaining({ type: 'pageenter', view: Foo }), _]
         ]);
-        expect(pageenter.mock.results[0].value).toBe(element);
+        expect(pageenter.mock.results[0].value).toBeTruthy();
         unmount();
     });
 

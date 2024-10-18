@@ -84,6 +84,34 @@ exports[`renderView should clear view data when navigation is redirected 1`] = `
 </DocumentFragment>
 `;
 
+exports[`renderView should discard pending view if matched view is reverted 1`] = `
+<DocumentFragment>
+  <div>
+    <div
+      brew-view=""
+    >
+      <div>
+        foo
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`renderView should discard pending view if matched view is reverted without navigation 1`] = `
+<DocumentFragment>
+  <div>
+    <div
+      brew-view=""
+    >
+      <div>
+        bar
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`renderView should match views with more params first 1`] = `
 <DocumentFragment>
   <div>
