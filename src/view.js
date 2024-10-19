@@ -292,7 +292,10 @@ function createViewComponent(factory) {
             return children;
         }
         var component = useAsync(function () {
-            return promise.then(null, props.onError);
+            return promise.then(null, function (error) {
+                promise = null;
+                props.onError(error);
+            });
         })[0];
         useEffect(function () {
             if (component) {

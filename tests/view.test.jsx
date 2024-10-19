@@ -611,6 +611,26 @@ describe('renderView', () => {
         unmount();
     });
 
+    it('should retry importing component', async () => {
+        const cb = mockFn(async () => {
+            throw new Error();
+        });
+        const cbReset = mockFn();
+        registerErrorView(({ reset }) => {
+            cbReset.mockImplementation(reset);
+            return <div>error</div>;
+        });
+        const BarError = registerView(cb, { view: 'bar' });
+        const { unmount } = render(<div>{renderView(BarError)}</div>);
+
+        await waitForPageLoad();
+        expect(cb).toBeCalledTimes(1);
+
+        cbReset();
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
+        unmount();
+    });
+
     it('should notify asynchronous operation on view container', async () => {
         const Foo = registerView(async () => {
             await delay(10);
