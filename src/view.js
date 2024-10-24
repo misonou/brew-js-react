@@ -81,16 +81,15 @@ definePrototype(ErrorBoundary, Component, {
     componentDidMount: function () {
         var self = this;
         self.componentWillUnmount = watch(self.props.context, 'page', function () {
-            self.state.error = null;
+            self.state.errorView = null;
             self.forceUpdate();
         });
     },
     componentDidCatch: function (error) {
         var self = this;
-        if (errorView && !self.state.error) {
-            self.setState({ error });
+        if (errorView && self.state.errorView !== errorView) {
+            self.setState({ error, errorView });
         } else {
-            // ensure promise sent to beforepageload event is resolved
             self.props.onLoad();
             reportError(error, self.props.context.container);
         }
@@ -104,26 +103,27 @@ definePrototype(ErrorBoundary, Component, {
             });
             return null;
         }
-        var error = self.state.error;
+        var errorView = self.state.errorView;
         var scope = self.scope || (self.scope = createAsyncScope(context.container));
-        var childProps = {
-            onLoad: self.props.onLoad,
-            onError: self.componentDidCatch.bind(self),
-            viewProps: error ? {
+        if (errorView) {
+            self.props.onLoad();
+            return createElement(scope.Provider, null, createElement(errorView, {
                 view: context.view,
-                error: error,
+                error: self.state.error,
                 reset: self.reset.bind(self)
-            } : {
-                errorHandler: scope.errorHandler,
-                navigationType: event.navigationType,
-                viewContext: context,
-                viewData: context.page.data || {}
-            }
+            }));
+        }
+        var onError = self.componentDidCatch.bind(self);
+        var viewProps = {
+            errorHandler: scope.errorHandler,
+            navigationType: event.navigationType,
+            viewContext: context,
+            viewData: context.page.data || {}
         };
-        return createElement(scope.Provider, null, createElement(error ? errorView : context.view, childProps));
+        return createElement(scope.Provider, null, createElement(context.view, extend({ viewProps, onError }, self.props)));
     },
     reset: function () {
-        this.setState({ error: null });
+        this.setState({ errorView: null });
     }
 });
 
@@ -351,7 +351,7 @@ export function registerView(factory, routeParams) {
 }
 
 export function registerErrorView(factory) {
-    errorView = createViewComponent(factory);
+    errorView = throwNotFunction(factory);
 }
 
 export function renderView() {

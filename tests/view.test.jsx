@@ -279,6 +279,17 @@ describe('isViewRendered', () => {
     });
 });
 
+describe('registerErrorView', () => {
+    it('should throw when value is not callable', () => {
+        expect(() => registerErrorView(null)).toThrow();
+        expect(() => registerErrorView(undefined)).toThrow();
+        expect(() => registerErrorView(1)).toThrow();
+        expect(() => registerErrorView(true)).toThrow();
+        expect(() => registerErrorView("true")).toThrow();
+        expect(() => registerErrorView([])).toThrow();
+    });
+});
+
 describe('renderView', () => {
     it('should render matched view', async () => {
         await app.navigate('/dummy/bar');
