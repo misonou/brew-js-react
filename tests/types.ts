@@ -1,6 +1,8 @@
 import { expectTypeOf } from "expect-type";
 import { createDialog, DialogOptions, DialogOptionsStrict, DialogRenderComponentProps, DialogState } from "src/dialog";
+import { makeTranslation, Translate, Translation } from "src/i18n";
 import { navigateTo, registerView, ViewComponent, ViewProps } from "src/view";
+import { Stringifiable } from "zeta-dom-react";
 
 declare const ReactContent: JSX.Element;
 declare const _: unknown;
@@ -308,6 +310,51 @@ createDialog(<DialogOptions<boolean> & { extraProp: boolean }>{
         return ReactContent;
     }
 });
+
+// -------------------------------------
+// i18n.d.ts
+
+const translations = {
+    en: {
+        prefix1: { key1: '', key2: '' },
+        prefix2: { key3: '', key4: '' },
+    }
+};
+
+expectTypeOf((<Translate<'key1' | 'key2'>>_)('key1')).toEqualTypeOf<string>();
+expectTypeOf((<Translate<'key1' | 'key2'>>_).html('key1')).toEqualTypeOf<{ __html: string }>();
+expectTypeOf((<Translate<'key1' | 'key2'>>_).lazy('key1')).toEqualTypeOf<Stringifiable>();
+
+// @ts-expect-error
+(<Translate<'key1' | 'key2'>>_)('key3');
+// @ts-expect-error
+(<Translate<'key1' | 'key2'>>_).html('key3');
+// @ts-expect-error
+(<Translate<'key1' | 'key2'>>_).lazy('key3');
+
+expectTypeOf((<Translation<'key1' | 'key2'>>_).t('key1')).toEqualTypeOf<string>();
+expectTypeOf((<Translation<'key1' | 'key2'>>_).t.html('key1')).toEqualTypeOf<{ __html: string }>();
+expectTypeOf((<Translation<'key1' | 'key2'>>_).t.lazy('key1')).toEqualTypeOf<Stringifiable>();
+
+// @ts-expect-error
+(<Translation<'key1' | 'key2'>>_).t('key3');
+// @ts-expect-error
+(<Translation<'key1' | 'key2'>>_).t.html('key3');
+// @ts-expect-error
+(<Translation<'key1' | 'key2'>>_).t.lazy('key3');
+
+expectTypeOf(makeTranslation(translations, 'en').keys).parameter(0).toEqualTypeOf<'prefix1' | 'prefix2'>();
+
+expectTypeOf(makeTranslation(translations, 'en').translate).toEqualTypeOf<Translate<'prefix1.key1' | 'prefix1.key2' | 'prefix2.key3' | 'prefix2.key4'>>();
+
+expectTypeOf(makeTranslation(translations, 'en').getTranslation()).toEqualTypeOf<Translate<'prefix1.key1' | 'prefix1.key2' | 'prefix2.key3' | 'prefix2.key4'>>();
+expectTypeOf(makeTranslation(translations, 'en').getTranslation('prefix1')).toEqualTypeOf<Translate<'key1' | 'key2'>>();
+
+expectTypeOf(makeTranslation(translations, 'en').useTranslation()).toEqualTypeOf<Translation<'prefix1.key1' | 'prefix1.key2' | 'prefix2.key3' | 'prefix2.key4'>>();
+expectTypeOf(makeTranslation(translations, 'en').useTranslation('prefix1')).toEqualTypeOf<Translation<'key1' | 'key2'>>();
+
+// @ts-expect-error
+makeTranslation(translations, 'de');
 
 // -------------------------------------
 // view.d.ts

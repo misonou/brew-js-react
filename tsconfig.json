@@ -3,6 +3,10 @@
     "compilerOptions": {
         "esModuleInterop": true,
         "jsx": "react-jsx",
+        "typeRoots": [
+            "node_modules/@types",
+            "../@types"
+        ],
         "types": [
             "brew-js",
             "zeta-dom",

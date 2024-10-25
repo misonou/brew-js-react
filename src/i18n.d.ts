@@ -1,5 +1,5 @@
-type StringKeysOf<T> = Extract<keyof T, string>;
-type ArrayMember<T> = { [P in Extract<keyof T, number>]: T[P] }[Extract<keyof T, number>];
+type ResourceGlobalKey<T> = { [P in Zeta.StringKeyOf<T>]: `${P}.${Zeta.StringKeyOf<T[P]>}` }[Zeta.StringKeyOf<T>];
+type ResourceKey<T, K extends Zeta.StringKeyOf<T>> = { [P in Zeta.StringKeyOf<T>]: Zeta.StringKeyOf<T[P]> }[K];
 
 export interface Translate<T> {
     /**
@@ -36,6 +36,37 @@ export interface Translation<T> {
     readonly t: Translate<T>
 }
 
+export interface TranslationFactory<T extends object> {
+    /**
+     * Returns all keys for the given prefix.
+     */
+    keys<K extends Zeta.StringKeyOf<T>>(prefix: K): ResourceKey<T, K>[];
+    /**
+     * Returns a translated string based on the given translation key.
+     */
+    translate: Translate<ResourceGlobalKey<T>>;
+    /**
+     * Create translation callback which only looks up all prefixes.
+     * Translation key must include prefix.
+     */
+    getTranslation(): Translate<ResourceGlobalKey<T>>;
+    /**
+     * Create translation callback which only looks up the given prefixes.
+     * Translation string will be looked up in prefixes of the specified order.
+     */
+    getTranslation<K extends readonly Zeta.StringKeyOf<T>[]>(...args: K): Translate<ResourceKey<T, Zeta.ArrayMember<K>>>;
+    /**
+     * Create translation callback which only looks up all prefixes.
+     * Translation key must include prefix.
+     */
+    useTranslation(): Translation<ResourceGlobalKey<T>>;
+    /**
+     * Create translation callback which only looks up the given prefixes.
+     * Translation string will be looked up in prefixes of the specified order.
+     */
+    useTranslation<K extends readonly Zeta.StringKeyOf<T>[]>(...args: K): Translation<ResourceKey<T, Zeta.ArrayMember<K>>>;
+}
+
 /**
  * Returns the current language, and
  * refresh the component when the language has changed.
@@ -60,48 +91,4 @@ export function useLanguage(): string;
  * };
  * ```
  */
-export function makeTranslation<T extends Zeta.Dictionary<object>, K extends keyof T>(resources: T, defaultLang: K) {
-    type ResourceObject = typeof resources[K];
-    type ResourcePrefix = StringKeysOf<ResourceObject>;
-    type ResourceKey<T> = { [P in ResourcePrefix]: StringKeysOf<ResourceObject[P]> }[T];
-    type ResourceGlobalKey = { [P in ResourcePrefix]: `${P}.${StringKeysOf<ResourceObject[P]>}` }[ResourcePrefix];
-
-    interface GetKeys {
-        /**
-         * Gets the list of translation key under the given prefix.
-         */
-        <T extends ResourcePrefix>(prefix: T): ResourceKey<T>[];
-    }
-
-    interface GetTranslation {
-        /**
-         * Create translation callback which only looks up all prefixes.
-         * Translation key must include prefix.
-         */
-        (): Translate<ResourceGlobalKey>;
-        /**
-         * Create translation callback which only looks up the given prefixes.
-         * Translation string will be looked up in prefixes of the specified order.
-         */
-        <T extends readonly ResourcePrefix[]>(...args: T): Translate<ResourceKey<ArrayMember<T>>>;
-    }
-
-    interface UseTranslationHook {
-        /**
-         * Create translation callback which only looks up all prefixes.
-         * Translation key must include prefix.
-         */
-        (): Translation<ResourceGlobalKey>;
-        /**
-         * Create translation callback which only looks up the given prefixes.
-         * Translation string will be looked up in prefixes of the specified order.
-         */
-        <T extends readonly ResourcePrefix[]>(...args: T): Translation<ResourceKey<ArrayMember<T>>>;
-    }
-
-    declare const keys: GetKeys;
-    declare const translate: Translate<ResourceGlobalKey>;
-    declare const getTranslation: GetTranslation;
-    declare const useTranslation: UseTranslationHook;
-    return { keys, translate, getTranslation, useTranslation };
-}
+export function makeTranslation<T extends Zeta.Dictionary<object>, K extends keyof T>(resources: T, defaultLang: K): TranslationFactory<T[K]>

@@ -5,6 +5,8 @@ import Mixin from "./Mixin";
 import StaticAttributeMixin from "./StaticAttributeMixin";
 import { useScrollableMixin } from "../mixin";
 
+type JQueryScrollableMethods = Pick<JQueryScrollable, { [P in keyof JQueryScrollable]: JQueryScrollable[P] extends Zeta.AnyFunction ? P : never }[keyof JQueryScrollable]>;
+
 export interface ScrollableMixinOptions {
     /**
      * Specifies in which direction can be scrolled.
@@ -46,7 +48,7 @@ export interface ScrollableMixinOptions {
  *
  * Mixin should be created using {@link useScrollableMixin} and applied to element by {@link Mixin.use}.
  */
-export default class ScrollableMixin extends ClassNameMixin implements JQueryScrollable {
+export default class ScrollableMixin extends ClassNameMixin implements JQueryScrollableMethods {
     /**
      * Gets a mixin object that when applied to descecant element
      * the element will act as content to be scrolled.

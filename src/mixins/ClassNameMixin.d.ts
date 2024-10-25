@@ -12,7 +12,7 @@ export default class ClassNameMixin extends StatefulMixin<ClassNameMixinState> {
     /**
      * @param classNames Specifies a list of class names to be obeserved.
      */
-    constructor(classNames: string[] = []);
+    constructor(classNames?: string[]);
 
     /**
      * Override to perform actions when observed class names has changed.
