@@ -229,7 +229,9 @@ definePrototype(ViewContainer, Component, {
     },
     getViewComponent: function () {
         var props = this.props;
-        return any(props.views, isViewMatched) || props.defaultView;
+        return any(props.views, function (v) {
+            return matchViewParams(v, app.route);
+        }) || props.defaultView;
     }
 });
 fill(ViewContainer.prototype, 'abort onRender setActive setPage unmountView', noop);
@@ -315,7 +317,8 @@ export function useViewContext() {
 }
 
 export function isViewMatched(view) {
-    return matchViewParams(view, app.route);
+    var route = app.route;
+    return matchViewParams(view, route) && resolvePath(view, route) === route.toString();
 }
 
 export function isViewRendered(view) {

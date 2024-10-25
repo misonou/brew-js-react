@@ -259,6 +259,11 @@ describe('isViewMatched', () => {
         await app.navigate('/dummy/foo/baz');
         expect(isViewMatched(FooBazEmpty)).toBe(false);
     });
+
+    it('should not match when resolved path differs from current', async () => {
+        await app.navigate('/dummy/foo');
+        expect(isViewMatched(Baz)).toBe(false);
+    });
 });
 
 describe('isViewRendered', () => {
