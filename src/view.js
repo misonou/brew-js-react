@@ -105,15 +105,18 @@ definePrototype(ErrorBoundary, Component, {
         var context = self.props.context;
         if (!context.container) {
             setImmediate(function () {
+                extend(self, createAsyncScope(context.container));
+                dom.on(context.container, 'error', function (e) {
+                    return emitter.emit(e, context, { error: e.error });
+                });
                 self.forceUpdate();
             });
             return null;
         }
         var errorView = self.state.errorView;
-        var scope = self.scope || (self.scope = createAsyncScope(context.container));
         if (errorView) {
             self.props.onLoad();
-            return createElement(scope.Provider, null, createElement(self.state.errorView, {
+            return createElement(self.Provider, null, createElement(self.state.errorView, {
                 view: context.view,
                 error: self.state.error,
                 reset: self.reset.bind(self)
@@ -121,12 +124,12 @@ definePrototype(ErrorBoundary, Component, {
         }
         var onError = self.componentDidCatch.bind(self);
         var viewProps = {
-            errorHandler: scope.errorHandler,
+            errorHandler: self.errorHandler,
             navigationType: event.navigationType,
             viewContext: context,
             viewData: context.page.data || {}
         };
-        return createElement(scope.Provider, null, createElement(context.view, extend({ viewProps, onError }, self.props)));
+        return createElement(self.Provider, null, createElement(context.view, extend({ viewProps, onError }, self.props)));
     },
     reset: function () {
         this.setState({ errorView: null });
@@ -221,10 +224,13 @@ definePrototype(ViewContainer, Component, {
                 animateIn(element, 'show', '[brew-view]', true);
                 resolve();
             });
+            context.on('error', function () {
+                return (rootProps.onError || noop).apply(this, arguments);
+            });
             self.abort = resolve;
             self.views[2] = createElement(StateContext.Provider, { key: state.id, value: context },
                 createElement(ViewStateContainer, null,
-                    createElement('div', extend(exclude(rootProps, 'loader'), { ref: initElement, 'brew-view': '' }),
+                    createElement('div', extend(exclude(rootProps, ['loader', 'onError']), { ref: initElement, 'brew-view': '' }),
                         createElement(ErrorBoundary, { onLoad, context, self, loader: rootProps.loader }))));
         }));
     },

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useAsync, useObservableProperty, useViewState } from "zeta-dom-react";
-import { isViewMatched, isViewRendered, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext } from "src/view";
+import { isViewMatched, isViewRendered, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext, ViewContext } from "src/view";
 import { body, delay, mockFn, verifyCalls, _, cleanup, root } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
 import { addAnimateIn, addAnimateOut } from "brew-js/anim";
@@ -535,14 +535,15 @@ describe('renderView', () => {
         const BarError = registerView(async () => {
             throw error;
         }, { view: 'bar' });
-        const { container, unmount } = render(<div>{renderView(BarError)}</div>);
 
-        const cb = mockFn();
-        dom.on(container, 'error', cb);
-        dom.on(root, 'error', cb);
+        const onError = mockFn();
+        const { container, unmount } = render(<div>{renderView({ onError }, BarError)}</div>);
+        dom.on(container, 'error', onError);
+        dom.on(root, 'error', onError);
 
         await waitForPageLoad();
-        verifyCalls(cb, [
+        verifyCalls(onError, [
+            [expect.objectContaining({ error, currentTarget: ViewContext.root.getChildren()[0] }), _],
             [expect.objectContaining({ error, currentTarget: container }), _],
             [expect.objectContaining({ error, currentTarget: root }), _],
         ]);
@@ -558,14 +559,15 @@ describe('renderView', () => {
                 }
             }
         }, { view: 'bar' });
-        const { container, unmount } = render(<div>{renderView(BarError)}</div>);
 
-        const cb = mockFn();
-        dom.on(container, 'error', cb);
-        dom.on(root, 'error', cb);
+        const onError = mockFn();
+        const { container, unmount } = render(<div>{renderView({ onError }, BarError)}</div>);
+        dom.on(container, 'error', onError);
+        dom.on(root, 'error', onError);
 
         await waitForPageLoad();
-        verifyCalls(cb, [
+        verifyCalls(onError, [
+            [expect.objectContaining({ error, currentTarget: ViewContext.root.getChildren()[0] }), _],
             [expect.objectContaining({ error, currentTarget: container }), _],
             [expect.objectContaining({ error, currentTarget: root }), _],
         ]);
@@ -581,15 +583,16 @@ describe('renderView', () => {
             }
             return (<div>bar</div>);
         }, { view: 'bar' });
-        const { container, unmount } = render(<div>{renderView(BarError)}</div>);
+
+        const onError = mockFn();
+        const { container, unmount } = render(<div>{renderView({ onError }, BarError)}</div>);
+        dom.on(container, 'error', onError);
+        dom.on(root, 'error', onError);
+
         await screen.findByText('bar');
-
-        const cb = mockFn();
-        dom.on(container, 'error', cb);
-        dom.on(root, 'error', cb);
-
         await actAwaitSetImmediate(() => setError(new Error()));
-        verifyCalls(cb, [
+        verifyCalls(onError, [
+            [expect.objectContaining({ error, currentTarget: ViewContext.root.getChildren()[0] }), _],
             [expect.objectContaining({ error, currentTarget: container }), _],
             [expect.objectContaining({ error, currentTarget: root }), _],
         ]);
@@ -597,6 +600,7 @@ describe('renderView', () => {
     });
 
     it('should catch and render error view', async () => {
+        const error = new Error();
         const reset = mockFn();
         const receivedProps = {};
         registerErrorView((props) => {
@@ -613,17 +617,16 @@ describe('renderView', () => {
             }
             return (<div>bar</div>);
         }, { view: 'bar' });
-        const { container } = render(<div>{renderView(BarError)}</div>);
+
+        const onError = mockFn();
+        const { container } = render(<div>{renderView({ onError }, BarError)}</div>);
+        dom.on(container, 'error', onError);
+        dom.on(root, 'error', onError);
+
         await screen.findByText('bar');
-
-        const error = new Error();
-        const cb = mockFn();
-        dom.on(container, 'error', cb);
-        dom.on(root, 'error', cb);
-
         await actAwaitSetImmediate(() => obj.error = error);
         await screen.findByText('error');
-        expect(cb).not.toBeCalled();
+        expect(onError).not.toBeCalled();
         expect(receivedProps).toMatchObject({
             view: BarError,
             error: error
@@ -635,6 +638,7 @@ describe('renderView', () => {
     });
 
     it('should catch and emit rendering error thrown from error view', async () => {
+        const error = new Error();
         const obj = { error: null };
         registerErrorView(() => {
             const error = useObservableProperty(obj, 'error');
@@ -647,16 +651,16 @@ describe('renderView', () => {
         const BarError = registerView(async () => {
             throw new Error();
         }, { view: 'bar' });
-        const { container, asFragment, unmount } = render(<div>{renderView(BarError)}</div>);
+
+        const onError = mockFn();
+        const { container, asFragment, unmount } = render(<div>{renderView({ onError }, BarError)}</div>);
+        dom.on(container, 'error', onError);
+        dom.on(root, 'error', onError);
+
         await screen.findByText('error');
-
-        const error = new Error();
-        const cb = mockFn();
-        dom.on(container, 'error', cb);
-        dom.on(root, 'error', cb);
-
         await actAwaitSetImmediate(() => obj.error = error);
-        verifyCalls(cb, [
+        verifyCalls(onError, [
+            [expect.objectContaining({ error, currentTarget: ViewContext.root.getChildren()[0] }), _],
             [expect.objectContaining({ error, currentTarget: container }), _],
             [expect.objectContaining({ error, currentTarget: root }), _],
         ]);

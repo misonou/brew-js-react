@@ -39,6 +39,7 @@ export interface PageChangeEvent extends Zeta.ZetaEventBase<ViewContext> {
 }
 
 export interface ViewContextEventMap {
+    error: Zeta.ZetaErrorEvent<HTMLElement, ViewContext>;
     pagechange: PageChangeEvent;
 }
 
@@ -138,11 +139,17 @@ export interface ErrorViewProps<T = any> {
     reset(): void;
 }
 
-export interface ViewComponentRootProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+export interface ViewComponentRootProps extends Omit<React.ComponentProps<'div'>, 'onError'> {
     /**
      * Specifies initial loader if the first matched view is lazy-loaded.
      */
     loader?: React.ReactNode;
+    /**
+     * Specifies callback to handle error raised within the view.
+     * @param event Error event.
+     * @param context Associated view context.
+     */
+    onError?: (event: Zeta.ZetaErrorEvent<HTMLElement, ViewContext>, context: ViewContext) => any;
 }
 
 export function useViewContext(): ViewContext;
