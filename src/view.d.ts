@@ -42,7 +42,7 @@ export interface ViewContextEventMap {
     pagechange: PageChangeEvent;
 }
 
-export interface ViewContext extends Zeta.ZetaEventDispatcher<ViewContextEventMap, ViewContext> {
+export class ViewContext implements Zeta.ZetaEventDispatcher<ViewContextEventMap, ViewContext> {
     /**
      * Gets the parent view context, or `null` if there is no parent context.
      */
@@ -69,6 +69,11 @@ export interface ViewContext extends Zeta.ZetaEventDispatcher<ViewContextEventMa
     readonly page: Brew.PageInfo;
 
     /**
+     * Gets the root context.
+     */
+    static readonly root: ViewContext;
+
+    /**
      * Gets view contexts rendered under this view container.
      */
     getChildren(): ViewContext[];
@@ -80,6 +85,19 @@ export interface ViewContext extends Zeta.ZetaEventDispatcher<ViewContextEventMa
      * @returns Returns `true` when error view is triggered; or `undefined` when called on root context.
      */
     setErrorView<T>(errorView: React.ComponentType<ErrorViewProps<T>>, error: T): true | undefined;
+
+    /**
+     * Adds event handlers to multiple events.
+     * @param handlers A dictionary which the keys are event names and values are the callback for each event.
+     */
+    on(handlers: Zeta.ZetaEventHandlers<ViewContextEventMap, ViewContext>): Zeta.UnregisterCallback;
+
+    /**
+     * Adds an event handler to a specific event.
+     * @param event Name of the event.
+     * @param handler A callback function to be fired when the specified event is triggered.
+     */
+    on<E extends keyof ViewContextEventMap>(event: E, handler: Zeta.ZetaEventHandler<E, ViewContextEventMap, ViewContext>): Zeta.UnregisterCallback;
 }
 
 export interface ViewProps<S = {}> {

@@ -42,7 +42,7 @@ onAppInit(function () {
     rootState.setPage(app.page);
 });
 
-function ViewContext(view, page, parent) {
+export function ViewContext(view, page, parent) {
     var self = this;
     defineOwnProperty(self, 'view', view || null, true);
     defineOwnProperty(self, 'parent', parent || null, true);
@@ -60,6 +60,7 @@ function ViewContext(view, page, parent) {
         });
     });
 }
+defineOwnProperty(ViewContext, 'root', rootContext, true);
 
 definePrototype(ViewContext, {
     getChildren: function () {
