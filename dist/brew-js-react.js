@@ -1,4 +1,4 @@
-/*! brew-js-react v0.6.4 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.6.5 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -181,6 +181,7 @@ __webpack_require__.d(__webpack_exports__, {
   ScrollableMixin: () => (/* reexport */ ScrollableMixin),
   StatefulMixin: () => (/* reexport */ StatefulMixin),
   UnmanagedClassNameMixin: () => (/* reexport */ UnmanagedClassNameMixin),
+  ViewContext: () => (/* reexport */ ViewContext),
   ViewStateContainer: () => (/* reexport */ ViewStateContainer),
   createDialog: () => (/* reexport */ createDialog),
   isViewMatched: () => (/* reexport */ isViewMatched),
@@ -220,6 +221,7 @@ var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __we
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/util.js
 
 var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
+  always = _lib$util.always,
   any = _lib$util.any,
   arrRemove = _lib$util.arrRemove,
   catchAsync = _lib$util.catchAsync,
@@ -301,12 +303,12 @@ var external_commonjs_react_commonjs2_react_amd_react_root_React_ = __webpack_re
 ;// CONCATENATED MODULE: ./|umd|/react.js
 
 var Component = external_commonjs_react_commonjs2_react_amd_react_root_React_.Component,
-  Fragment = external_commonjs_react_commonjs2_react_amd_react_root_React_.Fragment,
   StrictMode = external_commonjs_react_commonjs2_react_amd_react_root_React_.StrictMode,
   createContext = external_commonjs_react_commonjs2_react_amd_react_root_React_.createContext,
   createElement = external_commonjs_react_commonjs2_react_amd_react_root_React_.createElement,
   useContext = external_commonjs_react_commonjs2_react_amd_react_root_React_.useContext,
   useEffect = external_commonjs_react_commonjs2_react_amd_react_root_React_.useEffect,
+  useLayoutEffect = external_commonjs_react_commonjs2_react_amd_react_root_React_.useLayoutEffect,
   useMemo = external_commonjs_react_commonjs2_react_amd_react_root_React_.useMemo,
   useRef = external_commonjs_react_commonjs2_react_amd_react_root_React_.useRef,
   useState = external_commonjs_react_commonjs2_react_amd_react_root_React_.useState;
@@ -504,7 +506,9 @@ var rootState = _(rootContext);
 var StateContext = /*#__PURE__*/createContext(rootContext);
 var errorView;
 /** @type {Partial<Zeta.ZetaEventType<"beforepageload", Brew.RouterEventMap, Element>>} */
-var view_event = {};
+var view_event = {
+  waitFor: noop
+};
 onAppInit(function () {
   app_app.on('beforepageload', function (e) {
     rootState.setPage(app_app.page);
@@ -541,92 +545,109 @@ function ViewContext(view, page, parent) {
     });
   });
 }
+defineOwnProperty(ViewContext, 'root', rootContext, true);
 definePrototype(ViewContext, {
   getChildren: function getChildren() {
     return map(_(this).children, function (v) {
       return v.currentContext;
     });
   },
+  setErrorView: function setErrorView(errorView, error) {
+    var wrapper = _(this).wrapper;
+    return wrapper && errorView && !wrapper.setState({
+      error: error,
+      errorView: errorView
+    });
+  },
   on: function on(event, handler) {
     return emitter.add(this, event, handler);
   }
 });
-function ErrorBoundary() {
-  Component.apply(this, arguments);
+function ErrorBoundary(props) {
+  Component.call(this, props);
   this.state = {};
+  _(props.context).wrapper = this;
 }
-ErrorBoundary.contextType = StateContext;
 definePrototype(ErrorBoundary, Component, {
   componentDidMount: function componentDidMount() {
     var self = this;
-    self.componentWillUnmount = watch(self.context, 'page', function () {
-      self.state.error = null;
+    self.componentWillUnmount = watch(self.props.context, 'page', function () {
+      self.state.errorView = null;
       self.forceUpdate();
     });
   },
   componentDidCatch: function componentDidCatch(error) {
     var self = this;
-    if (errorView && !self.state.error) {
+    if (errorView && self.state.errorView !== errorView) {
       self.setState({
-        error: error
+        error: error,
+        errorView: errorView
       });
     } else {
-      // ensure promise sent to beforepageload event is resolved
       self.props.onLoad();
-      reportError(error, self.context.container);
+      reportError(error, self.props.context.container);
     }
   },
   render: function render() {
     var self = this;
-    var context = self.context;
+    var context = self.props.context;
     if (!context.container) {
       setImmediate(function () {
+        extend(self, createAsyncScope(context.container));
+        zeta_dom_dom.on(context.container, 'error', function (e) {
+          return emitter.emit(e, context, {
+            error: e.error
+          });
+        });
         self.forceUpdate();
       });
       return null;
     }
-    var error = self.state.error;
-    var scope = self.scope || (self.scope = createAsyncScope(context.container));
-    var childProps = {
-      onLoad: self.props.onLoad,
-      onError: self.componentDidCatch.bind(self),
-      viewProps: error ? {
+    var errorView = self.state.errorView;
+    if (errorView) {
+      self.props.onLoad();
+      return /*#__PURE__*/createElement(self.Provider, null, /*#__PURE__*/createElement(self.state.errorView, {
         view: context.view,
-        error: error,
+        error: self.state.error,
         reset: self.reset.bind(self)
-      } : {
-        errorHandler: scope.errorHandler,
-        navigationType: view_event.navigationType,
-        viewContext: context,
-        viewData: context.page.data || {}
-      }
+      }));
+    }
+    var onError = self.componentDidCatch.bind(self);
+    var viewProps = {
+      errorHandler: self.errorHandler,
+      navigationType: view_event.navigationType,
+      viewContext: context,
+      viewData: context.page.data || {}
     };
-    return /*#__PURE__*/createElement(scope.Provider, null, /*#__PURE__*/createElement(error ? errorView : context.view, childProps));
+    return /*#__PURE__*/createElement(self.Provider, null, /*#__PURE__*/createElement(context.view, extend({
+      viewProps: viewProps,
+      onError: onError
+    }, self.props)));
   },
   reset: function reset() {
     this.setState({
-      error: null
+      errorView: null
     });
   }
 });
 function ViewContainer() {
   Component.apply(this, arguments);
+  this.views = [];
 }
 ViewContainer.contextType = StateContext;
 definePrototype(ViewContainer, Component, {
-  setActive: noop,
   componentDidMount: function componentDidMount() {
     var self = this;
     var parent = _(self.context).children;
     var unwatch = watch(app_app.route, function () {
-      self.setActive(self.getViewComponent() === self.currentViewComponent);
+      self.setActive(self.getViewComponent() === (self.currentContext || '').view);
     });
     self.componentWillUnmount = function () {
       self.setActive(false);
       arrRemove(parent, self);
       unwatch();
       setImmediate(function () {
-        if (self.unmountView && !self.currentContext.active) {
+        if (self.currentContext && !self.currentContext.active) {
           self.unmountView();
         }
       });
@@ -640,13 +661,13 @@ definePrototype(ViewContainer, Component, {
     if (self.context.active) {
       self.updateView();
     }
-    (self.onRender || noop)();
-    return /*#__PURE__*/createElement(Fragment, null, self.prevView, self.currentView);
+    self.onRender();
+    return self.views;
   },
   updateView: function updateView() {
     var self = this;
     var V = self.getViewComponent();
-    var viewChanged = V !== self.currentViewComponent;
+    var viewChanged = V !== (self.currentContext || '').view;
     if (V && (viewChanged || !(self.children || '')[0])) {
       // ensure the current path actually corresponds to the matched view
       // when some views are not included in the list of allowed views
@@ -656,67 +677,78 @@ definePrototype(ViewContainer, Component, {
         return;
       }
     }
-    if (V && viewChanged) {
-      (self.unmountView || noop)(true);
+    var state = routeMap.get(V) || {};
+    if ((self.views[2] || '').key === state.id) {
+      return;
+    }
+    self.views[2] = null;
+    self.abort();
+    if (!V || !viewChanged) {
+      self.setActive(true);
+      self.setPage(app_app.page);
+      return;
+    }
+    view_event.waitFor(new Promise(function (resolve) {
       var context = new ViewContext(V, app_app.page, self.context);
-      var state = routeMap.get(V);
-      var onLoad;
-      var promise = new Promise(function (resolve) {
-        onLoad = resolve;
-      });
-      var unmountView = onLoad;
+      var rootProps = self.props.rootProps;
       var initElement = executeOnce(function (element) {
-        context.container = element;
-        promise.then(function () {
-          if (self.currentContext === context) {
-            unmountView = function unmountView() {
-              self.prevView = self.currentView;
-              app_app.emit('pageleave', element, {
-                pathname: context.page.path,
-                view: V
-              }, true);
-              animateOut(element, 'show').then(function () {
-                self.prevView = undefined;
-                self.forceUpdate();
-              });
-            };
-            animateIn(element, 'show', '[brew-view]', true);
-            app_app.emit('pageenter', element, {
-              pathname: context.page.path,
-              view: V
-            }, true);
-          }
-        });
+        defineOwnProperty(context, 'container', element, true);
+        self.currentContext = self.currentContext || context;
       });
-      var view = /*#__PURE__*/createElement(StateContext.Provider, {
+      var onLoad = executeOnce(function () {
+        var element = context.container;
+        var promise = self.unmountView();
+        self.unmountView = executeOnce(function () {
+          state.rendered--;
+          self.setActive(false);
+          app_app.emit('pageleave', element, {
+            pathname: context.page.path,
+            view: V
+          }, true);
+          return animateOut(element, 'show').then(function () {
+            self.views[0] = null;
+            self.forceUpdate();
+          });
+        });
+        always(promise, delay).then(function () {
+          app_app.emit('pageenter', element, {
+            pathname: context.page.path,
+            view: V
+          }, true);
+        });
+        self.views.shift();
+        self.currentContext = context;
+        extend(self, _(context));
+        state.rendered++;
+        animateIn(element, 'show', '[brew-view]', true);
+        resolve();
+      });
+      context.on('error', function () {
+        return (rootProps.onError || noop).apply(this, arguments);
+      });
+      self.abort = resolve;
+      self.views[2] = /*#__PURE__*/createElement(StateContext.Provider, {
         key: state.id,
         value: context
-      }, /*#__PURE__*/createElement(ViewStateContainer, null, /*#__PURE__*/createElement('div', extend({}, self.props.rootProps, {
+      }, /*#__PURE__*/createElement(ViewStateContainer, null, /*#__PURE__*/createElement('div', extend(exclude(rootProps, ['loader', 'onError']), {
         ref: initElement,
         'brew-view': ''
       }), /*#__PURE__*/createElement(ErrorBoundary, {
-        onLoad: onLoad
+        onLoad: onLoad,
+        context: context,
+        self: self,
+        loader: rootProps.loader
       }))));
-      extend(self, _(context), {
-        currentContext: context,
-        currentView: view,
-        currentViewComponent: V,
-        unmountView: executeOnce(function () {
-          self.setActive(false);
-          state.rendered--;
-          unmountView();
-        })
-      });
-      state.rendered++;
-      (view_event.waitFor || noop)(promise);
-    }
-    (self.setPage || noop)(app_app.page);
+    }));
   },
   getViewComponent: function getViewComponent() {
     var props = this.props;
-    return any(props.views, isViewMatched) || props.defaultView;
+    return any(props.views, function (v) {
+      return matchViewParams(v, app_app.route);
+    }) || props.defaultView;
   }
 });
+fill(ViewContainer.prototype, 'abort onRender setActive setPage unmountView', noop);
 function normalizePart(value, part) {
   return isUndefinedOrNull(value) || value === '' || value === part ? '' : value[0] === part ? value : part + value;
 }
@@ -775,25 +807,27 @@ function createViewComponent(factory) {
       promise = children;
       catchAsync(promise);
     } else {
-      useEffect(props.onLoad, []);
+      useLayoutEffect(props.onLoad, []);
       return children;
     }
     var component = useAsync(function () {
-      return promise.then(null, props.onError);
+      return promise.then(null, function (error) {
+        promise = null;
+        props.onError(error);
+      });
     })[0];
-    useEffect(function () {
-      if (component) {
-        props.onLoad();
-      }
-    }, [component]);
-    return component ? /*#__PURE__*/createElement(component["default"], props.viewProps) : null;
+    if (component) {
+      props.onLoad();
+    }
+    return component ? /*#__PURE__*/createElement(component["default"], props.viewProps) : props.self.currentContext === props.context && props.loader || null;
   };
 }
 function useViewContext() {
   return useContext(StateContext);
 }
 function isViewMatched(view) {
-  return matchViewParams(view, app_app.route);
+  var route = app_app.route;
+  return matchViewParams(view, route) && resolvePath(view, route) === route.toString();
 }
 function isViewRendered(view) {
   return !!(routeMap.get(view) || '').rendered;
@@ -832,7 +866,7 @@ function registerView(factory, routeParams) {
   return Component;
 }
 function registerErrorView(factory) {
-  errorView = createViewComponent(factory);
+  errorView = throwNotFunction(factory);
 }
 function renderView() {
   var views = makeArray(arguments);
