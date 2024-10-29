@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react-hooks";
 import { addAnimateOut } from "brew-js/anim";
 import { useQueryParam, useRouteParam, useRouteState, ViewStateContainer } from "src/hooks";
@@ -291,7 +291,7 @@ describe('useRouteState', () => {
 
         cb.mockClear();
         await app.navigate('/bar');
-        await screen.findByText('bar1');
+        await waitFor(() => expect(cb).toBeCalledTimes(3));
         try {
             expect(cb.mock.calls).toEqual([
                 ['bar'],
@@ -308,7 +308,7 @@ describe('useRouteState', () => {
 
         cb.mockClear();
         await app.back();
-        await screen.findByText('foo1');
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
         try {
             expect(cb.mock.calls).toEqual([
                 ['foo1'],
