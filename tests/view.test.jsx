@@ -688,6 +688,19 @@ describe('renderView', () => {
         unmount();
     });
 
+    it('should invoke onError callback supplied in the last render', async () => {
+        const cb1 = mockFn();
+        const cb2 = mockFn();
+        const { rerender, unmount } = render(<div>{renderView({ onError: cb1 }, Foo)}</div>);
+        await screen.findByText('foo');
+
+        rerender(<div>{renderView({ onError: cb2 }, Foo)}</div>);
+        dom.reportError(new Error(), screen.getByText('foo'));
+        expect(cb1).not.toBeCalled();
+        expect(cb2).toBeCalled();
+        unmount();
+    });
+
     it('should render error view when requested', async () => {
         const setErrorView = mockFn();
         const errorView = (props) => {

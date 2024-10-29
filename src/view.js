@@ -225,7 +225,7 @@ definePrototype(ViewContainer, Component, {
                 resolve();
             });
             context.on('error', function () {
-                return (rootProps.onError || noop).apply(this, arguments);
+                return (self.props.rootProps.onError || noop).apply(this, arguments);
             });
             self.abort = resolve;
             self.views[2] = createElement(StateContext.Provider, { key: state.id, value: context },
