@@ -668,6 +668,26 @@ describe('renderView', () => {
         unmount();
     });
 
+    it('should invoke onError callback correctly with nested container', async () => {
+        const onError = mockFn();
+        const FooOuter = registerView(() => {
+            return (
+                <div>{renderView({ onError }, Foo)}</div>
+            );
+        }, { view: 'foo' });
+        const { unmount } = render(<div>{renderView({ onError }, FooOuter)}</div>);
+        await screen.findByText('foo');
+
+        const outer = ViewContext.root.getChildren()[0];
+        const inner = outer.getChildren()[0];
+        dom.reportError(new Error(), inner.container);
+        verifyCalls(onError, [
+            [expect.objectContaining({ currentTarget: inner }), inner],
+            [expect.objectContaining({ currentTarget: outer }), outer],
+        ]);
+        unmount();
+    });
+
     it('should render error view when requested', async () => {
         const setErrorView = mockFn();
         const errorView = (props) => {

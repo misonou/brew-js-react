@@ -107,7 +107,7 @@ definePrototype(ErrorBoundary, Component, {
             setImmediate(function () {
                 extend(self, createAsyncScope(context.container));
                 dom.on(context.container, 'error', function (e) {
-                    return emitter.emit(e, context, { error: e.error });
+                    return emitter.emit(e, context, { error: e.error }, false);
                 });
                 self.forceUpdate();
             });
