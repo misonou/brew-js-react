@@ -200,6 +200,11 @@ definePrototype(ViewContainer, Component, {
             var rootProps = self.props.rootProps;
             var initElement = executeOnce(function (element) {
                 defineOwnProperty(context, 'container', element, true);
+                dom.on(element, 'error', function (e) {
+                    if (context !== self.currentContext) {
+                        e.handled();
+                    }
+                });
                 self.currentContext = self.currentContext || context;
             });
             var onLoad = executeOnce(function () {
