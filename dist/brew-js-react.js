@@ -1,4 +1,4 @@
-/*! brew-js-react v0.6.5 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.6.6 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -597,7 +597,7 @@ definePrototype(ErrorBoundary, Component, {
         zeta_dom_dom.on(context.container, 'error', function (e) {
           return emitter.emit(e, context, {
             error: e.error
-          });
+          }, false);
         });
         self.forceUpdate();
       });
@@ -655,6 +655,14 @@ definePrototype(ViewContainer, Component, {
     parent.push(self);
     self.setActive(true);
   },
+  componentDidUpdate: function componentDidUpdate(prevProps) {
+    (prevProps.rootProps.ref || {}).current = null;
+    this.setContext(this.currentContext);
+  },
+  setContext: function setContext(context) {
+    this.currentContext = context;
+    (this.props.rootProps.ref || {}).current = context;
+  },
   render: function render() {
     /** @type {any} */
     var self = this;
@@ -693,7 +701,12 @@ definePrototype(ViewContainer, Component, {
       var rootProps = self.props.rootProps;
       var initElement = executeOnce(function (element) {
         defineOwnProperty(context, 'container', element, true);
-        self.currentContext = self.currentContext || context;
+        zeta_dom_dom.on(element, 'error', function (e) {
+          if (context !== self.currentContext) {
+            e.handled();
+          }
+        });
+        self.setContext(self.currentContext || context);
       });
       var onLoad = executeOnce(function () {
         var element = context.container;
@@ -717,14 +730,14 @@ definePrototype(ViewContainer, Component, {
           }, true);
         });
         self.views.shift();
-        self.currentContext = context;
+        self.setContext(context);
         extend(self, _(context));
         state.rendered++;
         animateIn(element, 'show', '[brew-view]', true);
         resolve();
       });
       context.on('error', function () {
-        return (rootProps.onError || noop).apply(this, arguments);
+        return (self.props.rootProps.onError || noop).apply(this, arguments);
       });
       self.abort = resolve;
       self.views[2] = /*#__PURE__*/createElement(StateContext.Provider, {
