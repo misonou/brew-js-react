@@ -10,6 +10,7 @@ import { subscribeAsync } from "zeta-dom/domLock";
 import initAppBeforeAll, { waitForPageLoad } from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
 import { useRouteParam } from "src/hooks";
+import { jest } from "@jest/globals";
 
 const { actAwaitSetImmediate } = composeAct(act);
 
@@ -338,6 +339,27 @@ describe('renderView', () => {
         await screen.findByText('baz');
         await delay();
         expect(asFragment()).toMatchSnapshot();
+    });
+
+    it('should set current context to ref', async () => {
+        let ref = { set current(value) { } };
+        let setCurrent = jest.spyOn(ref, 'current', 'set');
+
+        const { rerender, unmount } = render(<div>{renderView({ ref }, Foo, Bar)}</div>)
+        await waitFor(() => expect(setCurrent).toBeCalled());
+        expect(ViewContext.root.getChildren()[0].view).toBe(Foo);
+        expect(setCurrent).toHaveBeenLastCalledWith(ViewContext.root.getChildren()[0]);
+
+        await waitForPageLoad();
+        app.navigate('/dummy/bar');
+        await waitForPageLoad();
+        expect(ViewContext.root.getChildren()[0].view).toBe(Bar);
+        expect(setCurrent).toHaveBeenLastCalledWith(ViewContext.root.getChildren()[0]);
+
+        ref = {};
+        rerender(<div>{renderView({ ref }, Foo, Bar)}</div>)
+        expect(ref.current).toMatchObject({ view: Bar });
+        unmount();
     });
 
     it('should pass props to view container', async () => {

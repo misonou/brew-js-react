@@ -139,7 +139,11 @@ export interface ErrorViewProps<T = any> {
     reset(): void;
 }
 
-export interface ViewComponentRootProps extends Omit<React.ComponentProps<'div'>, 'onError'> {
+export interface ViewComponentRootProps extends Omit<React.ComponentProps<'div'>, 'onError' | 'ref'> {
+    /**
+     * Specifies a ref object that can retrieve the active view context.
+     */
+    ref?: React.RefObject<ViewContext>;
     /**
      * Specifies initial loader if the first matched view is lazy-loaded.
      */
@@ -148,6 +152,7 @@ export interface ViewComponentRootProps extends Omit<React.ComponentProps<'div'>
      * Specifies callback to handle error raised within the view.
      * @param event Error event.
      * @param context Associated view context.
+     * @deprecated
      */
     onError?: (event: Zeta.ZetaErrorEvent<HTMLElement, ViewContext>, context: ViewContext) => any;
 }

@@ -162,6 +162,14 @@ definePrototype(ViewContainer, Component, {
         parent.push(self);
         self.setActive(true);
     },
+    componentDidUpdate: function (prevProps) {
+        (prevProps.rootProps.ref || {}).current = null;
+        this.setContext(this.currentContext);
+    },
+    setContext: function (context) {
+        this.currentContext = context;
+        (this.props.rootProps.ref || {}).current = context;
+    },
     render: function () {
         /** @type {any} */
         var self = this;
@@ -205,7 +213,7 @@ definePrototype(ViewContainer, Component, {
                         e.handled();
                     }
                 });
-                self.currentContext = self.currentContext || context;
+                self.setContext(self.currentContext || context);
             });
             var onLoad = executeOnce(function () {
                 var element = context.container;
@@ -223,7 +231,7 @@ definePrototype(ViewContainer, Component, {
                     app.emit('pageenter', element, { pathname: context.page.path, view: V }, true);
                 });
                 self.views.shift();
-                self.currentContext = context;
+                self.setContext(context);
                 extend(self, _(context));
                 state.rendered++;
                 animateIn(element, 'show', '[brew-view]', true);
