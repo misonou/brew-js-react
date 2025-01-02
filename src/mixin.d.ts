@@ -9,6 +9,7 @@ import FlyoutToggleMixin from "./mixins/FlyoutToggleMixin";
 import FocusStateMixin from "./mixins/FocusStateMixin";
 import LoadingStateMixin from "./mixins/LoadingStateMixin";
 import StatefulMixin, { MixinRef } from "./mixins/StatefulMixin";
+import StaticAttributeMixin from "./mixins/StaticAttributeMixin";
 import ScrollableMixin, { ScrollableMixinOptions } from "./mixins/ScrollableMixin";
 import ScrollIntoViewMixin from "./mixins/ScrollIntoViewMixin";
 import UnmanagedClassNameMixin from "./mixins/UnmanagedClassNameMixin";
@@ -36,6 +37,7 @@ export {
     FocusStateMixin,
     LoadingStateMixin,
     StatefulMixin,
+    StaticAttributeMixin,
     ScrollableMixin,
     ScrollIntoViewMixin,
     UnmanagedClassNameMixin,

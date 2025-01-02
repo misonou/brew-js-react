@@ -11,6 +11,7 @@ import FlyoutToggleMixin from "./mixins/FlyoutToggleMixin.js";
 import FocusStateMixin from "./mixins/FocusStateMixin.js";
 import LoadingStateMixin from "./mixins/LoadingStateMixin.js";
 import StatefulMixin from "./mixins/StatefulMixin.js";
+import StaticAttributeMixin from "./mixins/StaticAttributeMixin.js";
 import ScrollableMixin from "./mixins/ScrollableMixin.js";
 import ScrollIntoViewMixin from "./mixins/ScrollIntoViewMixin.js";
 import UnmanagedClassNameMixin from "./mixins/UnmanagedClassNameMixin.js";
@@ -59,6 +60,7 @@ export {
     FocusStateMixin,
     LoadingStateMixin,
     StatefulMixin,
+    StaticAttributeMixin,
     ScrollableMixin,
     ScrollIntoViewMixin,
     UnmanagedClassNameMixin,
