@@ -14,6 +14,10 @@ import ScrollableMixin, { ScrollableMixinOptions } from "./mixins/ScrollableMixi
 import ScrollIntoViewMixin from "./mixins/ScrollIntoViewMixin";
 import UnmanagedClassNameMixin from "./mixins/UnmanagedClassNameMixin";
 
+export interface WithOptions<T> {
+    withOptions(options: T): this;
+}
+
 export * from "./mixins/Mixin";
 export * from "./mixins/AnimateMixin";
 export * from "./mixins/AnimateSequenceItemMixin";
@@ -101,6 +105,13 @@ export function useClassNameToggleMixin<T extends Zeta.Dictionary<boolean>>(dict
  * @param mixin Constructor of the mixin type.
  */
 export function useMixin<T extends typeof Mixin>(mixin: T): InstanceType<T>;
+
+/**
+ * Creates a mixin of the specified type within the lifetime of current component.
+ * @param mixin Constructor of the mixin type.
+ * @param options A dictionary specifying options.
+ */
+export function useMixin<T extends typeof Mixin>(mixin: T, options: InstanceType<T> extends WithOptions<infer U> ? U : never): InstanceType<T>;
 
 /**
  * Uses mixin passed from parent component.

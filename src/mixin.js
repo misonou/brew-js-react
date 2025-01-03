@@ -21,11 +21,7 @@ function extendSelf(options) {
 }
 
 function createUseFunction(ctor) {
-    return function () {
-        var mixin = useMixin(ctor);
-        (mixin.withOptions || extendSelf).apply(mixin, arguments);
-        return mixin;
-    };
+    return useMixin.bind(0, ctor);
 }
 
 export const useAnimateMixin = /*#__PURE__*/ createUseFunction(AnimateMixin);
@@ -38,10 +34,12 @@ export const useScrollableMixin = /*#__PURE__*/ createUseFunction(ScrollableMixi
 export const useScrollIntoViewMixin = /*#__PURE__*/ createUseFunction(ScrollIntoViewMixin);
 export const useUnmanagedClassNameMixin = /*#__PURE__*/ createUseFunction(UnmanagedClassNameMixin);
 
-export function useMixin(ctor) {
-    return useSingleton(function () {
+export function useMixin(ctor, options) {
+    var mixin = useSingleton(function () {
         return new ctor();
-    }).reset();
+    }, []).reset();
+    (mixin.withOptions || extendSelf).call(mixin, options);
+    return mixin;
 }
 
 export function useMixinRef(mixin) {

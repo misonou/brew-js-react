@@ -108,6 +108,17 @@ describe('useMixin', () => {
         expect(result.current).toBeInstanceOf(Mixin);
         unmount();
     });
+
+    it('should call withOptions with specified options', () => {
+        const options = {};
+        const cb = mockFn();
+        class TestMixin extends Mixin {
+            withOptions = cb
+        }
+        const { unmount } = renderHook(() => useMixin(TestMixin, options));
+        expect(cb).toBeCalledWith(expect.sameObject(options));
+        unmount();
+    });
 });
 
 describe('StaticAttributeMixin', () => {
