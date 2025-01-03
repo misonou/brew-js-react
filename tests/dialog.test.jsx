@@ -293,6 +293,17 @@ describe('DialogState.open', () => {
     });
 });
 
+describe('DialogState.close', () => {
+    it('should cancel dialog when called synchronously', async () => {
+        const dialog = createDialogMock({ onRender: () => <div>1</div> });
+        const promise = dialog.open();
+        await dialog.close();
+
+        expect(screen.queryByText(1)).toBeNull();
+        await expect(promise).resolves.toBeUndefined();
+    });
+});
+
 describe('Dialog', () => {
     it('should open and close dialog when isOpen is updated', async () => {
         const Component = function ({ isOpen }) {
@@ -379,5 +390,20 @@ describe('Dialog', () => {
         await waitFor(() => expect(locked()).toBe(true));
         unmount();
         await waitFor(() => expect(locked()).toBe(false));
+    });
+
+    it('should not open dialog when isOpen set to false synchronously', async () => {
+        const Component = function ({ isOpen }) {
+            return (
+                <Dialog isOpen={isOpen}>
+                    <button>test</button>
+                </Dialog>
+            );
+        };
+        const { rerender, unmount } = render(<Component isOpen={true} />);
+        rerender(<Component isOpen={false} />);
+        await delay();
+        expect(screen.queryByRole('button')).toBeNull();
+        unmount();
     });
 });

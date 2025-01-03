@@ -2,7 +2,7 @@ import { createElement, StrictMode, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import ReactDOMClient from "@misonou/react-dom-client";
 import { createAsyncScope } from "zeta-dom-react";
-import { always, either, extend, noop, pick, resolve } from "zeta-dom/util";
+import { always, either, extend, noop, pick, resolve, setImmediate } from "zeta-dom/util";
 import { containsOrEquals, removeNode } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { lock, preventLeave, runAsync, subscribeAsync } from "zeta-dom/domLock";
@@ -45,11 +45,11 @@ function openDialog(element, props) {
         if (props.modal) {
             element.setAttribute('is-modal', '');
         }
+        setImmediate(function () {
+            dom.retainFocus(dom.activeElement, element);
+        });
     }
-    var promise = resolve().then(function () {
-        dom.retainFocus(dom.activeElement, element);
-        return openFlyout(element, null, pick(props, ['focus']));
-    });
+    var promise = openFlyout(element, null, pick(props, ['focus']));
     if (props.preventLeave) {
         preventLeave(element, promise);
     } else if (props.preventNavigation) {
