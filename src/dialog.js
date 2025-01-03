@@ -2,77 +2,93 @@ import { createElement, StrictMode, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import ReactDOMClient from "@misonou/react-dom-client";
 import { createAsyncScope } from "zeta-dom-react";
-import { either, extend, noop, pick, resolve } from "zeta-dom/util";
+import { always, either, extend, noop, pick, resolve } from "zeta-dom/util";
 import { containsOrEquals, removeNode } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { lock, preventLeave, runAsync, subscribeAsync } from "zeta-dom/domLock";
-import { closeFlyout, openFlyout } from "brew-js/domAction";
+import { closeFlyout, isFlyoutOpen, openFlyout } from "brew-js/domAction";
 
-/**
- * @param {Partial<import("./dialog").DialogOptions<any>>} props
- */
-export function createDialog(props) {
-    var root = document.createElement('div');
-    var reactRoot = ReactDOMClient.createRoot(root);
-    var scope = createAsyncScope(root);
-    var closeDialog = closeFlyout.bind(0, root);
+function debounceAsync(callback) {
     var promise;
+    return function () {
+        if (!promise) {
+            promise = callback.apply(this, arguments);
+            always(promise, function () {
+                promise = null;
+            });
+        }
+        return promise;
+    };
+}
 
+function createDialogElement(props, unmountAfterUse) {
+    var root = document.createElement('div');
     dom.on(root, {
         flyoutshow: function () {
             (props.onOpen || noop)(root);
         },
         flyouthide: function () {
-            promise = null;
             removeNode(root);
             (props.onClose || noop)(root);
-            if (props.onRender) {
-                reactRoot.unmount();
-            }
+            (unmountAfterUse || noop)();
         }
     });
     root.setAttribute('loading-class', '');
     subscribeAsync(root, true);
+    return root;
+}
+
+function openDialog(element, props) {
+    if (!containsOrEquals(dom.root, element)) {
+        element.className = props.className || '';
+        document.body.appendChild(element);
+        if (props.modal) {
+            element.setAttribute('is-modal', '');
+        }
+    }
+    var promise = resolve().then(function () {
+        dom.retainFocus(dom.activeElement, element);
+        return openFlyout(element, null, pick(props, ['focus']));
+    });
+    if (props.preventLeave) {
+        preventLeave(element, promise);
+    } else if (props.preventNavigation) {
+        lock(element, promise);
+    }
+    return promise;
+}
+
+/**
+ * @param {Partial<import("./dialog").DialogOptions<any>>} props
+ */
+export function createDialog(props) {
+    var root = createDialogElement(props, function () {
+        reactRoot.unmount();
+    });
+    var reactRoot = ReactDOMClient.createRoot(root);
+    var scope = createAsyncScope(root);
+    var closeDialog = closeFlyout.bind(0, root);
 
     return {
         root: root,
         close: closeDialog,
-        open: function () {
-            if (promise) {
-                return promise;
-            }
-            root.className = props.className || '';
-            document.body.appendChild(root);
-            if (props.modal) {
-                root.setAttribute('is-modal', '');
-            }
-            if (props.onRender) {
-                var commitDialog = props.onCommit ? function (value) {
-                    return runAsync(dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
-                } : closeDialog;
-                var dialogProps = extend({}, props, {
-                    errorHandler: scope.errorHandler,
-                    closeDialog: commitDialog,
-                    commitDialog: commitDialog,
-                    dismissDialog: closeDialog
-                });
-                var content = createElement(props.onRender, dialogProps);
-                if (props.wrapper) {
-                    content = createElement(props.wrapper, dialogProps, content);
-                }
-                reactRoot.render(createElement(StrictMode, null, createElement(scope.Provider, null, content)));
-            }
-            promise = resolve().then(function () {
-                dom.retainFocus(dom.activeElement, root);
-                return openFlyout(root, null, pick(props, ['focus']));
+        open: debounceAsync(function () {
+            var commitDialog = props.onCommit ? function (value) {
+                return runAsync(dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
+            } : closeDialog;
+            var dialogProps = extend({}, props, {
+                errorHandler: scope.errorHandler,
+                closeDialog: commitDialog,
+                commitDialog: commitDialog,
+                dismissDialog: closeDialog
             });
-            if (props.preventLeave) {
-                preventLeave(root, promise);
-            } else if (props.preventNavigation) {
-                lock(root, promise);
+            var content = createElement(props.onRender, dialogProps);
+            if (props.wrapper) {
+                content = createElement(props.wrapper, dialogProps, content);
             }
-            return promise;
-        }
+            reactRoot.render(createElement(StrictMode, null, createElement(scope.Provider, null, content)));
+            return openDialog(root, props);
+        })
     };
 }
 
@@ -80,24 +96,22 @@ export function createDialog(props) {
  * @param {import("./dialog").DialogProps} props
  */
 export function Dialog(props) {
-    const _props = useState({})[0];
-    const dialog = useState(function () {
-        return createDialog(_props);
+    const _props = extend(useState({})[0], props);
+    const element = useState(function () {
+        return createDialogElement(_props);
     })[0];
-    extend(_props, props);
-
     useEffect(function () {
-        var opened = containsOrEquals(dom.root, dialog.root);
+        var opened = isFlyoutOpen(element);
         if (either(opened, _props.isOpen)) {
             if (!opened) {
-                dialog.open();
+                openDialog(element, _props);
             } else {
-                dialog.close();
+                closeFlyout(element);
             }
         }
     }, [_props.isOpen])
     useEffect(function () {
-        return dialog.close;
-    }, [dialog]);
-    return ReactDOM.createPortal(props.children, dialog.root);
+        return closeFlyout.bind(0, element);
+    }, []);
+    return ReactDOM.createPortal(props.children, element);
 }

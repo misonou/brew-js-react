@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { act, render, screen, waitForElementToBeRemoved } from "@testing-library/react";
+import { act, render, screen, waitFor, waitForElementToBeRemoved } from "@testing-library/react";
 import { locked, subscribeAsync } from "zeta-dom/domLock";
 import { removeNode } from "zeta-dom/domUtil";
 import { createDialog, Dialog } from "src/dialog";
@@ -152,7 +152,7 @@ describe('createDialog', () => {
             }
         });
         const promise = dialog.open();
-        await actAwaitSetImmediate(() => promise);
+        await screen.findByText('text');
 
         dismiss();
         await expect(promise).resolves.toBeUndefined();
@@ -327,5 +327,57 @@ describe('Dialog', () => {
         expect(root.parentElement).toBe(document.body);
         expect(container.contains(root)).toBe(false);
         unmount();
+    });
+
+    it('should invoke onOpen and onClose callback', async () => {
+        const cb = mockFn();
+        const Component = function ({ isOpen }) {
+            return (
+                <Dialog isOpen={isOpen} onOpen={() => cb('open')} onClose={() => cb('close')}>
+                    <button>test</button>
+                </Dialog>
+            );
+        };
+        const { rerender, unmount } = render(<Component isOpen={false} />);
+        await after(() => rerender(<Component isOpen={true} />));
+        verifyCalls(cb, [['open']]);
+        cb.mockClear();
+
+        await after(() => rerender(<Component isOpen={false} />));
+        verifyCalls(cb, [['close']]);
+        unmount();
+    });
+
+    it('should set dialog as modal when modal is true', async () => {
+        const { unmount } = render(
+            <Dialog isOpen={true} modal>
+                <button>test</button>
+            </Dialog>
+        );
+        await waitFor(() => expect(dom.modalElement).toBeTruthy());
+        unmount();
+        await waitFor(() => expect(dom.modalElement).toBeNull());
+    });
+
+    it('should prevent leave when preventLeave is true', async () => {
+        const { unmount } = render(
+            <Dialog isOpen={true} preventLeave>
+                <button>test</button>
+            </Dialog>
+        );
+        await waitFor(() => expect(locked()).toBe(true));
+        unmount();
+        await waitFor(() => expect(locked()).toBe(false));
+    });
+
+    it('should lock root element when preventNavigation is true', async () => {
+        const { unmount } = render(
+            <Dialog isOpen={true} preventNavigation>
+                <button>test</button>
+            </Dialog>
+        );
+        await waitFor(() => expect(locked()).toBe(true));
+        unmount();
+        await waitFor(() => expect(locked()).toBe(false));
     });
 });
