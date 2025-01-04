@@ -36,6 +36,11 @@ export interface DialogState<T> {
 
 export interface DialogOptions<T, V = T | undefined> {
     /**
+     * Specifies container element where dialog's root element will be inserted to.
+     * Default to document's body.
+     */
+    container?: HTMLElement;
+    /**
      * Specifies dialog title.
      * This property is intended to be handled by {@link DialogOptions.onRender} or {@link DialogOptions.wrapper}.
      */

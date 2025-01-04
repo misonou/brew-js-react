@@ -235,6 +235,16 @@ describe('createDialog', () => {
         await actAwaitSetImmediate(() => dialog.open());
         expect(cb).toBeCalledTimes(1);
     });
+
+    it('should append dialog element to container', async () => {
+        const container = document.createElement('div');
+        document.body.append(container);
+
+        const dialog = createDialog({ container, onRender: () => <div>content</div> });
+        dialog.open();
+        await screen.findByText('content');
+        expect(dialog.root.parentElement).toBe(container);
+    });
 });
 
 describe('DialogState.open', () => {

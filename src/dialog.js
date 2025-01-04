@@ -41,7 +41,7 @@ function createDialogElement(props, unmountAfterUse) {
 function openDialog(element, props) {
     if (!containsOrEquals(dom.root, element)) {
         element.className = props.className || '';
-        document.body.appendChild(element);
+        (props.container || document.body).appendChild(element);
         if (props.modal) {
             element.setAttribute('is-modal', '');
         }
