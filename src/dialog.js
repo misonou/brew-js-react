@@ -2,11 +2,13 @@ import { createElement, StrictMode, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import ReactDOMClient from "@misonou/react-dom-client";
 import { createAsyncScope } from "zeta-dom-react";
-import { always, either, extend, noop, pick, resolve, setImmediate } from "zeta-dom/util";
+import { always, arrRemove, combineFn, createPrivateStore, defineObservableProperty, either, extend, noop, pick, resolve, setImmediate } from "zeta-dom/util";
 import { containsOrEquals, removeNode } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { lock, preventLeave, runAsync, subscribeAsync } from "zeta-dom/domLock";
 import { closeFlyout, isFlyoutOpen, openFlyout } from "brew-js/domAction";
+
+const _ = createPrivateStore();
 
 function debounceAsync(callback) {
     var promise;
@@ -38,10 +40,10 @@ function createDialogElement(props, unmountAfterUse) {
     return root;
 }
 
-function openDialog(element, props) {
+function openDialog(element, props, container) {
     if (!containsOrEquals(dom.root, element)) {
         element.className = props.className || '';
-        (props.container || document.body).appendChild(element);
+        (container || props.container || document.body).appendChild(element);
         if (props.modal) {
             element.setAttribute('is-modal', '');
         }
@@ -49,7 +51,7 @@ function openDialog(element, props) {
             dom.retainFocus(dom.activeElement, element);
         });
     }
-    var promise = openFlyout(element, null, pick(props, ['focus']));
+    var promise = openFlyout(element, null, pick(props, ['focus', 'closeOnBlur']));
     if (props.preventLeave) {
         preventLeave(element, promise);
     } else if (props.preventNavigation) {
@@ -62,34 +64,117 @@ function openDialog(element, props) {
  * @param {Partial<import("./dialog").DialogOptions<any>>} props
  */
 export function createDialog(props) {
-    var root = createDialogElement(props, function () {
+    var controller = _(props.controller) || {};
+    var shared = controller.mode === 'shared';
+    var state = shared ? controller : {};
+    var root = state.root || (state.root = createDialogElement(props, function () {
         reactRoot.unmount();
-    });
-    var reactRoot = ReactDOMClient.createRoot(root);
-    var scope = createAsyncScope(root);
-    var closeDialog = closeFlyout.bind(0, root);
+    }));
+    var reactRoot = state.reactRoot || (state.reactRoot = ReactDOMClient.createRoot(root));
+    var scope = state.scope || (state.scope = createAsyncScope(root));
+    var closeDialog = shared ? noop : closeFlyout.bind(0, root);
+
+    function render(closeDialog, props, container) {
+        var commitDialog = props.onCommit ? function (value) {
+            return runAsync(dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
+        } : closeDialog;
+        var dialogProps = extend({}, props, {
+            errorHandler: scope.errorHandler,
+            closeDialog: commitDialog,
+            commitDialog: commitDialog,
+            dismissDialog: closeDialog
+        });
+        var content = createElement(props.onRender, dialogProps);
+        if (props.wrapper) {
+            content = createElement(props.wrapper, dialogProps, content);
+        }
+        reactRoot.render(createElement(StrictMode, null, createElement(scope.Provider, null, content)));
+        return shared ? { then: noop } : openDialog(root, props, container);
+    }
 
     return {
         root: root,
-        close: closeDialog,
+        close: function (value) {
+            return closeDialog(value);
+        },
         open: debounceAsync(function () {
-            var commitDialog = props.onCommit ? function (value) {
-                return runAsync(dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
-            } : closeDialog;
-            var dialogProps = extend({}, props, {
-                errorHandler: scope.errorHandler,
-                closeDialog: commitDialog,
-                commitDialog: commitDialog,
-                dismissDialog: closeDialog
-            });
-            var content = createElement(props.onRender, dialogProps);
-            if (props.wrapper) {
-                content = createElement(props.wrapper, dialogProps, content);
+            if (controller.enqueue) {
+                return controller.enqueue(function (next) {
+                    closeDialog = shared ? next : closeDialog;
+                    render(closeDialog, extend({}, controller.props, props), controller.root).then(next);
+                });
             }
-            reactRoot.render(createElement(StrictMode, null, createElement(scope.Provider, null, content)));
-            return openDialog(root, props);
+            return render(closeDialog, props);
         })
     };
+}
+
+/**
+ * @param {import("./dialog").DialogControllerOptions | undefined} props
+ */
+export function createDialogQueue(props) {
+    var mode = props && props.mode;
+    var root = mode && createDialogElement(props);
+    var multiple = mode === 'multiple';
+    var childProps;
+    var queue = [];
+    var active = [];
+    var controller = {};
+    var setPendingCount = defineObservableProperty(controller, 'pendingCount', 0, true);
+
+    function dismissPending() {
+        combineFn(queue.splice(0))();
+        setPendingCount(0);
+    }
+
+    function dismissAll(value) {
+        combineFn(active.splice(0))(multiple ? undefined : value);
+        dismissPending();
+    }
+
+    function render(callback) {
+        return new Promise(function (resolvePromise) {
+            var next = function (value) {
+                if (arrRemove(active, resolvePromise)) {
+                    resolvePromise(value);
+                    setImmediate(function () {
+                        (queue.shift() || noop)(true);
+                    });
+                }
+                return root && !queue[0] && !active[0] ? closeFlyout(root) : resolve();
+            };
+            active.push(resolvePromise);
+            setPendingCount(queue.length);
+            callback(next);
+        });
+    }
+
+    if (multiple) {
+        childProps = { closeOnBlur: false };
+        props = extend({}, props, childProps);
+    } else {
+        childProps = props && pick(props, ['className', 'focus', 'modal', 'container']);
+    }
+    _(controller, {
+        root: root,
+        mode: mode,
+        props: childProps,
+        enqueue: function (callback) {
+            if (root && !isFlyoutOpen(root)) {
+                openDialog(root, props).then(dismissAll);
+            }
+            if (queue.length || active.length >= (multiple ? props.concurrent || Infinity : 1)) {
+                return new Promise(function (resolve) {
+                    queue.push(function (renderNext) {
+                        resolve(renderNext && render(callback));
+                    });
+                    setPendingCount(queue.length);
+                });
+            }
+            return render(callback);
+        }
+    });
+    return extend(controller, { dismissAll, dismissPending });
 }
 
 /**

@@ -2,14 +2,17 @@ import React, { useEffect } from "react";
 import { act, render, screen, waitFor, waitForElementToBeRemoved } from "@testing-library/react";
 import { locked, subscribeAsync } from "zeta-dom/domLock";
 import { removeNode } from "zeta-dom/domUtil";
-import { createDialog, Dialog } from "src/dialog";
+import { createDialog, createDialogQueue, Dialog } from "src/dialog";
 import { after, delay, mockFn, verifyCalls } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
 import { useAsync } from "zeta-dom-react";
+import { setTimeout, watch } from "zeta-dom/util";
+import { closeFlyout } from "brew-js/domAction";
 
 const createDialogMock = mockFn(createDialog);
+const createDialogQueueMock = mockFn(createDialogQueue);
 const { actAndReturn, actAwaitSetImmediate } = composeAct(act);
 
 initAppBeforeAll(() => { });
@@ -17,6 +20,9 @@ initAppBeforeAll(() => { });
 afterEach(() => {
     createDialogMock.mock.results.forEach(v => {
         removeNode(v.value.root);
+    });
+    createDialogQueueMock.mock.results.forEach(v => {
+        v.value.dismissAll();
     });
 });
 
@@ -240,10 +246,39 @@ describe('createDialog', () => {
         const container = document.createElement('div');
         document.body.append(container);
 
-        const dialog = createDialog({ container, onRender: () => <div>content</div> });
+        const dialog = createDialogMock({ container, onRender: () => <div>content</div> });
         dialog.open();
         await screen.findByText('content');
         expect(dialog.root.parentElement).toBe(container);
+    });
+
+    it('should ignore certain options when dialog is shared', async () => {
+        const container = document.createElement('div');
+        document.body.append(container);
+
+        const controller = createDialogQueueMock({
+            mode: 'shared',
+            className: 'test-shared-dialog'
+        });
+        const dialog = createDialogMock({
+            controller,
+            container,
+            className: 'should-not-used',
+            modal: true,
+            preventLeave: true,
+            preventNavigation: true,
+            onRender() {
+                return <div>content</div>
+            }
+        });
+        dialog.open();
+        await screen.findByText('content');
+
+        expect(dialog.root.parentElement).toBe(document.body);
+        expect(dialog.root).toHaveClassName('test-shared-dialog');
+        expect(dialog.root).not.toHaveClassName('should-not-used');
+        expect(dom.modalElement).toBeNull();
+        expect(locked()).toBe(false);
     });
 });
 
@@ -311,6 +346,280 @@ describe('DialogState.close', () => {
 
         expect(screen.queryByText(1)).toBeNull();
         await expect(promise).resolves.toBeUndefined();
+    });
+
+    it('should trigger pending dialog when dialog is shared', async () => {
+        const controller = createDialogQueueMock({ mode: 'shared' });
+        const d1 = createDialogMock({ controller, onRender: () => <div>1</div> });
+        const d2 = createDialogMock({ controller, onRender: () => <div>2</div> });
+        d1.open();
+        d2.open();
+        expect(controller.pendingCount).toBe(1);
+
+        const container = (await screen.findByText('1')).parentElement;
+        await d1.close();
+
+        const element = await screen.findByText('2');
+        expect(element.parentElement).toBe(container);
+    });
+
+    it('should have no effect when called second time when dialog is shared', async () => {
+        const controller = createDialogQueueMock({ mode: 'shared' });
+        const d1 = createDialogMock({ controller, onRender: () => <div>1</div> });
+        const d2 = createDialogMock({ controller, onRender: () => <div>2</div> });
+        d1.open();
+        d2.open();
+        expect(controller.pendingCount).toBe(1);
+
+        await screen.findByText('1');
+        await d1.close();
+        await screen.findByText('2');
+        await d1.close();
+        await screen.findByText('2');
+    });
+
+    it('should have no effect before open when dialog is shared', async () => {
+        const controller = createDialogQueueMock({ mode: 'shared' });
+        const d1 = createDialogMock({ controller, onRender: () => <div>1</div> });
+        const d2 = createDialogMock({ controller, onRender: () => <div>2</div> });
+        d1.open();
+        expect(controller.pendingCount).toBe(0);
+
+        await screen.findByText('1');
+        await d2.close();
+        await screen.findByText('1');
+    });
+
+    it('should have no effect when called after dialog is dismissed', async () => {
+        const controller = createDialogQueueMock({ mode: 'shared' });
+        const d1 = createDialogMock({ controller, onRender: () => <div>1</div> });
+        d1.open();
+
+        await screen.findByText('1');
+        controller.dismissAll();
+
+        const d2 = createDialogMock({ controller, onRender: () => <div>2</div> });
+        const d3 = createDialogMock({ controller, onRender: () => <div>3</div> });
+        d2.open();
+        d3.open();
+        expect(controller.pendingCount).toBe(1);
+
+        await screen.findByText('2');
+        await d1.close();
+        await screen.findByText('2');
+    });
+});
+
+describe('DialogController', () => {
+    it('should render dialog after previous one when controller is given', async () => {
+        const controller = createDialogQueueMock();
+        const renderCb = mockFn();
+        const dismissCb = mockFn();
+
+        const create = (id) => {
+            return createDialogMock({
+                controller,
+                onRender: function Component({ dismissDialog }) {
+                    renderCb(id);
+                    useEffect(() => {
+                        return setTimeout(() => dismissCb(dismissDialog(id)), 100);
+                    }, []);
+                    return <span data-testid="id">{id}</span>;
+                }
+            }).open();
+        };
+
+        const p1 = create(1);
+        const p2 = create(2);
+        const p3 = create(3);
+
+        await expect(screen.findByTestId('id')).resolves.toHaveProperty('textContent', '1');
+        verifyCalls(renderCb, [[1], [1]]); // strict mode
+
+        await waitFor(() => expect(renderCb).toBeCalledTimes(4));
+        await expect(screen.findByTestId('id')).resolves.toHaveProperty('textContent', '2');
+        expect(dismissCb).toBeCalledTimes(1);
+
+        await expect(Promise.all([p1, p2, p3])).resolves.toEqual([1, 2, 3]);
+        expect(renderCb).toBeCalledTimes(6);
+        expect(dismissCb).toBeCalledTimes(3);
+    });
+
+    it('should queue dialog in the correct order', async () => {
+        const dismiss = mockFn();
+        const controller = createDialogQueueMock({ mode: 'shared' });
+        const dialog = createDialogMock({
+            controller,
+            onRender: function Component({ dismissDialog }) {
+                dismiss.mockImplementationOnce(() => {
+                    dismissDialog();
+                    createDialogMock({ controller, onRender: () => <div>3</div> }).open();
+                });
+                return <div>1</div>;
+            }
+        });
+        dialog.open();
+        createDialogMock({ controller, onRender: () => <div>2</div> }).open();
+        await screen.findByText('1');
+        expect(controller.pendingCount).toBe(1);
+
+        dismiss();
+        expect(controller.pendingCount).toBe(2);
+        expect(screen.queryByText('3')).toBeNull();
+        await screen.findByText('2');
+    });
+
+    it('should show at most specified number of dialog', async () => {
+        const controller = createDialogQueueMock({ mode: 'multiple', concurrent: 2 })
+        createDialogMock({ controller, onRender: () => <div data-testid="1">content</div> }).open();
+        createDialogMock({ controller, onRender: () => <div data-testid="2">content</div> }).open();
+        createDialogMock({ controller, onRender: () => <div data-testid="3">content</div> }).open();
+        createDialogMock({ controller, onRender: () => <div data-testid="4">content</div> }).open();
+
+        const e1 = await screen.findByTestId('1');
+        const e2 = await screen.findByTestId('2');
+        expect(controller.pendingCount).toBe(2);
+
+        closeFlyout(e1.closest('.visible'));
+        await screen.findByTestId('3');
+        expect(controller.pendingCount).toBe(1);
+
+        closeFlyout(e2.closest('.visible'));
+        await screen.findByTestId('4');
+        expect(controller.pendingCount).toBe(0);
+    });
+
+    it('should close active dialog on blur', async () => {
+        const controller = createDialogQueueMock();
+        createDialogMock({ controller, onRender: () => <div>content</div> }).open();
+        await delay();
+
+        dom.blur(document.body);
+        await delay();
+        expect(screen.queryByText('content')).toBeNull();
+    });
+
+    it('should close shared dialog on blur', async () => {
+        const controller = createDialogQueueMock({ mode: 'shared' });
+        createDialogMock({ controller, onRender: () => <div>content</div> }).open();
+        await delay();
+
+        dom.blur(document.body);
+        await delay();
+        expect(screen.queryByText('content')).toBeNull();
+    });
+
+    it('should dismiss pending dialogs when root is closed directly', async () => {
+        const controller = createDialogQueueMock({ mode: 'multiple', className: 'test-root', concurrent: 1 });
+        const p1 = createDialogMock({ controller, onRender: () => <div>content</div> }).open();
+        const p2 = createDialogMock({ controller, onRender: () => { throw new Error() } }).open();
+        await expect(screen.findAllByText('content')).resolves.toHaveLength(1);
+        expect(controller.pendingCount).toBe(1);
+
+        closeFlyout('.test-root', 42);
+        await expect(p1).resolves.toBeUndefined();
+        await expect(p2).resolves.toBeUndefined();
+        expect(controller.pendingCount).toBe(0);
+    });
+
+    it('should dismiss active dialogs when root is closed directly', async () => {
+        const controller = createDialogQueueMock({ mode: 'multiple', className: 'test-root' });
+        const p1 = createDialogMock({ controller, onRender: () => <div>content</div> }).open();
+        const p2 = createDialogMock({ controller, onRender: () => <div>content</div> }).open();
+        await expect(screen.findAllByText('content')).resolves.toHaveLength(2);
+
+        closeFlyout('.test-root', 42);
+        await expect(p1).resolves.toBeUndefined();
+        await expect(p2).resolves.toBeUndefined();
+    });
+
+    it('should pass value from closeFlyout to active dialog if dialog is shared', async () => {
+        const controller = createDialogQueueMock({ mode: 'shared', className: 'test-root' });
+        const p1 = createDialogMock({ controller, onRender: () => <div>content</div> }).open();
+        const p2 = createDialogMock({ controller, onRender: () => <div>content</div> }).open();
+        await expect(screen.findAllByText('content')).resolves.toHaveLength(1);
+
+        closeFlyout('.test-root', 42);
+        await expect(p1).resolves.toBe(42);
+        await expect(p2).resolves.toBeUndefined();
+    });
+
+    it('should append dialog element to container', async () => {
+        const container = document.createElement('div');
+        document.body.append(container);
+
+        const controller = createDialogQueueMock({ mode: 'multiple', container });
+        const dialog = createDialogMock({ controller, onRender: () => <div>content</div> });
+        dialog.open();
+        await screen.findByText('content');
+        expect(dialog.root.parentElement.parentElement).toBe(container);
+    });
+});
+
+describe('DialogController.pendingCount', () => {
+    it('should be observable', async () => {
+        const cb = mockFn();
+        const controller = createDialogQueueMock();
+        watch(controller, 'pendingCount', cb);
+
+        const d1 = createDialogMock({ controller, onRender: () => <div>1</div> });
+        const d2 = createDialogMock({ controller, onRender: () => <div>2</div> });
+        d1.open();
+        d2.open();
+        await waitFor(() => expect(cb).toBeCalled());
+        expect(cb).toBeCalledWith(1, 0, 'pendingCount', controller);
+    });
+});
+
+describe('DialogController.dismissPending', () => {
+    it('should dismiss pending dialogs', async () => {
+        const controller = createDialogQueueMock();
+        const renderCb = mockFn();
+
+        const create = (id) => {
+            return createDialogMock({
+                controller,
+                onRender: function Component({ dismissDialog }) {
+                    renderCb(id);
+                    useEffect(() => {
+                        setTimeout(() => dismissDialog(id), 100);
+                    }, []);
+                    return <span data-testid="id">{id}</span>;
+                }
+            }).open();
+        };
+
+        const p1 = create(1);
+        const p2 = create(2);
+        const p3 = create(3);
+        expect(controller.pendingCount).toBe(2);
+
+        controller.dismissPending();
+        await expect(Promise.all([p1, p2, p3])).resolves.toEqual([1, undefined, undefined]);
+        verifyCalls(renderCb, [[1], [1]]);
+        expect(controller.pendingCount).toBe(0);
+    });
+
+    it('should dismiss immediate followed dialog', async () => {
+        const controller = createDialogQueueMock({ mode: 'shared' });
+        const cb = mockFn();
+
+        const promise = createDialogMock({
+            controller,
+            onRender: ({ commitDialog }) => {
+                cb.mockImplementationOnce(commitDialog);
+                return <div>1</div>;
+            }
+        }).open();
+
+        createDialogMock({ controller, onRender: () => <div>2</div> }).open();
+
+        await screen.findByText('1');
+        cb();
+        controller.dismissPending();
+
+        await promise;
+        expect(screen.queryByText('2')).toBeNull();
     });
 });
 

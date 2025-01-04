@@ -14,6 +14,41 @@ export type DialogBaseProps<T, V = T> = Omit<DialogOptions<T, V | undefined>, 'o
 /** @deprecated */
 export type DialogRenderComponentProps<T, V = T> = DialogOptions<T, V | undefined> & DialogContext<V | undefined>;
 
+export type DialogControllerOptions = Pick<DialogOptions<any>, 'container' | 'className' | 'focus' | 'modal'>;
+
+export interface DialogControllerAdvancedOptions extends DialogControllerOptions, Pick<DialogOptions<any>, 'onClose' | 'onOpen' | 'preventLeave' | 'preventNavigation'> {
+    /**
+     * Specifies how dialogs are queued and displayed.
+     *
+     * - `shared`: content of subsequent dialogs are rendered in the same dialog element;
+     * - `multiple`: multiple dialogs can be shown at the same time, as child elements of root dialog element associated with the controller.
+     */
+    mode: 'shared' | 'multiple';
+    /**
+     * Specifies number of dialogs can be shown at the same time.
+     * When limit is exceeded, dialog will be pended to open until any active dialog is closed.
+     *
+     * By default there is no limit, and has no effect when {@link DialogControllerAdvancedOptions.mode} is `shared`.
+     */
+    concurrent?: number;
+}
+
+export interface DialogController {
+    /**
+     * Gets the number of dialogs pending to be shown.
+     */
+    readonly pendingCount: number;
+    /**
+     * Cancels pending dialogs, while currently open dialog will not be dismissed.
+     */
+    dismissPending(): void;
+    /**
+     * Cancels active and pending dialogs.
+     * @param value Value send to active dialog. It is ignored when `mode` is `multiple`.
+     */
+    dismissAll(value?: any): void;
+}
+
 export interface DialogState<T> {
     /**
      * Gets the root element of the dialog.
@@ -35,6 +70,13 @@ export interface DialogState<T> {
 }
 
 export interface DialogOptions<T, V = T | undefined> {
+    /**
+     * Specifies a controller to allow queueing similar dialogs.
+     *
+     * When a controller with shared mode is specified, since there is not a designated element for individual dialog,
+     * the following options will have no effects: `container`, `className`, `focus`, `modal`, `preventLeave` and `preventNavigation`.
+     */
+    controller?: DialogController;
     /**
      * Specifies container element where dialog's root element will be inserted to.
      * Default to document's body.
@@ -138,7 +180,17 @@ export interface DialogProps<T, V = T> extends React.PropsWithChildren<DialogBas
 }
 
 /**
- * Creates a controller to render dialog.
+ * Creates a controller that manage multiple dialogs.
+ *
+ * When specified as {@link DialogOptions.controller} option for {@link createDialog},
+ * dialogs will be queued and be shown one after other.
+ *
+ * @param props A dictionary containing options.
+ */
+export function createDialogQueue(options?: DialogControllerOptions | DialogControllerAdvancedOptions): DialogController;
+
+/**
+ * Creates a dialog instance.
  * @param props A dictionary containing options.
  */
 export function createDialog<T, V>(props: DialogOptionsStrict<T, V>): DialogState<VoidOrOptional<T>>;
