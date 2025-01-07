@@ -1,4 +1,4 @@
-/*! brew-js-react v0.6.6 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.6.7 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -180,10 +180,12 @@ __webpack_require__.d(__webpack_exports__, {
   ScrollIntoViewMixin: () => (/* reexport */ ScrollIntoViewMixin),
   ScrollableMixin: () => (/* reexport */ ScrollableMixin),
   StatefulMixin: () => (/* reexport */ StatefulMixin),
+  StaticAttributeMixin: () => (/* reexport */ StaticAttributeMixin),
   UnmanagedClassNameMixin: () => (/* reexport */ UnmanagedClassNameMixin),
   ViewContext: () => (/* reexport */ ViewContext),
   ViewStateContainer: () => (/* reexport */ ViewStateContainer),
   createDialog: () => (/* reexport */ createDialog),
+  createDialogQueue: () => (/* reexport */ createDialogQueue),
   isViewMatched: () => (/* reexport */ isViewMatched),
   isViewRendered: () => (/* reexport */ isViewRendered),
   linkTo: () => (/* reexport */ linkTo),
@@ -371,96 +373,195 @@ var closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_b
 
 
 
-
-/**
- * @param {Partial<import("./dialog").DialogOptions<any>>} props
- */
-function createDialog(props) {
-  var root = document.createElement('div');
-  var reactRoot = fallback.createRoot(root);
-  var scope = createAsyncScope(root);
-  var closeDialog = closeFlyout.bind(0, root);
+var _ = createPrivateStore();
+function debounceAsync(callback) {
   var promise;
+  return function () {
+    if (!promise) {
+      promise = callback.apply(this, arguments);
+      always(promise, function () {
+        promise = null;
+      });
+    }
+    return promise;
+  };
+}
+function createDialogElement(props, unmountAfterUse) {
+  var root = document.createElement('div');
   zeta_dom_dom.on(root, {
     flyoutshow: function flyoutshow() {
       (props.onOpen || noop)(root);
     },
     flyouthide: function flyouthide() {
-      promise = null;
       removeNode(root);
       (props.onClose || noop)(root);
-      if (props.onRender) {
-        reactRoot.unmount();
-      }
+      (unmountAfterUse || noop)();
     }
   });
   root.setAttribute('loading-class', '');
   subscribeAsync(root, true);
+  return root;
+}
+function openDialog(element, props, container) {
+  if (!containsOrEquals(zeta_dom_dom.root, element)) {
+    element.className = props.className || '';
+    (container || props.container || document.body).appendChild(element);
+    if (props.modal) {
+      element.setAttribute('is-modal', '');
+    }
+    setImmediate(function () {
+      zeta_dom_dom.retainFocus(zeta_dom_dom.activeElement, element);
+    });
+  }
+  var promise = openFlyout(element, null, pick(props, ['focus', 'closeOnBlur']));
+  if (props.preventLeave) {
+    preventLeave(element, promise);
+  } else if (props.preventNavigation) {
+    lock(element, promise);
+  }
+  return promise;
+}
+
+/**
+ * @param {Partial<import("./dialog").DialogOptions<any>>} props
+ */
+function createDialog(props) {
+  var controller = _(props.controller) || {};
+  var shared = controller.mode === 'shared';
+  var state = shared ? controller : {};
+  var root = state.root || (state.root = createDialogElement(props, function () {
+    reactRoot.unmount();
+  }));
+  var reactRoot = state.reactRoot || (state.reactRoot = fallback.createRoot(root));
+  var scope = state.scope || (state.scope = createAsyncScope(root));
+  var closeDialog = shared ? noop : closeFlyout.bind(0, root);
+  function render(closeDialog, props, container) {
+    var commitDialog = props.onCommit ? function (value) {
+      return runAsync(zeta_dom_dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
+    } : closeDialog;
+    var dialogProps = extend({}, props, {
+      errorHandler: scope.errorHandler,
+      closeDialog: commitDialog,
+      commitDialog: commitDialog,
+      dismissDialog: closeDialog
+    });
+    var content = /*#__PURE__*/createElement(props.onRender, dialogProps);
+    if (props.wrapper) {
+      content = /*#__PURE__*/createElement(props.wrapper, dialogProps, content);
+    }
+    reactRoot.render( /*#__PURE__*/createElement(StrictMode, null, /*#__PURE__*/createElement(scope.Provider, null, content)));
+    return shared ? {
+      then: noop
+    } : openDialog(root, props, container);
+  }
   return {
     root: root,
-    close: closeDialog,
-    open: function open() {
-      if (promise) {
-        return promise;
-      }
-      root.className = props.className || '';
-      document.body.appendChild(root);
-      if (props.modal) {
-        root.setAttribute('is-modal', '');
-      }
-      if (props.onRender) {
-        var commitDialog = props.onCommit ? function (value) {
-          return runAsync(zeta_dom_dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
-        } : closeDialog;
-        var dialogProps = extend({}, props, {
-          errorHandler: scope.errorHandler,
-          closeDialog: commitDialog,
-          commitDialog: commitDialog,
-          dismissDialog: closeDialog
+    close: function close(value) {
+      return closeDialog(value);
+    },
+    open: debounceAsync(function () {
+      if (controller.enqueue) {
+        return controller.enqueue(function (next) {
+          closeDialog = shared ? next : closeDialog;
+          render(closeDialog, extend({}, controller.props, props), controller.root).then(next);
         });
-        var content = /*#__PURE__*/createElement(props.onRender, dialogProps);
-        if (props.wrapper) {
-          content = /*#__PURE__*/createElement(props.wrapper, dialogProps, content);
-        }
-        reactRoot.render( /*#__PURE__*/createElement(StrictMode, null, /*#__PURE__*/createElement(scope.Provider, null, content)));
       }
-      promise = resolve().then(function () {
-        zeta_dom_dom.retainFocus(zeta_dom_dom.activeElement, root);
-        return openFlyout(root, null, pick(props, ['focus']));
-      });
-      if (props.preventLeave) {
-        preventLeave(root, promise);
-      } else if (props.preventNavigation) {
-        lock(root, promise);
-      }
-      return promise;
-    }
+      return render(closeDialog, props);
+    })
   };
+}
+
+/**
+ * @param {import("./dialog").DialogControllerOptions | undefined} props
+ */
+function createDialogQueue(props) {
+  var mode = props && props.mode;
+  var root = mode && createDialogElement(props);
+  var multiple = mode === 'multiple';
+  var childProps;
+  var queue = [];
+  var active = [];
+  var controller = {};
+  var setPendingCount = defineObservableProperty(controller, 'pendingCount', 0, true);
+  function dismissPending() {
+    combineFn(queue.splice(0))();
+    setPendingCount(0);
+  }
+  function dismissAll(value) {
+    combineFn(active.splice(0))(multiple ? undefined : value);
+    dismissPending();
+  }
+  function render(callback) {
+    return new Promise(function (resolvePromise) {
+      var next = function next(value) {
+        if (arrRemove(active, resolvePromise)) {
+          resolvePromise(value);
+          setImmediate(function () {
+            (queue.shift() || noop)(true);
+          });
+        }
+        return root && !queue[0] && !active[0] ? closeFlyout(root) : resolve();
+      };
+      active.push(resolvePromise);
+      setPendingCount(queue.length);
+      callback(next);
+    });
+  }
+  if (multiple) {
+    childProps = {
+      closeOnBlur: false
+    };
+    props = extend({}, props, childProps);
+  } else {
+    childProps = props && pick(props, ['className', 'focus', 'modal', 'container']);
+  }
+  _(controller, {
+    root: root,
+    mode: mode,
+    props: childProps,
+    enqueue: function enqueue(callback) {
+      if (root && !isFlyoutOpen(root)) {
+        openDialog(root, props).then(dismissAll);
+      }
+      if (queue.length || active.length >= (multiple ? props.concurrent || Infinity : 1)) {
+        return new Promise(function (resolve) {
+          queue.push(function (renderNext) {
+            resolve(renderNext && render(callback));
+          });
+          setPendingCount(queue.length);
+        });
+      }
+      return render(callback);
+    }
+  });
+  return extend(controller, {
+    dismissAll: dismissAll,
+    dismissPending: dismissPending
+  });
 }
 
 /**
  * @param {import("./dialog").DialogProps} props
  */
 function Dialog(props) {
-  var _props = useState({})[0];
-  var dialog = useState(function () {
-    return createDialog(_props);
+  var _props = extend(useState({})[0], props);
+  var element = useState(function () {
+    return createDialogElement(_props);
   })[0];
-  extend(_props, props);
   useEffect(function () {
-    var opened = containsOrEquals(zeta_dom_dom.root, dialog.root);
+    var opened = isFlyoutOpen(element);
     if (either(opened, _props.isOpen)) {
       if (!opened) {
-        dialog.open();
+        openDialog(element, _props);
       } else {
-        dialog.close();
+        closeFlyout(element);
       }
     }
   }, [_props.isOpen]);
   useEffect(function () {
-    return dialog.close;
-  }, [dialog]);
-  return /*#__PURE__*/external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, dialog.root);
+    return closeFlyout.bind(0, element);
+  }, []);
+  return /*#__PURE__*/external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, element);
 }
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/events.js
 
@@ -493,7 +594,7 @@ var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_bre
 
 
 
-var _ = createPrivateStore();
+var view_ = createPrivateStore();
 var root = zeta_dom_dom.root;
 var routeMap = new Map();
 var usedParams = {};
@@ -502,7 +603,7 @@ var emitter = new EventContainer();
 var rootContext = freeze(extend(new ViewContext(), {
   container: root
 }));
-var rootState = _(rootContext);
+var rootState = view_(rootContext);
 var StateContext = /*#__PURE__*/createContext(rootContext);
 var errorView;
 /** @type {Partial<Zeta.ZetaEventType<"beforepageload", Brew.RouterEventMap, Element>>} */
@@ -531,7 +632,7 @@ function ViewContext(view, page, parent) {
   var self = this;
   defineOwnProperty(self, 'view', view || null, true);
   defineOwnProperty(self, 'parent', parent || null, true);
-  _(self, {
+  view_(self, {
     children: [],
     setPage: defineObservableProperty(self, 'page', page || null, true),
     setActive: defineObservableProperty(self, 'active', !!page, true)
@@ -548,12 +649,12 @@ function ViewContext(view, page, parent) {
 defineOwnProperty(ViewContext, 'root', rootContext, true);
 definePrototype(ViewContext, {
   getChildren: function getChildren() {
-    return map(_(this).children, function (v) {
+    return map(view_(this).children, function (v) {
       return v.currentContext;
     });
   },
   setErrorView: function setErrorView(errorView, error) {
-    var wrapper = _(this).wrapper;
+    var wrapper = view_(this).wrapper;
     return wrapper && errorView && !wrapper.setState({
       error: error,
       errorView: errorView
@@ -566,7 +667,7 @@ definePrototype(ViewContext, {
 function ErrorBoundary(props) {
   Component.call(this, props);
   this.state = {};
-  _(props.context).wrapper = this;
+  view_(props.context).wrapper = this;
 }
 definePrototype(ErrorBoundary, Component, {
   componentDidMount: function componentDidMount() {
@@ -638,7 +739,7 @@ ViewContainer.contextType = StateContext;
 definePrototype(ViewContainer, Component, {
   componentDidMount: function componentDidMount() {
     var self = this;
-    var parent = _(self.context).children;
+    var parent = view_(self.context).children;
     var unwatch = watch(app_app.route, function () {
       self.setActive(self.getViewComponent() === (self.currentContext || '').view);
     });
@@ -731,7 +832,7 @@ definePrototype(ViewContainer, Component, {
         });
         self.views.shift();
         self.setContext(context);
-        extend(self, _(context));
+        extend(self, view_(context));
         state.rendered++;
         animateIn(element, 'show', '[brew-view]', true);
         resolve();
@@ -1883,15 +1984,12 @@ definePrototype(UnmanagedClassNameMixin, ClassNameMixin, {
 
 
 
+
 function extendSelf(options) {
   extend(this, options);
 }
 function createUseFunction(ctor) {
-  return function () {
-    var mixin = useMixin(ctor);
-    (mixin.withOptions || extendSelf).apply(mixin, arguments);
-    return mixin;
-  };
+  return useMixin.bind(0, ctor);
 }
 var useAnimateMixin = /*#__PURE__*/createUseFunction(AnimateMixin);
 var useAnimateSequenceMixin = /*#__PURE__*/createUseFunction(AnimateSequenceMixin);
@@ -1902,10 +2000,12 @@ var useLoadingStateMixin = /*#__PURE__*/createUseFunction(LoadingStateMixin);
 var useScrollableMixin = /*#__PURE__*/createUseFunction(ScrollableMixin);
 var useScrollIntoViewMixin = /*#__PURE__*/createUseFunction(ScrollIntoViewMixin);
 var useUnmanagedClassNameMixin = /*#__PURE__*/createUseFunction(UnmanagedClassNameMixin);
-function useMixin(ctor) {
-  return useSingleton(function () {
+function useMixin(ctor, options) {
+  var mixin = useSingleton(function () {
     return new ctor();
-  }).reset();
+  }, []).reset();
+  (mixin.withOptions || extendSelf).call(mixin, options);
+  return mixin;
 }
 function useMixinRef(mixin) {
   return mixin && mixin.getMixin().reset();
