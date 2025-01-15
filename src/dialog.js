@@ -5,7 +5,7 @@ import { createAsyncScope } from "zeta-dom-react";
 import { always, arrRemove, combineFn, createPrivateStore, defineObservableProperty, either, extend, noop, pick, resolve, setImmediate } from "zeta-dom/util";
 import { containsOrEquals, removeNode } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
-import { lock, preventLeave, runAsync, subscribeAsync } from "zeta-dom/domLock";
+import { runAsync, subscribeAsync } from "zeta-dom/domLock";
 import { closeFlyout, isFlyoutOpen, openFlyout } from "brew-js/domAction";
 
 const _ = createPrivateStore();
@@ -43,21 +43,12 @@ function createDialogElement(props, unmountAfterUse) {
 function openDialog(element, props, container) {
     if (!containsOrEquals(dom.root, element)) {
         element.className = props.className || '';
-        (container || props.container || document.body).appendChild(element);
         if (props.modal) {
             element.setAttribute('is-modal', '');
         }
-        setImmediate(function () {
-            dom.retainFocus(dom.activeElement, element);
-        });
+        (container || props.container || document.body).appendChild(element);
     }
-    var promise = openFlyout(element, null, pick(props, ['focus', 'closeOnBlur']));
-    if (props.preventLeave) {
-        preventLeave(element, promise);
-    } else if (props.preventNavigation) {
-        lock(element, promise);
-    }
-    return promise;
+    return openFlyout(element, null, pick(props, ['focus', 'closeOnBlur', 'preventLeave', 'preventNavigation']));
 }
 
 /**

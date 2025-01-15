@@ -187,7 +187,7 @@ describe('createDialog', () => {
             }
         });
         actAndReturn(() => dialog.open());
-        expect(locked()).toBe(true);
+        expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(false);
     });
 
     it('should lock root element when preventNavigation is true', () => {
@@ -209,9 +209,9 @@ describe('createDialog', () => {
             }
         });
         await actAwaitSetImmediate(() => dialog.open());
-        expect(locked()).toBe(true);
+        expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(false);
         await after(() => void dialog.close());
-        expect(locked()).toBe(false);
+        expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(true);
     });
 
     it('should render content with wrapper', () => {
@@ -695,9 +695,9 @@ describe('Dialog', () => {
                 <button>test</button>
             </Dialog>
         );
-        await waitFor(() => expect(locked()).toBe(true));
+        await waitFor(() => expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(false));
         unmount();
-        await waitFor(() => expect(locked()).toBe(false));
+        await waitFor(() => expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(true));
     });
 
     it('should lock root element when preventNavigation is true', async () => {
