@@ -1,6 +1,7 @@
 import { expectTypeOf } from "expect-type";
 import { createDialog, DialogOptions, DialogOptionsStrict, DialogRenderComponentProps, DialogState, openDialog } from "src/dialog";
 import { makeTranslation, Translate, Translation } from "src/i18n";
+import { Mixin, MixinProps, StaticAttributeMixin } from "src/mixin";
 import { navigateTo, registerView, ViewComponent, ViewProps } from "src/view";
 import { Stringifiable } from "zeta-dom-react";
 
@@ -402,6 +403,30 @@ expectTypeOf(makeTranslation(translations, 'en').useTranslation('prefix1')).toEq
 
 // @ts-expect-error
 makeTranslation(translations, 'de');
+
+// -------------------------------------
+// mixin.d.ts
+
+declare const fooMixin: StaticAttributeMixin<{ foo: string }>;
+declare const barMixin: StaticAttributeMixin<{ bar: string }>;
+
+expectTypeOf(Mixin.use(fooMixin)).toEqualTypeOf<MixinProps<Element, typeof fooMixin>>();
+expectTypeOf(Mixin.use('ref', fooMixin)).toEqualTypeOf<MixinProps<Element, typeof fooMixin>>();
+expectTypeOf(Mixin.use(<React.Ref<HTMLDivElement>>_, fooMixin)).toEqualTypeOf<MixinProps<HTMLDivElement, typeof fooMixin>>();
+expectTypeOf(Mixin.use(<React.Ref<HTMLDivElement>>_, fooMixin, barMixin, "", undefined)).toEqualTypeOf<MixinProps<HTMLDivElement, typeof fooMixin | typeof barMixin>>();
+
+expectTypeOf(<MixinProps<HTMLDivElement, typeof fooMixin | typeof barMixin>>_).toMatchTypeOf<MixinProps<HTMLDivElement, never>>();
+expectTypeOf(<MixinProps<HTMLDivElement, typeof fooMixin | typeof barMixin>>_).toMatchTypeOf<Record<'foo' | 'bar', string>>();
+
+expectTypeOf(new StaticAttributeMixin('foo').getCustomAttributes()).toEqualTypeOf<{ foo: any }>();
+expectTypeOf(new StaticAttributeMixin({ foo: 'value' }).getCustomAttributes()).toEqualTypeOf<{ foo: string }>();
+
+new StaticAttributeMixin<{ foo: string }>('foo', 'value');
+new StaticAttributeMixin<{ foo: string }>({ foo: 'value' });
+// @ts-expect-error
+new StaticAttributeMixin<{ foo: string }>();
+// @ts-expect-error
+new StaticAttributeMixin<{ foo: string }>('a', 'value');
 
 // -------------------------------------
 // view.d.ts

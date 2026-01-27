@@ -53,7 +53,7 @@ export default class ScrollableMixin extends ClassNameMixin implements JQueryScr
      * Gets a mixin object that when applied to descecant element
      * the element will act as content to be scrolled.
      */
-    readonly target: StaticAttributeMixin;
+    readonly target: StaticAttributeMixin<Record<'scrollable-target', string>>;
     /**
      * Gets the element with scrollable plugin enabled.
      */
@@ -188,4 +188,10 @@ export default class ScrollableMixin extends ClassNameMixin implements JQueryScr
      * @returns A promise that resolves when scrolling is completed.
      */
     scrollToElement(target: Element | string, targetOrigin?: string, wrapperOrigin?: string, duration?: number, callback?: () => void): Promise<void> & JQueryScrollableState;
+
+    /**
+     * Applies custom attributes to element.
+     * @private It is used internally by mixins and is declared for type inference.
+     */
+    getCustomAttributes(): Record<'scrollable' | 'scroller-snap-page' | 'scroller-page' | 'persist-scroll', string>;
 }

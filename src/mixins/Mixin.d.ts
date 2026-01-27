@@ -2,26 +2,35 @@ import React from "react";
 import { ClassName, ClassNameProvider } from "zeta-dom-react";
 import StaticAttributeMixin from "./StaticAttributeMixin";
 
-interface MixinProps {
-    ref: React.RefCallback<Element>;
+export type MixinProps<T extends Element, M> = MixinDefaultProps<T> & UnionToIntersection<M extends CustomAttributeProvider<infer P> ? P : never>;
+
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+type MixinTypes<T extends unknown[]> = Extract<Zeta.ArrayMember<T>, CustomAttributeProvider>;
+
+interface MixinDefaultProps<T extends Element> {
+    ref: React.RefCallback<T>;
     className: string;
 }
 
+interface CustomAttributeProvider<T = {}> {
+    getCustomAttributes(): T;
+}
+
 export default abstract class Mixin implements ClassNameProvider {
-    static readonly scrollableTarget: StaticAttributeMixin;
-    static readonly tabRoot: StaticAttributeMixin;
+    static readonly scrollableTarget: StaticAttributeMixin<Record<'scrollable-target', string>>;
+    static readonly tabRoot: StaticAttributeMixin<Record<'tab-root', string>>;
 
     /**
      * Applies React ref and mixins to element.
      * @param ref A ref callback or ref object.
      * @param args Mixin instances or string literals. String literals are applied to element as CSS classes.
      */
-    static use(ref: React.ForwardedRef<any>, ...args: (Mixin | string | undefined)[]): MixinProps;
+    static use<T extends Element, M extends readonly (Mixin | string | undefined)[]>(ref: React.ForwardedRef<T>, ...args: M): MixinProps<T, MixinTypes<M>>;
     /**
      * Applies mixins to element.
      * @param args Mixin instances or string literals. String literals are applied to element as CSS classes.
      */
-    static use(...args: (Mixin | string | undefined)[]): MixinProps;
+    static use<M extends readonly (Mixin | string | undefined)[]>(...args: M): MixinProps<Element, MixinTypes<M>>;
 
     /**
      * @private Internal use.
@@ -42,7 +51,7 @@ export default abstract class Mixin implements ClassNameProvider {
     /**
      * Override this method to apply custom attributes to element.
      */
-    getCustomAttributes(): Zeta.Dictionary<string>;
+    getCustomAttributes(): {};
     /**
      * @private Internal use.
      */

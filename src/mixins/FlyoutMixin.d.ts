@@ -131,4 +131,10 @@ export default class FlyoutMixin<S = any, R = any> extends ClassNameMixin {
      * @returns A promise that resolves when the flyout is being closed.
      */
     toggleSelf(flag: boolean, source?: Element): Promise<HintedType<R>>;
+
+    /**
+     * Applies custom attributes to element.
+     * @private It is used internally by mixins and is declared for type inference.
+     */
+    getCustomAttributes(): Record<'is-flyout' | 'is-modal' | 'tab-through' | 'swipe-dismiss' | 'animate-on' | 'animate-in' | 'animate-out', string>;
 }

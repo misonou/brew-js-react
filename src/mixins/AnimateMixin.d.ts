@@ -48,4 +48,10 @@ export default class AnimateMixin extends ClassNameMixin {
      * @see {@link AnimationEffect} and {@link AnimationTrigger}.
      */
     withEffects(...effects: AnimationEffect[]): this;
+
+    /**
+     * Applies custom attributes to element.
+     * @private It is used internally by mixins and is declared for type inference.
+     */
+    getCustomAttributes(): Record<'animate-in' | 'animate-out', string>;
 }

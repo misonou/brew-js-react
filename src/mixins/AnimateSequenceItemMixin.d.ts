@@ -8,4 +8,10 @@ import ClassNameMixin from "./ClassNameMixin";
  */
 export default class AnimateSequenceItemMixin extends ClassNameMixin {
     constructor(className: string);
+
+    /**
+     * Applies custom attributes to element.
+     * @private It is used internally by mixins and is declared for type inference.
+     */
+    getCustomAttributes(): Record<'is-animate-sequence', string>;
 }
