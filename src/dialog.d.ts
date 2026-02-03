@@ -14,7 +14,7 @@ export type DialogBaseProps<T, V = T> = Omit<DialogOptions<T, V | undefined>, 'o
 /** @deprecated */
 export type DialogRenderComponentProps<T, V = T> = DialogOptions<T, V | undefined> & DialogContext<V | undefined>;
 
-export type DialogControllerOptions = Pick<DialogOptions<any>, 'container' | 'className' | 'focus' | 'modal'>;
+export type DialogControllerOptions = Omit<DialogOptions<any>, 'onRender' | 'onCommit' | 'onOpen' | 'onClose' | 'controller'>;
 
 export interface DialogControllerAdvancedOptions extends DialogControllerOptions, Pick<DialogOptions<any>, 'onClose' | 'onOpen' | 'preventLeave' | 'preventNavigation'> {
     /**

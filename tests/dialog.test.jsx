@@ -554,6 +554,43 @@ describe('DialogController', () => {
         await screen.findByText('content');
         expect(dialog.root.parentElement.parentElement).toBe(container);
     });
+
+    it('should pass props as default options to created dialog', async () => {
+        const cb = mockFn();
+        const commitDialog = mockFn();
+        const controller = createDialogQueueMock({
+            className: 'test-dialog',
+            modal: true,
+            preventLeave: true,
+            preventNavigation: true,
+            onOpen: cb,
+            onClose: cb,
+            onCommit: cb,
+            wrapper: function Component(props) {
+                return <span data-testid="parent">{props.children}</span>;
+            }
+        });
+        const dialog = createDialogMock({
+            controller,
+            onRender: (props) => {
+                commitDialog.mockImplementationOnce(props.commitDialog);
+                return <div>content</div>;
+            }
+        });
+        dialog.open();
+        await screen.findByText('content');
+        await screen.findByTestId('parent');
+
+        expect(dialog.root).toHaveClassName('test-dialog');
+        expect(dialog.root).toHaveAttribute('is-modal');
+        expect(dom.modalElement).toBe(dialog.root);
+        expect(locked()).toBe(true);
+
+        await commitDialog();
+        await dialog.close();
+        expect(locked()).toBe(false);
+        expect(cb).not.toBeCalled();
+    });
 });
 
 describe('DialogController.pendingCount', () => {

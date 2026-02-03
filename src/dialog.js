@@ -2,7 +2,7 @@ import { createElement, StrictMode, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import ReactDOMClient from "@misonou/react-dom-client";
 import { createAsyncScope } from "zeta-dom-react";
-import { always, arrRemove, combineFn, createPrivateStore, defineObservableProperty, either, extend, noop, pick, resolve, setImmediate } from "zeta-dom/util";
+import { always, arrRemove, combineFn, createPrivateStore, defineObservableProperty, either, exclude, extend, noop, pick, resolve, setImmediate } from "zeta-dom/util";
 import { containsOrEquals, removeNode } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { runAsync, subscribeAsync } from "zeta-dom/domLock";
@@ -144,7 +144,7 @@ export function createDialogQueue(props) {
         childProps = { closeOnBlur: false };
         props = extend({}, props, childProps);
     } else {
-        childProps = props && pick(props, ['className', 'focus', 'modal', 'container']);
+        childProps = props && exclude(props, ['onCommit', 'onRender', 'onOpen', 'onClose']);
     }
     _(controller, {
         root: root,
