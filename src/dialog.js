@@ -40,7 +40,7 @@ function createDialogElement(props, unmountAfterUse) {
     return root;
 }
 
-function openDialog(element, props, container) {
+function showDialog(element, props, container) {
     if (!containsOrEquals(dom.root, element)) {
         element.className = props.className || '';
         if (props.modal) {
@@ -49,6 +49,10 @@ function openDialog(element, props, container) {
         (container || props.container || document.body).appendChild(element);
     }
     return openFlyout(element, null, pick(props, ['focus', 'closeOnBlur', 'preventLeave', 'preventNavigation']));
+}
+
+export function openDialog(props) {
+    return createDialog(props).open();
 }
 
 /**
@@ -80,7 +84,7 @@ export function createDialog(props) {
             content = createElement(props.wrapper, dialogProps, content);
         }
         reactRoot.render(createElement(StrictMode, null, createElement(scope.Provider, null, content)));
-        return shared ? { then: noop } : openDialog(root, props, container);
+        return shared ? { then: noop } : showDialog(root, props, container);
     }
 
     return {
@@ -152,7 +156,7 @@ export function createDialogQueue(props) {
         props: childProps,
         enqueue: function (callback) {
             if (root && !isFlyoutOpen(root)) {
-                openDialog(root, props).then(dismissAll);
+                showDialog(root, props).then(dismissAll);
             }
             if (queue.length || active.length >= (multiple ? props.concurrent || Infinity : 1)) {
                 return new Promise(function (resolve) {
@@ -180,7 +184,7 @@ export function Dialog(props) {
         var opened = isFlyoutOpen(element);
         if (either(opened, _props.isOpen)) {
             if (!opened) {
-                openDialog(element, _props);
+                showDialog(element, _props);
             } else {
                 closeFlyout(element);
             }

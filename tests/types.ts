@@ -1,5 +1,5 @@
 import { expectTypeOf } from "expect-type";
-import { createDialog, DialogOptions, DialogOptionsStrict, DialogRenderComponentProps, DialogState } from "src/dialog";
+import { createDialog, DialogOptions, DialogOptionsStrict, DialogRenderComponentProps, DialogState, openDialog } from "src/dialog";
 import { makeTranslation, Translate, Translation } from "src/i18n";
 import { navigateTo, registerView, ViewComponent, ViewProps } from "src/view";
 import { Stringifiable } from "zeta-dom-react";
@@ -310,6 +310,53 @@ createDialog(<DialogOptions<boolean> & { extraProp: boolean }>{
         return ReactContent;
     }
 });
+
+// infer return type by explicit T (with onCommit)
+expectTypeOf(openDialog<void>({ onRender, onCommit })).toEqualTypeOf<Promise<undefined>>();
+expectTypeOf(openDialog<undefined>({ onRender, onCommit })).toEqualTypeOf<Promise<undefined>>();
+expectTypeOf(openDialog<boolean>({ onRender, onCommit })).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog<boolean | undefined>({ onRender, onCommit })).toEqualTypeOf<Promise<boolean | undefined>>();
+
+// infer return type by explicit T (without onCommit)
+expectTypeOf(openDialog<void>({ onRender })).toEqualTypeOf<Promise<undefined>>();
+expectTypeOf(openDialog<undefined>({ onRender })).toEqualTypeOf<Promise<undefined>>();
+expectTypeOf(openDialog<boolean>({ onRender })).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog<boolean | undefined>({ onRender })).toEqualTypeOf<Promise<boolean | undefined>>();
+
+// infer return type by explicit T and V (with onCommit)
+expectTypeOf(openDialog<boolean, string>({ onRender, onCommit })).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog<boolean, void>({ onRender, onCommit })).toEqualTypeOf<Promise<boolean | undefined>>();
+
+// infer return type by explicit T and V (without onCommit)
+expectTypeOf(openDialog<boolean, string>({ onRender })).toEqualTypeOf<Promise<boolean | string | undefined>>();
+expectTypeOf(openDialog<boolean, void>({ onRender })).toEqualTypeOf<Promise<boolean | undefined>>();
+
+// infer return type by onCommit
+expectTypeOf(openDialog({ onRender, onCommit: <Func<boolean, void>>_ })).toEqualTypeOf<Promise<undefined>>();
+expectTypeOf(openDialog({ onRender, onCommit: <Func<boolean, string>>_ })).toEqualTypeOf<Promise<string | undefined>>();
+expectTypeOf(openDialog({ onRender, onCommit: <FuncOp<boolean, void>>_ })).toEqualTypeOf<Promise<undefined>>();
+expectTypeOf(openDialog({ onRender, onCommit: <FuncOp<boolean, string>>_ })).toEqualTypeOf<Promise<string | undefined>>();
+
+// infer return type by explicit optional onCommit
+expectTypeOf(openDialog({ onRender, onCommit: <Func<boolean, void> | undefined>_ })).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog({ onRender, onCommit: <Func<boolean, string> | undefined>_ })).toEqualTypeOf<Promise<boolean | string | undefined>>();
+expectTypeOf(openDialog({ onRender, onCommit: <FuncOp<boolean, void> | undefined>_ })).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog({ onRender, onCommit: <FuncOp<boolean, string> | undefined>_ })).toEqualTypeOf<Promise<boolean | string | undefined>>();
+
+// infer return type by DialogOptions
+expectTypeOf(openDialog(<DialogOptions<boolean>>_)).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog(<DialogOptions<boolean, void>>_)).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog(<DialogOptions<boolean, string>>_)).toEqualTypeOf<Promise<boolean | string | undefined>>();
+expectTypeOf(openDialog(<DialogOptionsStrict<boolean, void>>_)).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog(<DialogOptionsStrict<boolean, string>>_)).toEqualTypeOf<Promise<boolean | undefined>>();
+
+// infer return type by DialogRenderComponentProps
+expectTypeOf(openDialog<boolean>({ onRender: (_1: DialogRenderComponentProps<boolean>) => ReactContent })).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog<boolean, void>({ onRender: (_1: DialogRenderComponentProps<boolean, void>) => ReactContent })).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog<boolean, string>({ onRender: (_1: DialogRenderComponentProps<boolean, string>) => ReactContent })).toEqualTypeOf<Promise<boolean | string | undefined>>();
+expectTypeOf(openDialog<boolean>({ onCommit, onRender: (_1: DialogRenderComponentProps<boolean>) => ReactContent })).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog<boolean, void>({ onCommit, onRender: (_1: DialogRenderComponentProps<boolean, void>) => ReactContent })).toEqualTypeOf<Promise<boolean | undefined>>();
+expectTypeOf(openDialog<boolean, string>({ onCommit, onRender: (_1: DialogRenderComponentProps<boolean, string>) => ReactContent })).toEqualTypeOf<Promise<boolean | string | undefined>>();
 
 // -------------------------------------
 // i18n.d.ts

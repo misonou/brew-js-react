@@ -204,6 +204,20 @@ export function createDialog<P extends DialogOptionsStrict<any, any>>(props: P):
 export function createDialog<P extends DialogOptions<any, any>>(props: P): DialogState<VoidOrOptional<P extends DialogOptions<infer T, infer V> ? T | V : unknown>>;
 
 /**
+ * Opens a dialog.
+ * @param props A dictionary containing options.
+ */
+export function openDialog<T, V>(props: DialogOptionsStrict<T, V>): Promise<DialogResult<VoidOrOptional<T>>>;
+
+export function openDialog<T, V>(props: DialogOptions<T, V>): Promise<DialogResult<VoidOrOptional<T | V>>>;
+
+export function openDialog<T, V = T>(props: DialogOptions<T, V | undefined>): Promise<DialogResult<VoidOrOptional<T | V>>>;
+
+export function openDialog<P extends DialogOptionsStrict<any, any>>(props: P): Promise<DialogResult<VoidOrOptional<P extends DialogOptionsStrict<infer T, any> ? T : unknown>>>;
+
+export function openDialog<P extends DialogOptions<any, any>>(props: P): Promise<DialogResult<VoidOrOptional<P extends DialogOptions<infer T, infer V> ? T | V : unknown>>>;
+
+/**
  * Renders a dialog declaratively.
  */
 export function Dialog<T, V = T>(props: DialogProps<T, V>): JSX.Element;
