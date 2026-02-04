@@ -27,6 +27,8 @@ const config = {
 if (process.env.CI !== 'true' && require('fs').existsSync('../zeta-dom')) {
     config.moduleNameMapper = {
         ...config.moduleNameMapper,
+        "^jquery$": "<rootDir>/../zeta-dom/node_modules/jquery/dist/jquery",
+        "^jq-scrollable$": "<rootDir>/../jquery-scrollable/index",
         "^brew-js/(.*)$": "<rootDir>/../brew-js/src/$1",
         "^zeta-dom/(.*)$": "<rootDir>/../zeta-dom/src/$1",
         "^zeta-dom-react$": "<rootDir>/../zeta-dom-react/src/index",
