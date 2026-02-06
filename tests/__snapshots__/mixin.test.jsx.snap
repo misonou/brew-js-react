@@ -171,6 +171,16 @@ exports[`StaticAttributeMixin should add custom attributes to element 2`] = `
 </DocumentFragment>
 `;
 
+exports[`use should accept class name string as first argument 1`] = `
+<DocumentFragment>
+  <div
+    class="foo"
+  >
+    foo
+  </div>
+</DocumentFragment>
+`;
+
 exports[`use should accept class name string as second or next argument 1`] = `
 <DocumentFragment>
   <div

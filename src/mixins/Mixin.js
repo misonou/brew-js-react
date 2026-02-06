@@ -34,36 +34,30 @@ define(Mixin, {
     },
     use: function () {
         const args = makeArray(arguments);
-        const ref = args[0];
         const props = {};
-        const mixins = args.filter(function (v) {
-            return v instanceof Mixin;
-        });
-        const refs = mixins.map(function (v) {
-            return v.getRef();
-        });
-        if (ref && !(ref instanceof Mixin)) {
-            if (typeof ref !== 'function') {
-                refs.push(function (v) {
-                    ref.current = v;
-                });
-            } else {
-                refs.push(ref);
-            }
+        const refs = [];
+        const ref = args[0];
+        if (!ref) {
             args.shift();
-        } else if (!ref) {
+        } else if (typeof ref === 'function') {
+            refs.push(ref);
+            args.shift();
+        } else if (typeof ref !== 'string' && !(ref instanceof Mixin)) {
+            refs.push(function (w) {
+                ref.current = w;
+            });
             args.shift();
         }
-        each(mixins, function (i, v) {
-            extend(props, v.getCustomAttributes());
+        each(args, function (i, v) {
+            if (v instanceof Mixin) {
+                refs.push(v.getRef());
+                extend(props, v.getCustomAttributes());
+                v.next();
+            }
         });
-        extend(props, {
+        return extend(props, {
             ref: combineFn(refs),
             className: classNames.apply(null, args)
         });
-        each(mixins, function (i, v) {
-            v.next();
-        });
-        return props;
     }
 });

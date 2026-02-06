@@ -19,15 +19,9 @@ export default abstract class Mixin implements ClassNameProvider {
     static use(ref: React.ForwardedRef<any>, ...args: (Mixin | string | undefined)[]): MixinProps;
     /**
      * Applies mixins to element.
-     * @param mixin Mixin instance.
      * @param args Mixin instances or string literals. String literals are applied to element as CSS classes.
      */
-    static use(mixin: Mixin, ...args: (Mixin | string | undefined)[]): MixinProps;
-    /**
-     * Applies mixins to element.
-     * @param mixins Mixin instances.
-     */
-    static use(...mixins: (Mixin | undefined)[]): MixinProps;
+    static use(...args: (Mixin | string | undefined)[]): MixinProps;
 
     /**
      * @private Internal use.

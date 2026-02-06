@@ -64,6 +64,14 @@ describe('use', () => {
         expect(ref.current).toBe(getByText('foo'));
     });
 
+    it('should accept class name string as first argument', () => {
+        const Component = function () {
+            return (<div {...Mixin.use('foo')}>foo</div>)
+        };
+        const { asFragment } = render(<Component />);
+        expect(asFragment()).toMatchSnapshot();
+    });
+
     it('should accept class name string as second or next argument', () => {
         const Component = function () {
             return (<div {...Mixin.use(mockFn(), 'foo')}>foo</div>)
