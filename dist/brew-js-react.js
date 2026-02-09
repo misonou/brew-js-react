@@ -1,4 +1,4 @@
-/*! brew-js-react v0.6.7 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.7.0 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -192,6 +192,7 @@ __webpack_require__.d(__webpack_exports__, {
   makeTranslation: () => (/* reexport */ makeTranslation),
   matchView: () => (/* reexport */ matchView),
   navigateTo: () => (/* reexport */ navigateTo),
+  openDialog: () => (/* reexport */ openDialog),
   redirectTo: () => (/* reexport */ redirectTo),
   registerErrorView: () => (/* reexport */ registerErrorView),
   registerView: () => (/* reexport */ registerView),
@@ -351,8 +352,6 @@ var reportError = dom.reportError;
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/domLock.js
 
 var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
-  lock = _lib$dom.lock,
-  preventLeave = _lib$dom.preventLeave,
   runAsync = _lib$dom.runAsync,
   subscribeAsync = _lib$dom.subscribeAsync;
 
@@ -402,24 +401,18 @@ function createDialogElement(props, unmountAfterUse) {
   subscribeAsync(root, true);
   return root;
 }
-function openDialog(element, props, container) {
+function showDialog(element, props, container) {
   if (!containsOrEquals(zeta_dom_dom.root, element)) {
     element.className = props.className || '';
-    (container || props.container || document.body).appendChild(element);
     if (props.modal) {
       element.setAttribute('is-modal', '');
     }
-    setImmediate(function () {
-      zeta_dom_dom.retainFocus(zeta_dom_dom.activeElement, element);
-    });
+    (container || props.container || document.body).appendChild(element);
   }
-  var promise = openFlyout(element, null, pick(props, ['focus', 'closeOnBlur']));
-  if (props.preventLeave) {
-    preventLeave(element, promise);
-  } else if (props.preventNavigation) {
-    lock(element, promise);
-  }
-  return promise;
+  return openFlyout(element, null, pick(props, ['focus', 'closeOnBlur', 'preventLeave', 'preventNavigation']));
+}
+function openDialog(props) {
+  return createDialog(props).open();
 }
 
 /**
@@ -452,7 +445,7 @@ function createDialog(props) {
     reactRoot.render( /*#__PURE__*/createElement(StrictMode, null, /*#__PURE__*/createElement(scope.Provider, null, content)));
     return shared ? {
       then: noop
-    } : openDialog(root, props, container);
+    } : showDialog(root, props, container);
   }
   return {
     root: root,
@@ -513,7 +506,7 @@ function createDialogQueue(props) {
     };
     props = extend({}, props, childProps);
   } else {
-    childProps = props && pick(props, ['className', 'focus', 'modal', 'container']);
+    childProps = props && exclude(props, ['onCommit', 'onRender', 'onOpen', 'onClose']);
   }
   _(controller, {
     root: root,
@@ -521,7 +514,7 @@ function createDialogQueue(props) {
     props: childProps,
     enqueue: function enqueue(callback) {
       if (root && !isFlyoutOpen(root)) {
-        openDialog(root, props).then(dismissAll);
+        showDialog(root, props).then(dismissAll);
       }
       if (queue.length || active.length >= (multiple ? props.concurrent || Infinity : 1)) {
         return new Promise(function (resolve) {
@@ -552,7 +545,7 @@ function Dialog(props) {
     var opened = isFlyoutOpen(element);
     if (either(opened, _props.isOpen)) {
       if (!opened) {
-        openDialog(element, _props);
+        showDialog(element, _props);
       } else {
         closeFlyout(element);
       }
@@ -1330,37 +1323,31 @@ util_define(Mixin, {
   },
   use: function use() {
     var args = makeArray(arguments);
-    var ref = args[0];
     var props = {};
-    var mixins = args.filter(function (v) {
-      return v instanceof Mixin;
-    });
-    var refs = mixins.map(function (v) {
-      return v.getRef();
-    });
-    if (ref && !(ref instanceof Mixin)) {
-      if (typeof ref !== 'function') {
-        refs.push(function (v) {
-          ref.current = v;
-        });
-      } else {
-        refs.push(ref);
-      }
+    var refs = [];
+    var ref = args[0];
+    if (!ref) {
       args.shift();
-    } else if (!ref) {
+    } else if (typeof ref === 'function') {
+      refs.push(ref);
+      args.shift();
+    } else if (typeof ref !== 'string' && !(ref instanceof Mixin)) {
+      refs.push(function (w) {
+        ref.current = w;
+      });
       args.shift();
     }
-    each(mixins, function (i, v) {
-      extend(props, v.getCustomAttributes());
+    each(args, function (i, v) {
+      if (v instanceof Mixin) {
+        refs.push(v.getRef());
+        extend(props, v.getCustomAttributes());
+        v.next();
+      }
     });
-    extend(props, {
+    return extend(props, {
       ref: combineFn(refs),
       className: classNames.apply(null, args)
     });
-    each(mixins, function (i, v) {
-      v.next();
-    });
-    return props;
   }
 });
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/observe.js
