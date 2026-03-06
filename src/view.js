@@ -105,11 +105,13 @@ definePrototype(ErrorBoundary, Component, {
         var context = self.props.context;
         if (!context.container) {
             setImmediate(function () {
-                extend(self, createAsyncScope(context.container));
-                dom.on(context.container, 'error', function (e) {
-                    return emitter.emit(e, context, { error: e.error }, false);
-                });
-                self.forceUpdate();
+                if (!self.errorHandler) {
+                    extend(self, createAsyncScope(context.container));
+                    dom.on(context.container, 'error', function (e) {
+                        return emitter.emit(e, context, { error: e.error }, false);
+                    });
+                    self.forceUpdate();
+                }
             });
             return null;
         }

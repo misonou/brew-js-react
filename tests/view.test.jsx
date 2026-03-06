@@ -11,6 +11,7 @@ import initAppBeforeAll, { waitForPageLoad } from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
 import { useRouteParam } from "src/hooks";
 import { jest } from "@jest/globals";
+import { combineFn } from "zeta-dom/util";
 
 const { actAwaitSetImmediate } = composeAct(act);
 
@@ -1483,6 +1484,66 @@ describe('ViewContext', () => {
         verifyCalls(resolve, [
             ['waitFor complete'],
             ['navigate complete']
+        ]);
+        unmount();
+    });
+
+    it('should fire error event when error is emitted to container', async () => {
+        const cb = mockFn();
+        const Foo = registerView(({ viewContext }) => {
+            useEffect(() => {
+                return viewContext.on('error', cb);
+            });
+            return <div>foo</div>;
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>);
+        const elm = await screen.findByText('foo');
+        const error = new Error();
+
+        cb.mockReturnValueOnce(42);
+        await expect(dom.reportError(error, elm)).resolves.toBe(42);
+
+        verifyCalls(cb, [
+            [expect.objectContaining({ error, target: elm, context: expect.any(ViewContext) }), _]
+        ]);
+        unmount();
+    });
+
+    it('should fire error event exactly once in strict mode', async () => {
+        const cb = mockFn();
+        const Foo = registerView(({ viewContext }) => {
+            useEffect(() => {
+                return viewContext.on('error', cb);
+            });
+            return <div>foo</div>;
+        }, { view: 'foo' });
+
+        const { unmount } = render(<React.StrictMode><div>{renderView(Foo)}</div></React.StrictMode>);
+        const elm = await screen.findByText('foo');
+        dom.reportError(new Error(), elm);
+        expect(cb).toBeCalledTimes(1);
+        unmount();
+    });
+
+    it('should fire error event after error handler', async () => {
+        const cb = mockFn();
+        const Foo = registerView(({ viewContext, errorHandler }) => {
+            useEffect(() => {
+                return combineFn(
+                    viewContext.on('error', () => cb('viewContext handler')),
+                    errorHandler.catch(() => cb('errorHandler handler')),
+                );
+            });
+            return <div>foo</div>;
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>);
+        const elm = await screen.findByText('foo');
+        dom.reportError(new Error(), elm);
+        verifyCalls(cb, [
+            ['errorHandler handler'],
+            ['viewContext handler'],
         ]);
         unmount();
     });
