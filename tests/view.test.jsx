@@ -323,6 +323,25 @@ describe('renderView', () => {
         expect(() => renderView(function () { })).toThrow();
     });
 
+    it('should call async import callback once on each render', async () => {
+        const FooCb = mockFn(async () => ({
+            default: () => <div>foo</div>
+        }));
+        const Foo = registerView(FooCb, { view: 'foo' });
+
+        render(<React.StrictMode><div>{renderView(Foo, Bar)}</div></React.StrictMode>);
+        await waitForPageLoad();
+        expect(FooCb).toBeCalledTimes(1);
+
+        app.navigate('/dummy/bar');
+        await waitForPageLoad();
+        FooCb.mockClear();
+
+        app.navigate('/dummy/foo');
+        await waitForPageLoad();
+        expect(FooCb).toBeCalledTimes(1);
+    });
+
     it('should cause redirection to the first match view if none was matched', async () => {
         const { asFragment } = render(<div>{renderView(Foo, Bar, Baz)}</div>)
         await screen.findByText('foo');

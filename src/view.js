@@ -314,7 +314,7 @@ function createViewComponent(factory) {
     }
     return function fn(props) {
         var children = promise || factory(props.viewProps);
-        if (isThenable(children)) {
+        if (promise || isThenable(children)) {
             promise = children;
             catchAsync(promise);
         } else {
@@ -322,8 +322,8 @@ function createViewComponent(factory) {
             return children;
         }
         var component = useAsync(function () {
-            return promise.then(null, function (error) {
-                promise = null;
+            promise = true;
+            return (isThenable(children) || factory()).then(null, function (error) {
                 props.onError(error);
             });
         })[0];
