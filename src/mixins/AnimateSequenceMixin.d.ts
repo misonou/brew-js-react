@@ -18,5 +18,6 @@ export default class AnimateSequenceMixin extends AnimateMixin {
      * Applies custom attributes to element.
      * @private It is used internally by mixins and is declared for type inference.
      */
+    // @ts-ignore
     getCustomAttributes(): Record<'animate-sequence' | 'animate-sequence-type' | 'animate-out', string>;
 }

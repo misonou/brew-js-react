@@ -98,7 +98,14 @@ export class ViewContext implements Zeta.ZetaEventDispatcher<ViewContextEventMap
      * @param event Name of the event.
      * @param handler A callback function to be fired when the specified event is triggered.
      */
-    on<E extends keyof ViewContextEventMap>(event: E, handler: Zeta.ZetaEventHandler<E, ViewContextEventMap, ViewContext>): Zeta.UnregisterCallback;
+    on<E extends Zeta.StringKeyOf<ViewContextEventMap>>(event: E, handler: Zeta.ZetaEventHandler<E, ViewContextEventMap, ViewContext>): Zeta.UnregisterCallback;
+
+    /**
+     * Adds an event handler to a specific event.
+     * @param event Name of the event.
+     * @param handler A callback function to be fired when the specified event is triggered.
+     */
+    on<E extends Zeta.HintedStringKeyOf<ViewContextEventMap>>(event: E, handler: Zeta.ZetaEventHandler<Zeta.WhitespaceDelimited<E>, ViewContextEventMap, ViewContext>): Zeta.UnregisterCallback;
 }
 
 export interface ViewProps<S = {}> {

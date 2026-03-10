@@ -15,5 +15,6 @@ export default class StaticAttributeMixin<P = {}> extends Mixin {
      * Applies custom attributes to element.
      * @private It is used internally by mixins and is declared for type inference.
      */
+    // @ts-ignore
     getCustomAttributes(): P;
 }

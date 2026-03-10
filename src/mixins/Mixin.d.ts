@@ -5,7 +5,7 @@ import StaticAttributeMixin from "./StaticAttributeMixin";
 export type MixinProps<T extends Element, M> = MixinDefaultProps<T> & UnionToIntersection<M extends CustomAttributeProvider<infer P> ? P : never>;
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
-type MixinTypes<T extends unknown[]> = Extract<Zeta.ArrayMember<T>, CustomAttributeProvider>;
+type MixinTypes<T extends readonly unknown[]> = Extract<Zeta.ArrayMember<T>, CustomAttributeProvider>;
 
 interface MixinDefaultProps<T extends Element> {
     ref: React.RefCallback<T>;
