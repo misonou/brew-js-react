@@ -1,4 +1,4 @@
-/*! brew-js-react v0.7.0 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.7.1 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -687,13 +687,15 @@ definePrototype(ErrorBoundary, Component, {
     var context = self.props.context;
     if (!context.container) {
       setImmediate(function () {
-        extend(self, createAsyncScope(context.container));
-        zeta_dom_dom.on(context.container, 'error', function (e) {
-          return emitter.emit(e, context, {
-            error: e.error
-          }, false);
-        });
-        self.forceUpdate();
+        if (!self.errorHandler) {
+          extend(self, createAsyncScope(context.container));
+          zeta_dom_dom.on(context.container, 'error', function (e) {
+            return emitter.emit(e, context, {
+              error: e.error
+            }, false);
+          });
+          self.forceUpdate();
+        }
       });
       return null;
     }
@@ -910,7 +912,7 @@ function createViewComponent(factory) {
   }
   return function fn(props) {
     var children = promise || factory(props.viewProps);
-    if (isThenable(children)) {
+    if (promise || isThenable(children)) {
       promise = children;
       catchAsync(promise);
     } else {
@@ -918,8 +920,8 @@ function createViewComponent(factory) {
       return children;
     }
     var component = useAsync(function () {
-      return promise.then(null, function (error) {
-        promise = null;
+      promise = true;
+      return (isThenable(children) || factory()).then(null, function (error) {
         props.onError(error);
       });
     })[0];
