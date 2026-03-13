@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useAsync, useObservableProperty, useViewState } from "zeta-dom-react";
-import { isViewMatched, isViewRendered, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, useViewContainerState, useViewContext, ViewContext } from "src/view";
+import { isViewMatched, isViewRendered, linkTo, matchView, navigateTo, redirectTo, registerErrorView, registerView, renderView, resetAllViews, useViewContainerState, useViewContext, ViewContext } from "src/view";
 import { body, delay, mockFn, verifyCalls, _, cleanup, root } from "@misonou/test-utils";
 import dom from "zeta-dom/dom";
 import { addAnimateIn, addAnimateOut } from "brew-js/anim";
@@ -1149,6 +1149,28 @@ describe('renderView', () => {
     });
 });
 
+describe('resetAllViews', () => {
+    it('should remount all view components', async () => {
+        const setStateCallbacks = new Set();
+        const Foo = registerView(() => {
+            const [state, setState] = useState(0);
+            setStateCallbacks.add(setState);
+            return <div>{state}</div>;
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}{renderView(Foo)}</div>);
+        await waitFor(() => expect(screen.findAllByText('0')).resolves.toHaveLength(2));
+        expect(setStateCallbacks.size).toBe(2);
+
+        act(() => combineFn(...setStateCallbacks)(1));
+        await waitFor(() => expect(screen.findAllByText('1')).resolves.toHaveLength(2));
+
+        act(() => resetAllViews());
+        await waitFor(() => expect(screen.findAllByText('0')).resolves.toHaveLength(2));
+        unmount();
+    });
+});
+
 describe('linkTo', () => {
     it('should return path that will render specified view with params', () => {
         expect(linkTo(Foo, { baz: 'baz' })).toBe('/dummy/foo');
@@ -1580,5 +1602,77 @@ describe('ViewContext', () => {
         expect(context.active).toBe(true);
         unmount();
         expect(context.active).toBe(false);
+    });
+});
+
+describe('ViewContext.resetView', () => {
+    it('should remount view component', async () => {
+        const setStateCallback = mockFn();
+        const resetViewCallback = mockFn();
+        const Foo = registerView(({ viewContext }) => {
+            const [state, setState] = useState(0);
+            setStateCallback.mockImplementation(setState);
+            resetViewCallback.mockImplementation(() => viewContext.resetView());
+            return <div>{state}</div>
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>);
+        await screen.findByText('0');
+
+        act(() => setStateCallback(1));
+        await screen.findByText('1');
+
+        act(() => resetViewCallback());
+        await screen.findByText('0');
+        unmount();
+    });
+
+    it('should reset view from error view', async () => {
+        const setErrorViewCallback = mockFn();
+        const resetViewCallback = mockFn();
+        const ErrorView = () => {
+            return <div>error</div>;
+        };
+        const Foo = registerView(({ viewContext }) => {
+            setErrorViewCallback.mockImplementation((v, e) => viewContext.setErrorView(v, e));
+            resetViewCallback.mockImplementation(() => viewContext.resetView());
+            return <div>foo</div>
+        }, { view: 'foo' });
+
+        const { unmount } = render(<div>{renderView(Foo)}</div>);
+        await screen.findByText('foo');
+
+        act(() => setErrorViewCallback(ErrorView, new Error()));
+        await screen.findByText('error');
+
+        act(() => resetViewCallback());
+        await screen.findByText('foo');
+        unmount();
+    });
+
+    it('should not affect parent or sibling view component', async () => {
+        const setStateCallbacks = new Set();
+        const resetViewCallback = mockFn();
+        const FooInner = registerView(({ viewContext }) => {
+            const [state, setState] = useState(0);
+            setStateCallbacks.add(setState);
+            resetViewCallback.mockImplementation(() => viewContext.resetView());
+            return <div>{state}</div>
+        }, { view: 'foo' });
+        const Foo = registerView(() => {
+            return (<div>{renderView(FooInner)}{renderView(FooInner)}</div>);
+        }, { view: 'foo' });
+
+        const { asFragment, unmount } = render(<div>{renderView(Foo)}</div>);
+        await waitFor(() => expect(screen.findAllByText('0')).resolves.toHaveLength(2));
+        expect(setStateCallbacks.size).toBe(2);
+
+        act(() => combineFn(...setStateCallbacks)(1));
+        await waitFor(() => expect(screen.findAllByText('1')).resolves.toHaveLength(2));
+
+        act(() => resetViewCallback());
+        await waitFor(() => expect(screen.findAllByText('1')).resolves.toHaveLength(1));
+        expect(asFragment()).toMatchSnapshot();
+        unmount();
     });
 });

@@ -1,5 +1,32 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ViewContext.resetView should not affect parent or sibling view component 1`] = `
+<DocumentFragment>
+  <div>
+    <div
+      brew-view=""
+    >
+      <div>
+        <div
+          brew-view=""
+        >
+          <div>
+            1
+          </div>
+        </div>
+        <div
+          brew-view=""
+        >
+          <div>
+            0
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`navigateTo should pass data to view component 1`] = `
 <DocumentFragment>
   <div>

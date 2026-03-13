@@ -72,6 +72,13 @@ definePrototype(ViewContext, {
         var wrapper = _(this).wrapper;
         return wrapper && errorView && !wrapper.setState({ error, errorView });
     },
+    resetView: function () {
+        var self = this;
+        each(self.parent ? [self] : self.getChildren(), function (i, v) {
+            var wrapper = _(v).wrapper;
+            wrapper.setState({ key: (wrapper.state.key || 0) + 1, errorView: null });
+        });
+    },
     on: function (event, handler) {
         return emitter.add(this, event, handler);
     }
@@ -125,13 +132,14 @@ definePrototype(ErrorBoundary, Component, {
             }));
         }
         var onError = self.componentDidCatch.bind(self);
+        var key = self.state.key || 0;
         var viewProps = {
             errorHandler: self.errorHandler,
             navigationType: event.navigationType,
             viewContext: context,
             viewData: context.page.data || {}
         };
-        return createElement(self.Provider, null, createElement(context.view, extend({ viewProps, onError }, self.props)));
+        return createElement(self.Provider, null, createElement(context.view, extend({ key, viewProps, onError }, self.props)));
     },
     reset: function () {
         this.setState({ errorView: null });
@@ -397,6 +405,10 @@ export function renderView() {
     });
     views.sort(sortViews);
     return createElement(ViewContainer, { rootProps, views, defaultView });
+}
+
+export function resetAllViews() {
+    rootContext.resetView();
 }
 
 export function resolvePath(view, params) {

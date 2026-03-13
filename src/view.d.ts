@@ -88,6 +88,11 @@ export class ViewContext implements Zeta.ZetaEventDispatcher<ViewContextEventMap
     setErrorView<T>(errorView: React.ComponentType<ErrorViewProps<T>>, error: T): true | undefined;
 
     /**
+     * Unmounts and remounts the view component, or re-renders the view component if it is currently replaced by an error view.
+     */
+    resetView(): void;
+
+    /**
      * Adds event handlers to multiple events.
      * @param handlers A dictionary which the keys are event names and values are the callback for each event.
      */
@@ -252,6 +257,11 @@ export function renderView(...args: ViewComponent<any>[]): JSX.Element;
  * @param args A list of view components created by {@link registerView}.
  */
 export function renderView(props: ViewComponentRootProps, ...args: ViewComponent<any>[]): JSX.Element;
+
+/**
+ * Resets all rendered views by unmounting and remounting the view components, or re-rendering the view components if they are currently replaced by error views.
+ */
+export function resetAllViews(): void;
 
 /**
  * Returns the app path that will render the specified view.
