@@ -333,6 +333,33 @@ describe('useRouteState', () => {
         expect(result.all.length).toBe(1);
         unmount()
     });
+
+    it('should handle key change', async () => {
+        await app.navigate('/foo');
+
+        const { result, rerender, unmount } = renderHook(({ key }) => useRouteState(key, () => key + '_value'), {
+            initialProps: { key: 'foo' }
+        });
+        expect(result.current[0]).toBe('foo_value');
+        expect(app.historyStorage.current.get('foo')).toBe('foo_value');
+
+        rerender({ key: 'bar' });
+        expect(result.current[0]).toBe('bar_value');
+        expect(app.historyStorage.current.get('bar')).toBe('bar_value');
+        expect(app.historyStorage.current.get('foo')).toBe('foo_value');
+
+        const cb = mockFn().mockReturnValue('bar_value2');
+        act(() => result.current[1](cb));
+        expect(cb).toBeCalledWith('bar_value');
+        expect(result.current[0]).toBe('bar_value2');
+        expect(app.historyStorage.current.get('bar')).toBe('bar_value2');
+        expect(app.historyStorage.current.get('foo')).toBe('foo_value');
+
+        app.historyStorage.current.set('baz', 'baz');
+        rerender({ key: 'baz' });
+        expect(result.current[0]).toBe('baz');
+        unmount();
+    });
 });
 
 describe('useQueryParam', () => {

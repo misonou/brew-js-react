@@ -1,6 +1,6 @@
 import { createElement, useEffect, useMemo, useRef, useState } from "react";
-import { ViewStateProvider, useEagerState, useMemoizedFunction, useObservableProperty, useValueTrigger } from "zeta-dom-react";
-import { catchAsync, definePrototype, delay, each, equal, extend, freeze, isFunction, isPlainObject, keys, kv, mapObject, throwNotFunction } from "zeta-dom/util";
+import { ViewStateProvider, useEagerReducer, useEagerState, useMemoizedFunction, useObservableProperty, useValueTrigger } from "zeta-dom-react";
+import { catchAsync, definePrototype, delay, each, equal, extend, freeze, isFunction, isPlainObject, keys, kv, mapObject, sameValue, throwNotFunction } from "zeta-dom/util";
 import { ZetaEventContainer } from "zeta-dom/events";
 import { getQueryParam, setQueryParam } from "brew-js/util/common";
 import { parsePath } from "brew-js/util/path";
@@ -68,6 +68,20 @@ function useViewContextWithEffect(callback, deps) {
     return container;
 }
 
+function usePersistedState(storage, key, defaultValue) {
+    var state = useEagerReducer(function (prevState, value) {
+        value = isFunction(value) ? value(prevState[1]) : value;
+        return sameValue(value, prevState[1]) ? prevState : [prevState[0], value];
+    }, []);
+    var cur = state[0];
+    useMemo(function () {
+        if (cur[0] !== key) {
+            cur.splice(0, 2, key, storage && storage.has(key) ? storage.get(key) : isFunction(defaultValue) ? defaultValue() : defaultValue);
+        }
+    }, [storage, key]);
+    return [cur[1], state[1]];
+}
+
 export function useAppReady() {
     return useAppReadyState().ready;
 }
@@ -101,7 +115,7 @@ export function useRouteParam(name, defaultValue) {
 
 export function useRouteState(key, defaultValue, snapshotOnUpdate) {
     var cur = getCurrentStates();
-    var state = useEagerState(cur && cur.has(key) ? cur.get(key) : defaultValue);
+    var state = usePersistedState(cur, key, defaultValue);
     var container = useViewContextWithEffect(function (cur) {
         state[1](function (oldValue) {
             return cur.has(key) ? cur.get(key) : (cur.set(key, oldValue), oldValue);
