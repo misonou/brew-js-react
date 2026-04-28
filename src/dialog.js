@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import ReactDOMClient from "@misonou/react-dom-client";
 import { createAsyncScope } from "zeta-dom-react";
 import { always, arrRemove, combineFn, createPrivateStore, defineObservableProperty, either, exclude, extend, noop, pick, resolve, setImmediate } from "zeta-dom/util";
-import { containsOrEquals, removeNode } from "zeta-dom/domUtil";
+import { bind, containsOrEquals, removeNode } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { runAsync, subscribeAsync } from "zeta-dom/domLock";
 import { closeFlyout, isFlyoutOpen, openFlyout } from "brew-js/domAction";
@@ -70,6 +70,15 @@ export function createDialog(props) {
     var closeDialog = shared ? noop : closeFlyout.bind(0, root);
 
     function render(closeDialog, props, container) {
+        var signal = props.signal;
+        if (signal) {
+            if (signal.aborted) {
+                return resolve();
+            }
+            closeDialog = combineFn(closeDialog, bind(signal, 'abort', function () {
+                closeDialog();
+            }));
+        }
         var commitDialog = props.onCommit ? function (value) {
             return runAsync(dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
         } : closeDialog;

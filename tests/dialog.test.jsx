@@ -8,7 +8,7 @@ import dom from "zeta-dom/dom";
 import initAppBeforeAll from "./harness/initAppBeforeAll";
 import composeAct from "./harness/composeAct";
 import { useAsync } from "zeta-dom-react";
-import { setTimeout, watch } from "zeta-dom/util";
+import { catchAsync, setTimeout, watch } from "zeta-dom/util";
 import { closeFlyout } from "brew-js/domAction";
 
 const createDialogMock = mockFn(createDialog);
@@ -165,6 +165,32 @@ describe('createDialog', () => {
         expect(onCommit).not.toBeCalled();
     });
 
+    it('should signal onCommit callback when dialog is forcibly closed', async () => {
+        const commit = mockFn();
+        const cb = mockFn().mockImplementation(() => new Promise(() => { }));
+        const dialog = createDialogMock({
+            onCommit: cb,
+            onRender: function Component({ commitDialog }) {
+                commit.mockImplementationOnce(commitDialog);
+                return <span>text</span>;
+            }
+        });
+        dialog.open();
+        await screen.findByText('text');
+
+        const commitResult = commit();
+        catchAsync(commitResult); // avoid 'Promise rejection was handled asynchronously' error
+        expect(cb).toBeCalledTimes(1);
+
+        const signal = cb.mock.calls[0][1].signal;
+        expect(signal).toBeInstanceOf(AbortSignal);
+        expect(signal.aborted).toBe(false);
+
+        dialog.close();
+        await waitFor(() => expect(signal.aborted).toBe(true));
+        await expect(commitResult).rejects.toBeErrorWithCode('zeta/cancelled');
+    });
+
     it('should set dialog as modal when modal is true', async () => {
         const cb = mockFn();
         const dialog = createDialogMock({
@@ -279,6 +305,63 @@ describe('createDialog', () => {
         expect(dialog.root).not.toHaveClassName('should-not-used');
         expect(dom.modalElement).toBeNull();
         expect(locked()).toBe(false);
+    });
+
+    it('should dismiss dialog when signal is aborted', async () => {
+        const cb = mockFn();
+        const controller = new AbortController();
+        const dialog = createDialogMock({
+            signal: controller.signal,
+            onCommit: cb,
+            onRender: function Component() {
+                return <span>text</span>;
+            }
+        });
+        const promise = dialog.open();
+        await screen.findByText('text');
+
+        controller.abort();
+        await waitForElementToBeRemoved(() => screen.getByText('text'));
+        await expect(promise).resolves.toBeUndefined();
+        expect(cb).not.toBeCalled();
+    });
+
+    it('should signal onCommit callback when given signal is aborted', async () => {
+        const commit = mockFn();
+        const cb = mockFn().mockImplementation(() => new Promise(() => { }));
+        const controller = new AbortController();
+        const dialog = createDialogMock({
+            signal: controller.signal,
+            onCommit: cb,
+            onRender: function Component({ commitDialog }) {
+                commit.mockImplementationOnce(commitDialog);
+                return <span>text</span>;
+            }
+        });
+        dialog.open();
+        await screen.findByText('text');
+
+        const commitResult = commit();
+        catchAsync(commitResult); // avoid 'Promise rejection was handled asynchronously' error
+        expect(cb).toBeCalledTimes(1);
+
+        const signal = cb.mock.calls[0][1].signal;
+        expect(signal).toBeInstanceOf(AbortSignal);
+        expect(signal.aborted).toBe(false);
+
+        controller.abort();
+        await waitFor(() => expect(signal.aborted).toBe(true));
+        await expect(commitResult).rejects.toBeErrorWithCode('zeta/cancelled');
+    });
+
+    it('should not open dialog when signal is already aborted', async () => {
+        const cb = mockFn();
+        const dialog = createDialogMock({
+            signal: AbortSignal.abort(),
+            onRender: cb
+        });
+        await expect(dialog.open()).resolves.toBeUndefined()
+        expect(cb).not.toBeCalled();
     });
 });
 
@@ -467,6 +550,41 @@ describe('DialogController', () => {
         expect(controller.pendingCount).toBe(2);
         expect(screen.queryByText('3')).toBeNull();
         await screen.findByText('2');
+    });
+
+    it('should render next dialog in queue if current dialog is dismissed by abort signal', async () => {
+        const controller = createDialogQueueMock({ mode: 'shared' });
+        const ac = new AbortController();
+        createDialogMock({ controller, onRender: () => <div>1</div>, signal: ac.signal }).open();
+        createDialogMock({ controller, onRender: () => <div>2</div>, signal: AbortSignal.abort() }).open();
+        createDialogMock({ controller, onRender: () => <div>3</div> }).open();
+
+        await screen.findByText('1');
+        ac.abort();
+        await screen.findByText('3');
+    });
+
+    it('should not dismiss current dialog when abort signal for previous dialog is triggered', async () => {
+        const dismiss = mockFn();
+        const controller = createDialogQueueMock({ mode: 'shared' });
+        const ac = new AbortController();
+        createDialogMock({
+            controller,
+            onRender: ({ dismissDialog }) => {
+                dismiss.mockImplementationOnce(dismissDialog);
+                return (<div>1</div>);
+            },
+            signal: ac.signal
+        }).open();
+        createDialogMock({ controller, onRender: () => <div>2</div> }).open();
+        createDialogMock({ controller, onRender: () => <div>3</div> }).open();
+
+        await screen.findByText('1');
+        dismiss();
+        await screen.findByText('2');
+        ac.abort();
+        await expect(() => screen.findByText('3')).rejects.toBeTruthy();
+        expect(controller.pendingCount).toBe(1);
     });
 
     it('should show at most specified number of dialog', async () => {

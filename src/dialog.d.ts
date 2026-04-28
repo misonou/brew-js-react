@@ -14,7 +14,7 @@ export type DialogBaseProps<T, V = T> = Omit<DialogOptions<T, V | undefined>, 'o
 /** @deprecated */
 export type DialogRenderComponentProps<T, V = T> = DialogOptions<T, V | undefined> & DialogContext<V | undefined>;
 
-export type DialogControllerOptions = Omit<DialogOptions<any>, 'onRender' | 'onCommit' | 'onOpen' | 'onClose' | 'controller'>;
+export type DialogControllerOptions = Omit<DialogOptions<any>, 'signal' | 'onRender' | 'onCommit' | 'onOpen' | 'onClose' | 'controller'>;
 
 export interface DialogControllerAdvancedOptions extends DialogControllerOptions, Pick<DialogOptions<any>, 'onClose' | 'onOpen' | 'preventLeave' | 'preventNavigation'> {
     /**
@@ -143,6 +143,16 @@ export interface DialogOptions<T, V = T | undefined> {
      * which is useful for reusable layout for dialogs.
      */
     wrapper?: React.FC<DialogContext<V> & this & React.PropsWithChildren<{}>>;
+    /**
+     * An optional signal object to dismiss the dialog.
+     *
+     * When signal is received, the dialog will be closed without invoking {@link DialogOptions.onCommit}.
+     * If the signal is already aborted before the dialog is open, the dialog will cease to be opened.
+     *
+     * In either case, the promise returned from {@link DialogState.open} will always resolve to `undefined`
+     * without the abort reason being propagated.
+     */
+    signal?: AbortSignal;
 }
 
 export interface DialogContext<V> {
