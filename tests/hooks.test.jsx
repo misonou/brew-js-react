@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react-hooks";
 import { addAnimateOut } from "brew-js/anim";
-import { useQueryParam, useRouteParam, useRouteState, ViewStateContainer } from "src/hooks";
+import { useAppSessionState, useQueryParam, useRouteParam, useRouteState, ViewStateContainer } from "src/hooks";
 import { registerView, renderView } from "src/view";
 import { after, cleanup, delay, mockFn } from "@misonou/test-utils";
 import { useUpdateTrigger, useViewState } from "zeta-dom-react";
@@ -23,7 +23,97 @@ const app = initAppBeforeAll(app => {
 });
 
 beforeEach(async () => {
+    app.sessionStorage.clear();
     await app.navigate(app.initialPath);
+});
+
+describe('useAppSessionState', () => {
+    it('should return persisted value', () => {
+        app.sessionStorage.set('foo', 'baz');
+
+        const { result, unmount } = renderHook(() => useAppSessionState('foo', 'bar'));
+        expect(result.current[0]).toBe('baz');
+        expect(app.sessionStorage.get('foo')).toBe('baz');
+        unmount();
+    });
+
+    it('should return default value if there is no persisted value', () => {
+        const { result, unmount } = renderHook(() => useAppSessionState('foo', 'bar'));
+        expect(result.current[0]).toBe('bar');
+        expect(app.sessionStorage.get('foo')).toBe('bar');
+        unmount();
+    });
+
+    it('should return undefined if there is no persisted value and default value is not provided', () => {
+        const { result, unmount } = renderHook(() => useAppSessionState('foo'));
+        expect(result.current[0]).toBeUndefined();
+        expect(app.sessionStorage.get('foo')).toBeUndefined();
+        unmount();
+    });
+
+    it('should return initial value from callback', () => {
+        const init = mockFn().mockReturnValue('bar');
+        const { result, unmount } = renderHook(() => useAppSessionState('foo', init));
+        expect(init).toBeCalledTimes(1);
+        expect(result.current[0]).toBe('bar');
+        expect(app.sessionStorage.get('foo')).toBe('bar');
+        unmount();
+    });
+
+    it('should invoke action callback with current value', () => {
+        const cb = mockFn().mockReturnValue('baz');
+        const { result, unmount } = renderHook(() => useAppSessionState('foo', 'bar'));
+
+        act(() => result.current[1](cb));
+        expect(cb).toBeCalledWith('bar');
+        expect(result.current[0]).toBe('baz');
+        expect(app.sessionStorage.get('foo')).toBe('baz');
+        unmount();
+    });
+
+    it('should not trigger re-render when value did not change', () => {
+        const { result, unmount } = renderHook(() => useAppSessionState('foo', NaN));
+        act(() => result.current[1](NaN));
+        expect(result.all.length).toBe(1);
+
+        act(() => result.current[1](() => NaN));
+        expect(result.all.length).toBe(1);
+        unmount();
+    });
+
+    it('should persist value in app session storage', () => {
+        const { result, unmount } = renderHook(() => useAppSessionState('foo', ''));
+
+        act(() => result.current[1]('bar'));
+        expect(result.current[0]).toBe('bar');
+        expect(app.sessionStorage.get('foo')).toBe('bar');
+        unmount();
+    });
+
+    it('should handle key change', () => {
+        const { result, rerender, unmount } = renderHook(({ key }) => useAppSessionState(key, () => key + '_value'), {
+            initialProps: { key: 'foo' }
+        });
+        expect(result.current[0]).toBe('foo_value');
+        expect(app.sessionStorage.get('foo')).toBe('foo_value');
+
+        rerender({ key: 'bar' });
+        expect(result.current[0]).toBe('bar_value');
+        expect(app.sessionStorage.get('bar')).toBe('bar_value');
+        expect(app.sessionStorage.get('foo')).toBe('foo_value');
+
+        const cb = mockFn().mockReturnValue('bar_value2');
+        act(() => result.current[1](cb));
+        expect(cb).toBeCalledWith('bar_value');
+        expect(result.current[0]).toBe('bar_value2');
+        expect(app.sessionStorage.get('bar')).toBe('bar_value2');
+        expect(app.sessionStorage.get('foo')).toBe('foo_value');
+
+        app.sessionStorage.set('baz', 'baz');
+        rerender({ key: 'baz' });
+        expect(result.current[0]).toBe('baz');
+        unmount();
+    });
 });
 
 describe('useRouteParam', () => {

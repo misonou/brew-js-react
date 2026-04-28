@@ -40,6 +40,18 @@ export function useRouteState<T>(key: string | symbol, initialState: T | (() => 
 export function useRouteState<T = undefined>(key: string | symbol): [T | undefined, React.Dispatch<React.SetStateAction<T | undefined>>];
 
 /**
+ * Returns a stateful value, and a function to update it.
+ * Same as {@link React.useState}, but the state is persisted in `app.sessionStorage`.
+ */
+export function useAppSessionState<T>(key: string | symbol, initialState: T | (() => T)): [T, React.Dispatch<React.SetStateAction<T>>];
+
+/**
+ * Returns a stateful value, and a function to update it.
+ * Same as {@link React.useState}, but the state is persisted in `app.sessionStorage`.
+ */
+export function useAppSessionState<T = undefined>(key: string | symbol): [T | undefined, React.Dispatch<React.SetStateAction<T | undefined>>];
+
+/**
  * Returns value of the specified parameter in query string, and a function to update it.
  *
  * To remove parameter in query string, pass empty string to the update function.

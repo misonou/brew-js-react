@@ -130,6 +130,13 @@ export function useRouteState(key, defaultValue, snapshotOnUpdate) {
     return state;
 }
 
+export function useAppSessionState(key, defaultValue) {
+    var cur = app.sessionStorage;
+    var state = usePersistedState(cur, key, defaultValue);
+    updatePersistedValue(cur, key, state[0]);
+    return state;
+}
+
 export function useQueryParam(key, value, snapshotOnUpdate) {
     if (isPlainObject(key)) {
         snapshotOnUpdate = value;
