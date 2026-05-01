@@ -275,9 +275,8 @@ describe('useRouteState', () => {
         expect(history.state).not.toBe(stateId);
         act(() => result.current[1]('baz'));
 
-        await act(async () => void await app.back());
-        await delay();
-        expect(history.state).toBe(stateId);
+        await app.back();
+        await waitFor(() => expect(history.state).toBe(stateId));
         expect(result.current[0]).toBe('foo');
 
         history.forward();
