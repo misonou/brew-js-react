@@ -1,4 +1,4 @@
-/*! brew-js-react v0.7.1 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.7.2 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -12,64 +12,64 @@
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 87:
-/***/ ((module) => {
+/***/ 87
+(module) {
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__87__;
 
-/***/ }),
+/***/ },
 
-/***/ 760:
-/***/ ((module) => {
+/***/ 760
+(module) {
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__760__;
 
-/***/ }),
+/***/ },
 
-/***/ 914:
-/***/ ((module) => {
+/***/ 914
+(module) {
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__914__;
 
-/***/ }),
+/***/ },
 
-/***/ 12:
-/***/ ((module) => {
+/***/ 12
+(module) {
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__12__;
 
-/***/ }),
+/***/ },
 
-/***/ 33:
-/***/ ((module) => {
+/***/ 33
+(module) {
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__33__;
 
-/***/ }),
+/***/ },
 
-/***/ 231:
-/***/ ((module) => {
+/***/ 231
+(module) {
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__231__;
 
-/***/ }),
+/***/ },
 
-/***/ 402:
-/***/ ((module) => {
+/***/ 402
+(module) {
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__402__;
 
-/***/ }),
+/***/ },
 
-/***/ 621:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+/***/ 621
+(module, __unused_webpack_exports, __webpack_require__) {
 
 var ReactDOM = __webpack_require__(33);
 var ReactDOMClient;
@@ -99,7 +99,7 @@ if (ReactDOM.createRoot) {
 module.exports = ReactDOMClient;
 
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -158,7 +158,7 @@ module.exports = ReactDOMClient;
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
 (() => {
 "use strict";
 // ESM COMPAT FLAG
@@ -197,11 +197,13 @@ __webpack_require__.d(__webpack_exports__, {
   registerErrorView: () => (/* reexport */ registerErrorView),
   registerView: () => (/* reexport */ registerView),
   renderView: () => (/* reexport */ renderView),
+  resetAllViews: () => (/* reexport */ resetAllViews),
   resolvePath: () => (/* reexport */ resolvePath),
   useAnimateMixin: () => (/* reexport */ useAnimateMixin),
   useAnimateSequenceMixin: () => (/* reexport */ useAnimateSequenceMixin),
   useAppReady: () => (/* reexport */ useAppReady),
   useAppReadyState: () => (/* reexport */ useAppReadyState),
+  useAppSessionState: () => (/* reexport */ useAppSessionState),
   useClassNameToggleMixin: () => (/* reexport */ useClassNameToggleMixin),
   useFlyoutMixin: () => (/* reexport */ useFlyoutMixin),
   useFocusStateMixin: () => (/* reexport */ useFocusStateMixin),
@@ -221,7 +223,7 @@ __webpack_require__.d(__webpack_exports__, {
 
 // EXTERNAL MODULE: external {"commonjs":"zeta-dom","commonjs2":"zeta-dom","amd":"zeta-dom","root":"zeta"}
 var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(231);
-;// CONCATENATED MODULE: ./|umd|/zeta-dom/util.js
+;// ./|umd|/zeta-dom/util.js
 
 var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
   always = _lib$util.always,
@@ -260,6 +262,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   pick = _lib$util.pick,
   randomId = _lib$util.randomId,
   resolve = _lib$util.resolve,
+  sameValue = _lib$util.sameValue,
   setImmediate = _lib$util.setImmediate,
   setImmediateOnce = _lib$util.setImmediateOnce,
   single = _lib$util.single,
@@ -270,17 +273,18 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
 
 // EXTERNAL MODULE: external {"commonjs":"brew-js","commonjs2":"brew-js","amd":"brew-js","root":"brew"}
 var external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_ = __webpack_require__(760);
-;// CONCATENATED MODULE: ./|umd|/brew-js/app.js
+;// ./|umd|/brew-js/app.js
+/* unused harmony import specifier */ var lib;
 
 /* harmony default export */ const app = ((/* unused pure expression or super */ null && (lib)));
 var addExtension = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.addExtension,
   install = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.install;
 
-;// CONCATENATED MODULE: ./|umd|/brew-js/defaults.js
+;// ./|umd|/brew-js/defaults.js
 
 var defaults = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.defaults;
 /* harmony default export */ const brew_js_defaults = (defaults);
-;// CONCATENATED MODULE: ./src/app.js
+;// ./src/app.js
 
 
 
@@ -303,7 +307,7 @@ install('react', extension);
 brew_js_defaults.react = true;
 // EXTERNAL MODULE: external {"commonjs":"react","commonjs2":"react","amd":"react","root":"React"}
 var external_commonjs_react_commonjs2_react_amd_react_root_React_ = __webpack_require__(12);
-;// CONCATENATED MODULE: ./|umd|/react.js
+;// ./|umd|/react.js
 
 var Component = external_commonjs_react_commonjs2_react_amd_react_root_React_.Component,
   StrictMode = external_commonjs_react_commonjs2_react_amd_react_root_React_.StrictMode,
@@ -322,47 +326,49 @@ var external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_
 var fallback = __webpack_require__(621);
 // EXTERNAL MODULE: external {"commonjs":"zeta-dom-react","commonjs2":"zeta-dom-react","amd":"zeta-dom-react","root":["zeta","react"]}
 var external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_ = __webpack_require__(402);
-;// CONCATENATED MODULE: ./|umd|/zeta-dom-react.js
+;// ./|umd|/zeta-dom-react.js
 
 var ViewStateProvider = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.ViewStateProvider,
   classNames = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.classNames,
   createAsyncScope = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.createAsyncScope,
   useAsync = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useAsync,
+  useEagerReducer = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useEagerReducer,
   useEagerState = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useEagerState,
   useMemoizedFunction = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useMemoizedFunction,
   useObservableProperty = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useObservableProperty,
   useSingleton = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useSingleton,
   useValueTrigger = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useValueTrigger;
 
-;// CONCATENATED MODULE: ./|umd|/zeta-dom/domUtil.js
+;// ./|umd|/zeta-dom/domUtil.js
 
 var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
+  bind = domUtil_lib$util.bind,
   containsOrEquals = domUtil_lib$util.containsOrEquals,
   getClass = domUtil_lib$util.getClass,
   removeNode = domUtil_lib$util.removeNode,
   scrollIntoView = domUtil_lib$util.scrollIntoView,
   setClass = domUtil_lib$util.setClass;
 
-;// CONCATENATED MODULE: ./|umd|/zeta-dom/dom.js
+;// ./|umd|/zeta-dom/dom.js
 
 var dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
 /* harmony default export */ const zeta_dom_dom = (dom);
 var reportError = dom.reportError;
 
-;// CONCATENATED MODULE: ./|umd|/zeta-dom/domLock.js
+;// ./|umd|/zeta-dom/domLock.js
 
 var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
   runAsync = _lib$dom.runAsync,
   subscribeAsync = _lib$dom.subscribeAsync;
 
-;// CONCATENATED MODULE: ./|umd|/brew-js/domAction.js
+;// ./|umd|/brew-js/domAction.js
 
 var closeFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.closeFlyout,
   isFlyoutOpen = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.isFlyoutOpen,
   openFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.openFlyout,
   toggleFlyout = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toggleFlyout;
 
-;// CONCATENATED MODULE: ./src/dialog.js
+;// ./src/dialog.js
 
 
 
@@ -429,6 +435,15 @@ function createDialog(props) {
   var scope = state.scope || (state.scope = createAsyncScope(root));
   var closeDialog = shared ? noop : closeFlyout.bind(0, root);
   function render(closeDialog, props, container) {
+    var signal = props.signal;
+    if (signal) {
+      if (signal.aborted) {
+        return resolve();
+      }
+      closeDialog = combineFn(closeDialog, bind(signal, 'abort', function () {
+        closeDialog();
+      }));
+    }
     var commitDialog = props.onCommit ? function (value) {
       return runAsync(zeta_dom_dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
     } : closeDialog;
@@ -556,27 +571,27 @@ function Dialog(props) {
   }, []);
   return /*#__PURE__*/external_commonjs_react_dom_commonjs2_react_dom_amd_react_dom_root_ReactDOM_.createPortal(props.children, element);
 }
-;// CONCATENATED MODULE: ./|umd|/zeta-dom/events.js
+;// ./|umd|/zeta-dom/events.js
 
 var EventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
 
-;// CONCATENATED MODULE: ./|umd|/brew-js/util/common.js
+;// ./|umd|/brew-js/util/common.js
 
 var getQueryParam = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.getQueryParam,
   setQueryParam = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.setQueryParam,
   toQueryString = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.toQueryString;
 
-;// CONCATENATED MODULE: ./|umd|/brew-js/util/path.js
+;// ./|umd|/brew-js/util/path.js
 
 var parsePath = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.parsePath,
   removeQueryAndHash = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.removeQueryAndHash;
 
-;// CONCATENATED MODULE: ./|umd|/brew-js/anim.js
+;// ./|umd|/brew-js/anim.js
 
 var animateIn = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateIn,
   animateOut = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.animateOut;
 
-;// CONCATENATED MODULE: ./src/view.js
+;// ./src/view.js
 
 
 
@@ -653,6 +668,16 @@ definePrototype(ViewContext, {
       errorView: errorView
     });
   },
+  resetView: function resetView() {
+    var self = this;
+    each(self.parent ? [self] : self.getChildren(), function (i, v) {
+      var wrapper = view_(v).wrapper;
+      wrapper.setState({
+        key: (wrapper.state.key || 0) + 1,
+        errorView: null
+      });
+    });
+  },
   on: function on(event, handler) {
     return emitter.add(this, event, handler);
   }
@@ -709,6 +734,7 @@ definePrototype(ErrorBoundary, Component, {
       }));
     }
     var onError = self.componentDidCatch.bind(self);
+    var key = self.state.key || 0;
     var viewProps = {
       errorHandler: self.errorHandler,
       navigationType: view_event.navigationType,
@@ -716,6 +742,7 @@ definePrototype(ErrorBoundary, Component, {
       viewData: context.page.data || {}
     };
     return /*#__PURE__*/createElement(self.Provider, null, /*#__PURE__*/createElement(context.view, extend({
+      key: key,
       viewProps: viewProps,
       onError: onError
     }, self.props)));
@@ -993,6 +1020,9 @@ function renderView() {
     defaultView: defaultView
   });
 }
+function resetAllViews() {
+  rootContext.resetView();
+}
 function resolvePath(view, params) {
   var suffix = '';
   if (isArray(params)) {
@@ -1011,7 +1041,7 @@ function redirectTo(view, params, data) {
   return navigateTo(view, params, data, true);
 }
 
-;// CONCATENATED MODULE: ./src/hooks.js
+;// ./src/hooks.js
 
 
 
@@ -1076,6 +1106,19 @@ function useViewContextWithEffect(callback, deps) {
   }, deps);
   return container;
 }
+function usePersistedState(storage, key, defaultValue) {
+  var state = useEagerReducer(function (prevState, value) {
+    value = isFunction(value) ? value(prevState[1]) : value;
+    return sameValue(value, prevState[1]) ? prevState : [prevState[0], value];
+  }, []);
+  var cur = state[0];
+  useMemo(function () {
+    if (cur[0] !== key) {
+      cur.splice(0, 2, key, storage && storage.has(key) ? storage.get(key) : isFunction(defaultValue) ? defaultValue() : defaultValue);
+    }
+  }, [storage, key]);
+  return [cur[1], state[1]];
+}
 function useAppReady() {
   return useAppReadyState().ready;
 }
@@ -1106,7 +1149,7 @@ function useRouteParam(name, defaultValue) {
 }
 function useRouteState(key, defaultValue, snapshotOnUpdate) {
   var cur = getCurrentStates();
-  var state = useEagerState(cur && cur.has(key) ? cur.get(key) : defaultValue);
+  var state = usePersistedState(cur, key, defaultValue);
   var container = useViewContextWithEffect(function (cur) {
     state[1](function (oldValue) {
       return cur.has(key) ? cur.get(key) : (cur.set(key, oldValue), oldValue);
@@ -1118,6 +1161,12 @@ function useRouteState(key, defaultValue, snapshotOnUpdate) {
   } else if (container.active) {
     updatePersistedValue(cur, key, state[0], snapshotOnUpdate);
   }
+  return state;
+}
+function useAppSessionState(key, defaultValue) {
+  var cur = app_app.sessionStorage;
+  var state = usePersistedState(cur, key, defaultValue);
+  updatePersistedValue(cur, key, state[0]);
   return state;
 }
 function useQueryParam(key, value, snapshotOnUpdate) {
@@ -1196,7 +1245,7 @@ function ViewStateContainer(props) {
 }
 // EXTERNAL MODULE: external "waterpipe"
 var external_waterpipe_ = __webpack_require__(87);
-;// CONCATENATED MODULE: ./src/i18n.js
+;// ./src/i18n.js
 
 
 
@@ -1282,7 +1331,7 @@ function makeTranslation(resources, defaultLang) {
     }
   };
 }
-;// CONCATENATED MODULE: ./src/mixins/StaticAttributeMixin.js
+;// ./src/mixins/StaticAttributeMixin.js
 
 
 function StaticAttributeMixin(name, value) {
@@ -1294,7 +1343,7 @@ definePrototype(StaticAttributeMixin, Mixin, {
     return extend({}, this.attributes);
   }
 });
-;// CONCATENATED MODULE: ./src/mixins/Mixin.js
+;// ./src/mixins/Mixin.js
 
 
 
@@ -1352,13 +1401,13 @@ util_define(Mixin, {
     });
   }
 });
-;// CONCATENATED MODULE: ./|umd|/zeta-dom/observe.js
+;// ./|umd|/zeta-dom/observe.js
 
 var observe_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
   watchElements = observe_lib$dom.watchElements,
   watchOwnAttributes = observe_lib$dom.watchOwnAttributes;
 
-;// CONCATENATED MODULE: ./src/mixins/StatefulMixin.js
+;// ./src/mixins/StatefulMixin.js
 
 
 var StatefulMixin_ = createPrivateStore();
@@ -1468,7 +1517,7 @@ definePrototype(StatefulMixin, Mixin, {
     state.pending = {};
   }
 });
-;// CONCATENATED MODULE: ./src/mixins/ClassNameMixin.js
+;// ./src/mixins/ClassNameMixin.js
 
 
 
@@ -1505,7 +1554,7 @@ definePrototype(ClassNameMixin, StatefulMixin, {
   },
   onClassNameUpdated: function onClassNameUpdated(element, prevState, state) {}
 });
-;// CONCATENATED MODULE: ./src/mixins/AnimateMixin.js
+;// ./src/mixins/AnimateMixin.js
 
 
 var AnimateMixinSuper = ClassNameMixin.prototype;
@@ -1537,7 +1586,7 @@ definePrototype(AnimateMixin, ClassNameMixin, {
     });
   }
 });
-;// CONCATENATED MODULE: ./src/mixins/AnimateSequenceItemMixin.js
+;// ./src/mixins/AnimateSequenceItemMixin.js
 
 
 var AnimateSequenceItemMixinSuper = ClassNameMixin.prototype;
@@ -1557,7 +1606,7 @@ definePrototype(AnimateSequenceItemMixin, ClassNameMixin, {
 });
 // EXTERNAL MODULE: external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":"jQuery"}
 var external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_ = __webpack_require__(914);
-;// CONCATENATED MODULE: ./src/mixins/AnimateSequenceMixin.js
+;// ./src/mixins/AnimateSequenceMixin.js
 
 
 
@@ -1594,7 +1643,7 @@ definePrototype(AnimateSequenceMixin, AnimateMixin, {
     }
   }
 });
-;// CONCATENATED MODULE: ./src/mixins/ClassNameToggleMixin.js
+;// ./src/mixins/ClassNameToggleMixin.js
 
 
 
@@ -1616,7 +1665,7 @@ definePrototype(ClassNameToggleMixin, StatefulMixin, {
     extend(this.classes, value);
   }
 });
-;// CONCATENATED MODULE: ./src/mixins/FlyoutToggleMixin.js
+;// ./src/mixins/FlyoutToggleMixin.js
 
 
 
@@ -1660,7 +1709,7 @@ definePrototype(FlyoutToggleMixin, ClassNameMixin, {
     }));
   }
 });
-;// CONCATENATED MODULE: ./src/mixins/FlyoutMixin.js
+;// ./src/mixins/FlyoutMixin.js
 
 
 
@@ -1786,7 +1835,7 @@ definePrototype(FlyoutMixin, ClassNameMixin, {
     }, true));
   }
 });
-;// CONCATENATED MODULE: ./src/mixins/FocusStateMixin.js
+;// ./src/mixins/FocusStateMixin.js
 
 
 
@@ -1828,11 +1877,11 @@ definePrototype(FocusStateMixin, StatefulMixin, {
     setClass(element, 'focused', state.focused);
   }
 });
-;// CONCATENATED MODULE: ./|umd|/brew-js/directive.js
+;// ./|umd|/brew-js/directive.js
 
 var getDirectiveComponent = external_commonjs_brew_js_commonjs2_brew_js_amd_brew_js_root_brew_.getDirectiveComponent;
 
-;// CONCATENATED MODULE: ./src/mixins/LoadingStateMixin.js
+;// ./src/mixins/LoadingStateMixin.js
 
 
 
@@ -1855,7 +1904,7 @@ definePrototype(LoadingStateMixin, ClassNameMixin, {
     }));
   }
 });
-;// CONCATENATED MODULE: ./src/mixins/ScrollableMixin.js
+;// ./src/mixins/ScrollableMixin.js
 
 
 
@@ -1920,7 +1969,7 @@ each('destroy enable disable setOptions setStickyPosition refresh scrollPadding 
     return obj.scrollable[v].apply(null, arguments);
   });
 });
-;// CONCATENATED MODULE: ./src/mixins/ScrollIntoViewMixin.js
+;// ./src/mixins/ScrollIntoViewMixin.js
 
 
 
@@ -1944,7 +1993,7 @@ definePrototype(ScrollIntoViewMixin, StatefulMixin, {
     extend(state, newState);
   }
 });
-;// CONCATENATED MODULE: ./src/mixins/UnmanagedClassNameMixin.js
+;// ./src/mixins/UnmanagedClassNameMixin.js
 
 
 function UnmanagedClassNameMixin() {
@@ -1956,7 +2005,7 @@ definePrototype(UnmanagedClassNameMixin, ClassNameMixin, {
     return this;
   }
 });
-;// CONCATENATED MODULE: ./src/mixin.js
+;// ./src/mixin.js
 
 
 
@@ -2000,16 +2049,17 @@ function useMixinRef(mixin) {
   return mixin && mixin.getMixin().reset();
 }
 
-;// CONCATENATED MODULE: ./src/index.js
+;// ./src/index.js
+/* unused harmony import specifier */ var src_brew;
 
 
-/* harmony default export */ const src = ((/* unused pure expression or super */ null && (brew)));
+/* harmony default export */ const src = ((/* unused pure expression or super */ null && (src_brew)));
 
 
 
 
 
-;// CONCATENATED MODULE: ./src/entry.js
+;// ./src/entry.js
 
 defineGetterProperty(window, 'brew-js-react', function () {
   console.warn('window["brew-js-react"] is deprecated, access brew.react instead.');
