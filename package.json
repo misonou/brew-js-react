@@ -52,7 +52,8 @@
     "expect-type": "^0.20.0",
     "jest": "^27.0.6",
     "jest-environment-jsdom": "^27.4.6",
-    "regenerator-runtime": "^0.13.9"
+    "regenerator-runtime": "^0.13.9",
+    "webpack-cli": "^7.0.2"
   },
   "sideEffects": [
     "./src/app.js"
