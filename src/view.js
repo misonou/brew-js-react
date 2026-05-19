@@ -31,8 +31,7 @@ onAppInit(function () {
         (function updateViewRecursive(next) {
             each(next.children, function (i, v) {
                 e.waitFor(new Promise(function (resolve) {
-                    v.onRender = resolve;
-                    v.forceUpdate();
+                    v.forceUpdate(resolve);
                 }).then(function () {
                     updateViewRecursive(v);
                 }));
@@ -186,7 +185,6 @@ definePrototype(ViewContainer, Component, {
         if (self.context.active) {
             self.updateView();
         }
-        self.onRender();
         return self.views;
     },
     updateView: function () {
@@ -234,10 +232,12 @@ definePrototype(ViewContainer, Component, {
                     app.emit('pageleave', element, { pathname: context.page.path, view: V }, true);
                     return animateOut(element, 'show').then(function () {
                         self.views[0] = null;
-                        self.forceUpdate();
+                        return new Promise(function (resolve) {
+                            self.forceUpdate(resolve);
+                        });
                     });
                 });
-                always(promise, delay).then(function () {
+                always(promise || delay(), function () {
                     app.emit('pageenter', element, { pathname: context.page.path, view: V }, true);
                 });
                 self.views.shift();
@@ -264,7 +264,7 @@ definePrototype(ViewContainer, Component, {
         }) || props.defaultView;
     }
 });
-fill(ViewContainer.prototype, 'abort onRender setActive setPage unmountView', noop);
+fill(ViewContainer.prototype, 'abort setActive setPage unmountView', noop);
 
 function normalizePart(value, part) {
     return isUndefinedOrNull(value) || value === '' || value === part ? '' : value[0] === part ? value : part + value;

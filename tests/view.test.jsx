@@ -861,17 +861,76 @@ describe('renderView', () => {
     it('should emit pageenter event after effect is invoked', async () => {
         const cb = mockFn();
         const Foo = registerView(() => {
-            useEffect(() => cb('effect'));
+            useEffect(() => cb('foo effect'));
             return (<></>);
         }, { view: 'foo' });
-        const { container, unmount } = render(<div>{renderView(Foo)}</div>);
+        const Bar = registerView(() => {
+            useEffect(() => cb('bar effect'));
+            return (<></>);
+        }, { view: 'bar' });
+
+        const { container, unmount } = render(<div>{renderView(Foo, Bar)}</div>);
         dom.on(container, 'pageenter', () => cb('pageenter'));
 
         await waitFor(() => expect(cb).toBeCalledTimes(2));
         verifyCalls(cb, [
-            ['effect'],
+            ['foo effect'],
             ['pageenter']
         ]);
+        cb.mockClear();
+
+        await navigateTo(Bar);
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
+        verifyCalls(cb, [
+            ['bar effect'],
+            ['pageenter']
+        ]);
+        unmount();
+    });
+
+    it('should emit pageenter event after effect is invoked for async views', async () => {
+        const cb = mockFn();
+        viewCallback.mockImplementation((view) => {
+            if (view === Foo) {
+                useEffect(() => cb('foo effect'), []);
+            } else if (view === Bar) {
+                useEffect(() => cb('bar effect'), []);
+            }
+        });
+        const { container, unmount } = render(<div>{renderView(Foo, Bar)}</div>);
+        dom.on(container, 'pageenter', () => cb('pageenter'));
+
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
+        verifyCalls(cb, [
+            ['foo effect'],
+            ['pageenter']
+        ]);
+        cb.mockClear();
+
+        await navigateTo(Bar);
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
+        verifyCalls(cb, [
+            ['bar effect'],
+            ['pageenter']
+        ]);
+        unmount();
+    });
+
+    it('should emit pagenter event after previous view component is unmounted', async () => {
+        const cb = mockFn();
+        const { container, unmount } = render(<div>{renderView(Foo, Bar)}</div>);
+        dom.on(container, 'pageenter', () => {
+            const elements = document.querySelectorAll('[brew-view]');
+            cb(elements.length, elements[0].textContent.trim());
+        });
+
+        await waitFor(() => expect(cb).toBeCalledTimes(1));
+        verifyCalls(cb, [[1, 'foo']]);
+        cb.mockClear();
+
+        await navigateTo(Bar);
+        await waitFor(() => expect(cb).toBeCalledTimes(1));
+        verifyCalls(cb, [[1, 'bar']]);
         unmount();
     });
 
