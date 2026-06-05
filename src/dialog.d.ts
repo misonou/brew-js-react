@@ -230,4 +230,4 @@ export function openDialog<P extends DialogOptions<any, any>>(props: P): Promise
 /**
  * Renders a dialog declaratively.
  */
-export function Dialog<T, V = T>(props: DialogProps<T, V>): JSX.Element;
+export function Dialog<T, V = T>(props: DialogProps<T, V>): React.ReactElement;

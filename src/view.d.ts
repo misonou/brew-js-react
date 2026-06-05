@@ -249,14 +249,14 @@ export function matchView(path: string, ...views: ViewComponent<any>[]): ViewCom
  * Renders view by matching current route state against registered route parameters of each supplied views.
  * @param args A list of view components created by {@link registerView}.
  */
-export function renderView(...args: ViewComponent<any>[]): JSX.Element;
+export function renderView(...args: ViewComponent<any>[]): React.ReactElement;
 
 /**
  * Renders view by matching current route state against registered route parameters of each supplied views.
  * @param props Optional parameters passed to the root element rendered by the function.
  * @param args A list of view components created by {@link registerView}.
  */
-export function renderView(props: ViewComponentRootProps, ...args: ViewComponent<any>[]): JSX.Element;
+export function renderView(props: ViewComponentRootProps, ...args: ViewComponent<any>[]): React.ReactElement;
 
 /**
  * Resets all rendered views by unmounting and remounting the view components, or re-rendering the view components if they are currently replaced by error views.
