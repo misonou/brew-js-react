@@ -1,4 +1,4 @@
-/*! brew-js-react v0.7.2 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.7.3 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -626,8 +626,7 @@ onAppInit(function () {
     (function updateViewRecursive(next) {
       each(next.children, function (i, v) {
         e.waitFor(new Promise(function (resolve) {
-          v.onRender = resolve;
-          v.forceUpdate();
+          v.forceUpdate(resolve);
         }).then(function () {
           updateViewRecursive(v);
         }));
@@ -792,7 +791,6 @@ definePrototype(ViewContainer, Component, {
     if (self.context.active) {
       self.updateView();
     }
-    self.onRender();
     return self.views;
   },
   updateView: function updateView() {
@@ -843,10 +841,12 @@ definePrototype(ViewContainer, Component, {
           }, true);
           return animateOut(element, 'show').then(function () {
             self.views[0] = null;
-            self.forceUpdate();
+            return new Promise(function (resolve) {
+              self.forceUpdate(resolve);
+            });
           });
         });
-        always(promise, delay).then(function () {
+        always(promise || delay(), function () {
           app_app.emit('pageenter', element, {
             pathname: context.page.path,
             view: V
@@ -884,7 +884,7 @@ definePrototype(ViewContainer, Component, {
     }) || props.defaultView;
   }
 });
-fill(ViewContainer.prototype, 'abort onRender setActive setPage unmountView', noop);
+fill(ViewContainer.prototype, 'abort setActive setPage unmountView', noop);
 function normalizePart(value, part) {
   return isUndefinedOrNull(value) || value === '' || value === part ? '' : value[0] === part ? value : part + value;
 }
