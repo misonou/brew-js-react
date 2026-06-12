@@ -30,9 +30,10 @@ function createDialogElement(props, unmountAfterUse) {
             (props.onOpen || noop)(root);
         },
         flyouthide: function () {
-            removeNode(root);
             (props.onClose || noop)(root);
-            (unmountAfterUse || noop)();
+            resolve(unmountAfterUse()).then(function () {
+                removeNode(root);
+            });
         }
     });
     root.setAttribute('loading-class', '');
@@ -118,7 +119,9 @@ export function createDialog(props) {
  */
 export function createDialogQueue(props) {
     var mode = props && props.mode;
-    var root = mode && createDialogElement(props);
+    var root = mode && createDialogElement(props, function () {
+        return multiple && closeFlyout(root.children);
+    });
     var multiple = mode === 'multiple';
     var childProps;
     var queue = [];
@@ -187,7 +190,7 @@ export function createDialogQueue(props) {
 export function Dialog(props) {
     const _props = extend(useState({})[0], props);
     const element = useState(function () {
-        return createDialogElement(_props);
+        return createDialogElement(_props, noop);
     })[0];
     useEffect(function () {
         var opened = isFlyoutOpen(element);

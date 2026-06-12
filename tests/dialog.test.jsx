@@ -673,6 +673,32 @@ describe('DialogController', () => {
         expect(dialog.root.parentElement.parentElement).toBe(container);
     });
 
+    it('should detach container after all outro container dialog elements are detached', async () => {
+        const controller = createDialogQueueMock({ mode: 'multiple', className: 'test-root' });
+        const d1 = createDialogMock({ controller, onRender: () => <div>1</div> });
+        const d2 = createDialogMock({ controller, onRender: () => <div>2</div> });
+        const cb = mockFn();
+
+        for (const d of [d1, d2]) {
+            d.root.setAttribute('animate-out', '');
+            d.root.setAttribute('animate-on', 'open');
+            dom.on(d.root, 'animationout', () => delay(100));
+            dom.on(d.root, 'flyouthide', () => cb(d));
+        }
+        d1.open();
+        d2.open();
+
+        const root = document.querySelector('.test-root');
+        await screen.findByText('1');
+        await screen.findByText('2');
+        expect(root.children.length).toBe(2);
+
+        d1.close();
+        d2.close();
+        await waitFor(() => expect(cb).toBeCalledTimes(2));
+        verifyCalls(cb, [[d1], [d2]]);
+    });
+
     it('should pass props as default options to created dialog', async () => {
         const cb = mockFn();
         const commitDialog = mockFn();
