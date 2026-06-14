@@ -24,6 +24,8 @@ const app = initAppBeforeAll(app => {
             '/{dummy:dummy}/{view:foo}/{baz?}',
             '/{dummy:dummy}/{view}/*',
             '/{dummy:dummy}',
+            '/{quz:quz}/{qux}/{rux}',
+            '/{quz:quz}/{qux}/{rux?}',
             '/{var2}/a/{var1}',
             '/{var1:var1}',
             '/*'
@@ -1232,14 +1234,23 @@ describe('resetAllViews', () => {
 
 describe('linkTo', () => {
     it('should return path that will render specified view with params', () => {
+        expect(linkTo(Foo)).toBe('/dummy/foo');
         expect(linkTo(Foo, { baz: 'baz' })).toBe('/dummy/foo');
         expect(linkTo(Baz, { baz: 'baz' })).toBe('/dummy/foo/baz');
         expect(linkTo(Bar, { remainingSegments: '/buzz' })).toBe('/dummy/bar/buzz');
         expect(linkTo(BarBaz)).toBe('/dummy/bar/baz');
+        expect(linkTo(Test)).toBe('/dummy/test/a');
         expect(linkTo(Test, { params1: 'baz' })).toBe('/dummy/test/a/baz');
         expect(linkTo(Test, { params1: 'baz', params2: 'bee' })).toBe('/dummy/test/a/baz/bee');
         expect(linkTo(Test, { params3: 'baz' })).toBe('/dummy/test/b/baz');
         expect(linkTo(Var1, { var2: 'xxx' })).toBe('/var1');
+
+        // Qux should match /{quz}/{qux}/{rux?} route but rux is not included in the link
+        // because it is used by Rux thus not a free parameter
+        const Qux = registerView(() => null, { quz: 'quz', qux: /./ });
+        const Rux = registerView(() => null, { quz: 'quz', qux: 'qux', rux: 'rux' });
+        expect((linkTo(Qux, { qux: 'qux' }))).toBe('/quz/qux');
+        expect((linkTo(Qux, { qux: 'qux', rux: 'rux' }))).toBe('/quz/qux');
     });
 
     it('should accept array containing params, query and hash', () => {

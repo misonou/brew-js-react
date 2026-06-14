@@ -2,7 +2,7 @@ import { Component, createContext, createElement, useContext, useLayoutEffect } 
 import { createAsyncScope, useAsync } from "zeta-dom-react";
 import dom, { reportError } from "zeta-dom/dom";
 import { ZetaEventContainer } from "zeta-dom/events";
-import { always, any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, delay, each, exclude, executeOnce, extend, fill, freeze, grep, isArray, isFunction, isPlainObject, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
+import { always, any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, delay, each, exclude, executeOnce, extend, fill, freeze, grep, hasOwnProperty, isArray, isFunction, isPlainObject, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
 import { animateIn, animateOut } from "brew-js/anim";
 import { toQueryString } from "brew-js/util/common";
 import { removeQueryAndHash } from "brew-js/util/path";
@@ -273,27 +273,24 @@ function normalizePart(value, part) {
 function getCurrentParams(view, params) {
     var state = routeMap.get(view);
     if (!state.maxParams) {
-        var matchers = exclude(state.matchers, ['remainingSegments']);
+        var maxParams = {};
         var matched = map(app.routes, function (v) {
             var route = app.parseRoute(v);
-            var matched = route.length && !any(matchers, function (v, i) {
-                var pos = route.params[i];
-                return (v ? !(pos >= 0) : pos < route.minLength) || (!isFunction(v) && !route.match(i, v));
+            var routeParams = route.params;
+            var params = {};
+            var invalid = single(routeParams, (v, i) => {
+                if (usedParams[i] && !state.matchers[i]) {
+                    return v < route.minLength;
+                }
+                params[i] = true;
+            }) || single(state.matchers, function (v, i) {
+                return i !== 'remainingSegments' && !(isFunction(v) ? hasOwnProperty(routeParams, i) : v ? route.match(i, v) : routeParams[i] >= route.minLength);
             });
-            return matched ? route : null;
+            return invalid ? null : extend(maxParams, params) && route;
         });
-        if (matched[1]) {
-            matched = grep(matched, function (v) {
-                return !single(v.params, function (v, i) {
-                    return usedParams[i] && !matchers[i];
-                });
-            });
-        }
         if (matched[0]) {
             var last = matched.slice(-1)[0];
-            state.maxParams = keys(extend.apply(0, [{ remainingSegments: true }].concat(matched.map(function (v) {
-                return v.params;
-            }))));
+            state.maxParams = ['remainingSegments'].concat(keys(maxParams));
             state.minParams = map(last.params, function (v, i) {
                 return state.params[i] || v >= last.minLength ? null : i;
             });
