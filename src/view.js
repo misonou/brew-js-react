@@ -288,13 +288,11 @@ function getCurrentParams(view, params) {
             });
             return invalid ? null : extend(maxParams, params) && route;
         });
-        if (matched[0]) {
-            var last = matched.slice(-1)[0];
-            state.maxParams = ['remainingSegments'].concat(keys(maxParams));
-            state.minParams = map(last.params, function (v, i) {
-                return state.params[i] || v >= last.minLength ? null : i;
-            });
-        }
+        var last = matched.slice(-1)[0] || {};
+        state.maxParams = ['remainingSegments'].concat(keys(maxParams));
+        state.minParams = map(last.params, function (v, i) {
+            return state.params[i] || v >= last.minLength ? null : i;
+        });
     }
     return extend(pick(app.route, state.minParams), params && pick(params, state.maxParams), state.params);
 }
