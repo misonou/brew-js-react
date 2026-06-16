@@ -253,6 +253,23 @@ describe('createDialog', () => {
         expect(screen.getByTestId('child').parentElement).toBe(screen.getByTestId('parent'));
     });
 
+    it('should pass root element to wrapper and render callback', async () => {
+        const map = new Map();
+        const dialog = createDialogMock({
+            onRender: function Component({ dialogElement }) {
+                map.set('render', dialogElement);
+                return null;
+            },
+            wrapper: function Component({ dialogElement, children }) {
+                map.set('wrapper', dialogElement);
+                return children;
+            }
+        });
+        actAndReturn(() => dialog.open());
+        expect(map.get('wrapper')).toBe(dialog.root);
+        expect(map.get('render')).toBe(dialog.root);
+    });
+
     it('should pass error handler that catch async error', async () => {
         const cb = mockFn(() => true);
         const dialog = createDialogMock({

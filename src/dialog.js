@@ -84,6 +84,7 @@ export function createDialog(props) {
             return runAsync(dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
         } : closeDialog;
         var dialogProps = extend({}, props, {
+            dialogElement: root,
             errorHandler: scope.errorHandler,
             closeDialog: commitDialog,
             commitDialog: commitDialog,

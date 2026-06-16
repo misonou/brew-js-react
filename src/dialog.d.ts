@@ -158,6 +158,10 @@ export interface DialogOptions<T, V = T | undefined> {
 
 export interface DialogContext<V> {
     /**
+     * Gets the root element of the dialog.
+     */
+    dialogElement: HTMLElement;
+    /**
      * Gets an {@link ErrorHandler} object that catches errors emitted from rendered content.
      */
     errorHandler: ErrorHandler;
