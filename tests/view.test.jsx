@@ -477,6 +477,20 @@ describe('renderView', () => {
         unmount();
     });
 
+    it('should not halt navigation completion when nested view container is unmounted', async () => {
+        await app.navigate('/dummy/foo/baz');
+
+        const FooParent = registerView(() => {
+            const baz = useRouteParam('baz');
+            return (baz ? <div>{renderView(Baz)}</div> : null);
+        }, { view: 'foo', baz: /.*/ });
+        const { unmount } = render(<div>{renderView(FooParent)}</div>);
+
+        await screen.findByText('baz');
+        await app.navigate('/dummy/foo');
+        unmount();
+    });
+
     it('should discard pending view if matched view is reverted', async () => {
         const cb = mockFn();
         const Bar = registerView(async () => {

@@ -2,7 +2,7 @@ import { Component, createContext, createElement, useContext, useLayoutEffect } 
 import { createAsyncScope, useAsync } from "zeta-dom-react";
 import dom, { reportError } from "zeta-dom/dom";
 import { ZetaEventContainer } from "zeta-dom/events";
-import { always, any, arrRemove, catchAsync, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, delay, each, exclude, executeOnce, extend, fill, freeze, grep, hasOwnProperty, isArray, isFunction, isPlainObject, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
+import { always, any, arrRemove, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, delay, each, exclude, executeOnce, extend, fill, freeze, grep, hasOwnProperty, isArray, isFunction, isPlainObject, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
 import { animateIn, animateOut } from "brew-js/anim";
 import { toQueryString } from "brew-js/util/common";
 import { removeQueryAndHash } from "brew-js/util/path";
@@ -30,9 +30,7 @@ onAppInit(function () {
         event = e;
         (function updateViewRecursive(next) {
             each(next.children, function (i, v) {
-                e.waitFor(new Promise(function (resolve) {
-                    v.forceUpdate(resolve);
-                }).then(function () {
+                e.waitFor(v.renderAsync().then(function () {
                     updateViewRecursive(v);
                 }));
             });
@@ -148,6 +146,7 @@ definePrototype(ErrorBoundary, Component, {
 function ViewContainer() {
     Component.apply(this, arguments);
     this.views = [];
+    this.dispose = new Set();
 }
 ViewContainer.contextType = StateContext;
 
@@ -165,6 +164,7 @@ definePrototype(ViewContainer, Component, {
             setImmediate(function () {
                 if (self.currentContext && !self.currentContext.active) {
                     self.unmountView();
+                    combineFn(self.dispose)();
                 }
             });
         };
@@ -178,6 +178,16 @@ definePrototype(ViewContainer, Component, {
     setContext: function (context) {
         this.currentContext = context;
         (this.props.rootProps.ref || {}).current = context;
+    },
+    renderAsync: function () {
+        var self = this;
+        return new Promise(function (resolve) {
+            self.dispose.add(resolve);
+            self.forceUpdate(function () {
+                self.dispose.delete(resolve);
+                resolve();
+            });
+        });
     },
     render: function () {
         /** @type {any} */
@@ -232,9 +242,7 @@ definePrototype(ViewContainer, Component, {
                     app.emit('pageleave', element, { pathname: context.page.path, view: V }, true);
                     return animateOut(element, 'show').then(function () {
                         self.views[0] = null;
-                        return new Promise(function (resolve) {
-                            self.forceUpdate(resolve);
-                        });
+                        return self.renderAsync();
                     });
                 });
                 always(promise || delay(), function () {
