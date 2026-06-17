@@ -1,5 +1,6 @@
 import { ErrorHandler } from "zeta-dom-react";
 
+type VFC<P = {}> = (props: P) => ReturnType<React.FC>;
 type PartialRequired<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: T[P] }
 type VoidOrOptional<T> = [Exclude<T, undefined | void>] extends [never] ? void : Exclude<T, undefined | void>;
 
@@ -137,12 +138,12 @@ export interface DialogOptions<T, V = T | undefined> {
     /**
      * A callback that render dialog contents.
      */
-    onRender: React.VFC<DialogContext<V> & this>;
+    onRender: VFC<DialogContext<V> & this>;
     /**
      * Specifies wrapper component that envelops content from {@link DialogOptions.onRender},
      * which is useful for reusable layout for dialogs.
      */
-    wrapper?: React.FC<DialogContext<V> & this & React.PropsWithChildren<{}>>;
+    wrapper?: React.FC<DialogContext<V> & this & { children: React.ReactElement }>;
     /**
      * An optional signal object to dismiss the dialog.
      *

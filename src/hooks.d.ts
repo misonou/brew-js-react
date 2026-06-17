@@ -1,6 +1,6 @@
 export type SetQueryParamAction<T> = Partial<T> | ((prev: Readonly<T>) => Partial<T>);
 
-export const ViewStateContainer: React.FC;
+export const ViewStateContainer: React.FC<React.PropsWithChildren<{}>>;
 
 /**
  * Returns if the app has completed initialization, and
