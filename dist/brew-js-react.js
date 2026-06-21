@@ -1,4 +1,4 @@
-/*! brew-js-react v0.7.3 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.7.4 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -248,6 +248,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   fill = _lib$util.fill,
   freeze = _lib$util.freeze,
   grep = _lib$util.grep,
+  util_hasOwnProperty = _lib$util.hasOwnProperty,
   isArray = _lib$util.isArray,
   isFunction = _lib$util.isFunction,
   isPlainObject = _lib$util.isPlainObject,
@@ -398,9 +399,10 @@ function createDialogElement(props, unmountAfterUse) {
       (props.onOpen || noop)(root);
     },
     flyouthide: function flyouthide() {
-      removeNode(root);
       (props.onClose || noop)(root);
-      (unmountAfterUse || noop)();
+      resolve(unmountAfterUse()).then(function () {
+        removeNode(root);
+      });
     }
   });
   root.setAttribute('loading-class', '');
@@ -448,6 +450,7 @@ function createDialog(props) {
       return runAsync(zeta_dom_dom.activeElement, props.onCommit.bind(this, value)).then(closeDialog);
     } : closeDialog;
     var dialogProps = extend({}, props, {
+      dialogElement: root,
       errorHandler: scope.errorHandler,
       closeDialog: commitDialog,
       commitDialog: commitDialog,
@@ -484,7 +487,9 @@ function createDialog(props) {
  */
 function createDialogQueue(props) {
   var mode = props && props.mode;
-  var root = mode && createDialogElement(props);
+  var root = mode && createDialogElement(props, function () {
+    return multiple && closeFlyout(root.children);
+  });
   var multiple = mode === 'multiple';
   var childProps;
   var queue = [];
@@ -554,7 +559,7 @@ function createDialogQueue(props) {
 function Dialog(props) {
   var _props = extend(useState({})[0], props);
   var element = useState(function () {
-    return createDialogElement(_props);
+    return createDialogElement(_props, noop);
   })[0];
   useEffect(function () {
     var opened = isFlyoutOpen(element);
@@ -625,9 +630,7 @@ onAppInit(function () {
     view_event = e;
     (function updateViewRecursive(next) {
       each(next.children, function (i, v) {
-        e.waitFor(new Promise(function (resolve) {
-          v.forceUpdate(resolve);
-        }).then(function () {
+        e.waitFor(v.renderAsync().then(function () {
           updateViewRecursive(v);
         }));
       });
@@ -755,6 +758,7 @@ definePrototype(ErrorBoundary, Component, {
 function ViewContainer() {
   Component.apply(this, arguments);
   this.views = [];
+  this.dispose = new Set();
 }
 ViewContainer.contextType = StateContext;
 definePrototype(ViewContainer, Component, {
@@ -771,6 +775,7 @@ definePrototype(ViewContainer, Component, {
       setImmediate(function () {
         if (self.currentContext && !self.currentContext.active) {
           self.unmountView();
+          combineFn(self.dispose)();
         }
       });
     };
@@ -784,6 +789,16 @@ definePrototype(ViewContainer, Component, {
   setContext: function setContext(context) {
     this.currentContext = context;
     (this.props.rootProps.ref || {}).current = context;
+  },
+  renderAsync: function renderAsync() {
+    var self = this;
+    return new Promise(function (resolve) {
+      self.dispose.add(resolve);
+      self.forceUpdate(function () {
+        self.dispose["delete"](resolve);
+        resolve();
+      });
+    });
   },
   render: function render() {
     /** @type {any} */
@@ -841,9 +856,7 @@ definePrototype(ViewContainer, Component, {
           }, true);
           return animateOut(element, 'show').then(function () {
             self.views[0] = null;
-            return new Promise(function (resolve) {
-              self.forceUpdate(resolve);
-            });
+            return self.renderAsync();
           });
         });
         always(promise || delay(), function () {
@@ -891,33 +904,26 @@ function normalizePart(value, part) {
 function getCurrentParams(view, params) {
   var state = routeMap.get(view);
   if (!state.maxParams) {
-    var matchers = exclude(state.matchers, ['remainingSegments']);
+    var maxParams = {};
     var matched = map(app_app.routes, function (v) {
       var route = app_app.parseRoute(v);
-      var matched = route.length && !any(matchers, function (v, i) {
-        var pos = route.params[i];
-        return (v ? !(pos >= 0) : pos < route.minLength) || !isFunction(v) && !route.match(i, v);
+      var routeParams = route.params;
+      var params = {};
+      var invalid = single(routeParams, function (v, i) {
+        if (usedParams[i] && !state.matchers[i]) {
+          return v < route.minLength;
+        }
+        params[i] = true;
+      }) || single(state.matchers, function (v, i) {
+        return i !== 'remainingSegments' && !(isFunction(v) ? util_hasOwnProperty(routeParams, i) : v ? route.match(i, v) : routeParams[i] >= route.minLength);
       });
-      return matched ? route : null;
+      return invalid ? null : extend(maxParams, params) && route;
     });
-    if (matched[1]) {
-      matched = grep(matched, function (v) {
-        return !single(v.params, function (v, i) {
-          return usedParams[i] && !matchers[i];
-        });
-      });
-    }
-    if (matched[0]) {
-      var last = matched.slice(-1)[0];
-      state.maxParams = util_keys(extend.apply(0, [{
-        remainingSegments: true
-      }].concat(matched.map(function (v) {
-        return v.params;
-      }))));
-      state.minParams = map(last.params, function (v, i) {
-        return state.params[i] || v >= last.minLength ? null : i;
-      });
-    }
+    var last = matched.slice(-1)[0] || {};
+    state.maxParams = ['remainingSegments'].concat(util_keys(maxParams));
+    state.minParams = map(last.params, function (v, i) {
+      return state.params[i] || v >= last.minLength ? null : i;
+    });
   }
   return extend(pick(app_app.route, state.minParams), params && pick(params, state.maxParams), state.params);
 }
