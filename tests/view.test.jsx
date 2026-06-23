@@ -965,6 +965,31 @@ describe('renderView', () => {
         unmount();
     });
 
+    it('should emit pageleave event for nested view before view component is unmounted', async () => {
+        const Foo = registerView(() => {
+            return (<div>{renderView(Baz)}</div>);
+        }, { view: 'foo' });
+
+        const { container, unmount } = render(<div>{renderView(Foo, Bar)}</div>);
+        const cb = mockFn(() => screen.queryByText('baz'));
+        dom.on(container, 'pageenter', cb);
+        dom.on(container, 'pageleave', cb);
+
+        await waitForPageLoad();
+        cb.mockClear();
+
+        await actAwaitSetImmediate(() => app.navigate('/dummy/bar'));
+        verifyCalls(cb, [
+            [expect.objectContaining({ type: 'pageleave', view: Baz }), _],
+            [expect.objectContaining({ type: 'pageleave', view: Foo }), _],
+            [expect.objectContaining({ type: 'pageenter', view: Bar }), _],
+        ]);
+        expect(cb.mock.results[0].value).toBeTruthy();
+        expect(cb.mock.results[1].value).toBeTruthy();
+        expect(cb.mock.results[2].value).toBeFalsy();
+        unmount();
+    });
+
     it('should trigger intro animation after view component is rendered', async () => {
         const cb = mockFn(() => screen.queryByText('bar'));
         addAnimateIn('animate-in-qpfsq', cb);

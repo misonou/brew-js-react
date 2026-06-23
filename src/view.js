@@ -2,7 +2,7 @@ import { Component, createContext, createElement, useContext, useLayoutEffect } 
 import { createAsyncScope, useAsync } from "zeta-dom-react";
 import dom, { reportError } from "zeta-dom/dom";
 import { ZetaEventContainer } from "zeta-dom/events";
-import { always, any, arrRemove, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, delay, each, exclude, executeOnce, extend, fill, freeze, grep, hasOwnProperty, isArray, isFunction, isPlainObject, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
+import { always, any, arrRemove, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, delay, each, exclude, executeOnce, extend, fill, freeze, grep, hasOwnProperty, isArray, isFunction, isPlainObject, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
 import { animateIn, animateOut } from "brew-js/anim";
 import { toQueryString } from "brew-js/util/common";
 import { removeQueryAndHash } from "brew-js/util/path";
@@ -163,7 +163,7 @@ definePrototype(ViewContainer, Component, {
             unwatch();
             setImmediate(function () {
                 if (self.currentContext && !self.currentContext.active) {
-                    self.unmountView();
+                    self.unmountView(true);
                     combineFn(self.dispose)();
                 }
             });
@@ -236,13 +236,17 @@ definePrototype(ViewContainer, Component, {
             var onLoad = executeOnce(function () {
                 var element = context.container;
                 var promise = self.unmountView();
-                self.unmountView = executeOnce(function () {
+                self.unmountView = executeOnce(function (skipRender) {
+                    var promises = map(self.children, function (v) {
+                        return v.unmountView(true);
+                    });
                     state.rendered--;
                     self.setActive(false);
                     app.emit('pageleave', element, { pathname: context.page.path, view: V }, true);
-                    return animateOut(element, 'show').then(function () {
+                    promises.push(animateOut(element, 'show'));
+                    return resolveAll(promises, function () {
                         self.views[0] = null;
-                        return self.renderAsync();
+                        return skipRender || self.renderAsync();
                     });
                 });
                 always(promise || delay(), function () {
