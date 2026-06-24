@@ -381,6 +381,13 @@ describe('renderView', () => {
         ref = {};
         rerender(<div>{renderView({ ref }, Foo, Bar)}</div>)
         expect(ref.current).toMatchObject({ view: Bar });
+        expect(setCurrent).toHaveBeenLastCalledWith(null);
+
+        let previousRef = ref;
+        ref = mockFn();
+        rerender(<div>{renderView({ ref }, Foo, Bar)}</div>)
+        expect(ref).toBeCalledWith(expect.objectContaining({ view: Bar }));
+        expect(previousRef.current).toBe(null);
         unmount();
     });
 

@@ -155,7 +155,7 @@ export interface ViewComponentRootProps extends Omit<React.ComponentProps<'div'>
     /**
      * Specifies a ref object that can retrieve the active view context.
      */
-    ref?: React.RefObject<ViewContext>;
+    ref?: React.Ref<ViewContext>;
     /**
      * Specifies initial loader if the first matched view is lazy-loaded.
      */

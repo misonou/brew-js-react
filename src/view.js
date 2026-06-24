@@ -1,5 +1,5 @@
 import { Component, createContext, createElement, useContext, useLayoutEffect } from "react";
-import { createAsyncScope, useAsync } from "zeta-dom-react";
+import { createAsyncScope, toRefCallback, useAsync } from "zeta-dom-react";
 import dom, { reportError } from "zeta-dom/dom";
 import { ZetaEventContainer } from "zeta-dom/events";
 import { always, any, arrRemove, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, delay, each, exclude, executeOnce, extend, fill, freeze, grep, hasOwnProperty, isArray, isFunction, isPlainObject, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
@@ -172,12 +172,12 @@ definePrototype(ViewContainer, Component, {
         self.setActive(true);
     },
     componentDidUpdate: function (prevProps) {
-        (prevProps.rootProps.ref || {}).current = null;
+        toRefCallback(prevProps.rootProps.ref)(null);
         this.setContext(this.currentContext);
     },
     setContext: function (context) {
         this.currentContext = context;
-        (this.props.rootProps.ref || {}).current = context;
+        toRefCallback(this.props.rootProps.ref)(context);
     },
     renderAsync: function () {
         var self = this;
