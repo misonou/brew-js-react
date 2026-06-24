@@ -4,7 +4,7 @@ import { ErrorHandler } from "zeta-dom-react";
 import { useRouteState } from "./hooks";
 
 export type ViewComponent<P> = React.FC<ViewProps<P>>;
-export type ViewParamMatchers = Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean)>;
+export type ViewParamMatchers = Zeta.Dictionary<null | string | RegExp | ((value: string) => boolean) | { test: (value: string) => boolean; optional?: boolean }>;
 /**
  * @deprecated Alias of {@link ViewContext}
  */

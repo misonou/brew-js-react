@@ -2,7 +2,7 @@ import { Component, createContext, createElement, useContext, useLayoutEffect } 
 import { createAsyncScope, toRefCallback, useAsync } from "zeta-dom-react";
 import dom, { reportError } from "zeta-dom/dom";
 import { ZetaEventContainer } from "zeta-dom/events";
-import { always, any, arrRemove, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, delay, each, exclude, executeOnce, extend, fill, freeze, grep, hasOwnProperty, isArray, isFunction, isPlainObject, isThenable, isUndefinedOrNull, keys, makeArray, map, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
+import { always, any, arrRemove, catchAsync, combineFn, createPrivateStore, defineObservableProperty, defineOwnProperty, definePrototype, delay, each, exclude, executeOnce, extend, fill, freeze, hasOwnProperty, isArray, isFunction, isPlainObject, isThenable, isUndefinedOrNull, keys, makeArray, map, mapObject, noop, pick, randomId, resolveAll, setImmediate, single, throwNotFunction, watch } from "zeta-dom/util";
 import { animateIn, animateOut } from "brew-js/anim";
 import { toQueryString } from "brew-js/util/common";
 import { removeQueryAndHash } from "brew-js/util/path";
@@ -296,7 +296,7 @@ function getCurrentParams(view, params) {
                 }
                 params[i] = true;
             }) || single(state.matchers, function (v, i) {
-                return i !== 'remainingSegments' && !(isFunction(v) ? hasOwnProperty(routeParams, i) : v ? route.match(i, v) : routeParams[i] >= route.minLength);
+                return i !== 'remainingSegments' && !(v.test ? hasOwnProperty(routeParams, i) || v.optional : v ? route.match(i, v) : routeParams[i] >= route.minLength);
             });
             return invalid ? null : extend(maxParams, params) && route;
         });
@@ -316,8 +316,7 @@ function sortViews(a, b) {
 function matchViewParams(view, route) {
     var params = routeMap.get(view);
     return !!params && !single(params.matchers, function (v, i) {
-        var value = route[i] || '';
-        return isFunction(v) ? !v(value) : (v || '') !== value;
+        return v.test ? (route[i] ? !v.test(route[i]) : !v.optional) : v !== (route[i] || '');
     });
 }
 
@@ -376,18 +375,20 @@ export function matchView() {
 
 export function registerView(factory, routeParams) {
     var Component = createViewComponent(factory);
-    routeParams = extend({}, routeParams);
-    each(routeParams, function (i, v) {
-        usedParams[i] = true;
+    var matchers = mapObject(routeParams, function (v, i) {
+        var optional;
         if (v instanceof RegExp) {
-            routeParams[i] = v.test.bind(v);
+            v = v.test.bind(v);
+            optional = v('');
         }
+        usedParams[i] = true;
+        return isFunction(v) ? { test: v, optional } : v || '';
     });
     routeMap.set(Component, {
         id: randomId(),
         rendered: 0,
         matchCount: keys(routeParams).length,
-        matchers: routeParams,
+        matchers: matchers,
         params: pick(routeParams, function (v) {
             return isUndefinedOrNull(v) || typeof v === 'string';
         })

@@ -419,6 +419,24 @@ describe('renderView', () => {
         expect(app.path).toBe('/dummy/foo/baz');
     });
 
+    it('should match views with optional param matcher', async () => {
+        await app.navigate('/dummy/foo');
+
+        const Quz1 = registerView(() => <div>foo_quz1</div>, { view: 'foo', quz: /.*/ });
+        const Quz2 = registerView(() => <div>foo_quz2</div>, { view: 'foo', quz: /^(quz)?$/ });
+        const Quz3 = registerView(() => <div>foo_quz3</div>, { view: 'foo', quz: { test: s => s === 'quz', optional: true } });
+
+        const { rerender, unmount } = render(<div>{renderView(Foo, Quz1)}</div>);
+        await screen.findByText('foo_quz1');
+
+        rerender(<div>{renderView(Foo, Quz2)}</div>);
+        await screen.findByText('foo_quz2');
+
+        rerender(<div>{renderView(Foo, Quz3)}</div>);
+        await screen.findByText('foo_quz3');
+        unmount();
+    });
+
     it('should keep extra segments after view being matched', async () => {
         await app.navigate('/dummy/bar/baz');
         render(<div>{renderView(Bar)}</div>);
