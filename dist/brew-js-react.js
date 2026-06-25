@@ -1,4 +1,4 @@
-/*! brew-js-react v0.7.4 | (c) misonou | https://misonou.github.io */
+/*! brew-js-react v0.7.5 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("brew-js"), require("react"), require("react-dom"), require("zeta-dom-react"), require("waterpipe"), require("jquery"));
@@ -247,7 +247,6 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   extend = _lib$util.extend,
   fill = _lib$util.fill,
   freeze = _lib$util.freeze,
-  grep = _lib$util.grep,
   util_hasOwnProperty = _lib$util.hasOwnProperty,
   isArray = _lib$util.isArray,
   isFunction = _lib$util.isFunction,
@@ -263,6 +262,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   pick = _lib$util.pick,
   randomId = _lib$util.randomId,
   resolve = _lib$util.resolve,
+  resolveAll = _lib$util.resolveAll,
   sameValue = _lib$util.sameValue,
   setImmediate = _lib$util.setImmediate,
   setImmediateOnce = _lib$util.setImmediateOnce,
@@ -332,6 +332,7 @@ var external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react
 var ViewStateProvider = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.ViewStateProvider,
   classNames = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.classNames,
   createAsyncScope = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.createAsyncScope,
+  toRefCallback = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.toRefCallback,
   useAsync = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useAsync,
   useEagerReducer = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useEagerReducer,
   useEagerState = external_commonjs_zeta_dom_react_commonjs2_zeta_dom_react_amd_zeta_dom_react_root_zeta_react_.useEagerState,
@@ -774,7 +775,7 @@ definePrototype(ViewContainer, Component, {
       unwatch();
       setImmediate(function () {
         if (self.currentContext && !self.currentContext.active) {
-          self.unmountView();
+          self.unmountView(true);
           combineFn(self.dispose)();
         }
       });
@@ -783,12 +784,12 @@ definePrototype(ViewContainer, Component, {
     self.setActive(true);
   },
   componentDidUpdate: function componentDidUpdate(prevProps) {
-    (prevProps.rootProps.ref || {}).current = null;
+    toRefCallback(prevProps.rootProps.ref)(null);
     this.setContext(this.currentContext);
   },
   setContext: function setContext(context) {
     this.currentContext = context;
-    (this.props.rootProps.ref || {}).current = context;
+    toRefCallback(this.props.rootProps.ref)(context);
   },
   renderAsync: function renderAsync() {
     var self = this;
@@ -847,16 +848,20 @@ definePrototype(ViewContainer, Component, {
       var onLoad = executeOnce(function () {
         var element = context.container;
         var promise = self.unmountView();
-        self.unmountView = executeOnce(function () {
+        self.unmountView = executeOnce(function (skipRender) {
+          var promises = map(self.children, function (v) {
+            return v.unmountView(true);
+          });
           state.rendered--;
           self.setActive(false);
           app_app.emit('pageleave', element, {
             pathname: context.page.path,
             view: V
           }, true);
-          return animateOut(element, 'show').then(function () {
+          promises.push(animateOut(element, 'show'));
+          return resolveAll(promises, function () {
             self.views[0] = null;
-            return self.renderAsync();
+            return skipRender || self.renderAsync();
           });
         });
         always(promise || delay(), function () {
@@ -915,7 +920,7 @@ function getCurrentParams(view, params) {
         }
         params[i] = true;
       }) || single(state.matchers, function (v, i) {
-        return i !== 'remainingSegments' && !(isFunction(v) ? util_hasOwnProperty(routeParams, i) : v ? route.match(i, v) : routeParams[i] >= route.minLength);
+        return i !== 'remainingSegments' && !(v.test ? util_hasOwnProperty(routeParams, i) || v.optional : v ? route.match(i, v) : routeParams[i] >= route.minLength);
       });
       return invalid ? null : extend(maxParams, params) && route;
     });
@@ -933,8 +938,7 @@ function sortViews(a, b) {
 function matchViewParams(view, route) {
   var params = routeMap.get(view);
   return !!params && !single(params.matchers, function (v, i) {
-    var value = route[i] || '';
-    return isFunction(v) ? !v(value) : (v || '') !== value;
+    return v.test ? route[i] ? !v.test(route[i]) : !v.optional : v !== (route[i] || '');
   });
 }
 function createViewComponent(factory) {
@@ -987,18 +991,23 @@ function matchView() {
 }
 function registerView(factory, routeParams) {
   var Component = createViewComponent(factory);
-  routeParams = extend({}, routeParams);
-  each(routeParams, function (i, v) {
-    usedParams[i] = true;
+  var matchers = mapObject(routeParams, function (v, i) {
+    var optional;
     if (v instanceof RegExp) {
-      routeParams[i] = v.test.bind(v);
+      v = v.test.bind(v);
+      optional = v('');
     }
+    usedParams[i] = true;
+    return isFunction(v) ? {
+      test: v,
+      optional: optional
+    } : v || '';
   });
   routeMap.set(Component, {
     id: randomId(),
     rendered: 0,
     matchCount: util_keys(routeParams).length,
-    matchers: routeParams,
+    matchers: matchers,
     params: pick(routeParams, function (v) {
       return isUndefinedOrNull(v) || typeof v === 'string';
     })
